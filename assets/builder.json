@@ -1,0 +1,98 @@
+{
+  "dashboard": {
+    "sorting": [
+      "slider",
+      "categories",
+      "newest_product",
+      "feature_products",
+      "deal_of_the_day",
+      "Sale_Banner",
+      "blog",
+      "vendor",
+      "best_selling_product",
+      "sale_product",
+      "offer",
+      "suggested_for_you",
+      "you_may_like"
+    ],
+    "layout": "layout1",
+    "appBar": {
+      "title": "Twomenu Shop",
+      "appBarIcon": null,
+      "appBarLayout": null
+    },
+    "sliderView": {
+      "enable": true
+    },
+    "category": {
+      "enable": true
+    },
+    "newProduct": {
+      "enable": true,
+      "title": "New Collections",
+      "viewAll": "See All"
+    },
+    "blog": {
+      "enable": false,
+      "title": "Our Blog Post",
+      "viewAll": "See All"
+    },
+    "feature": {
+      "enable": true,
+      "title": "Featured Product",
+      "viewAll": "See All"
+    },
+    "saleProduct": {
+      "enable": true,
+      "title": "Trending Product",
+      "viewAll": "See All"
+    },
+    "dealOfTheDay": {
+      "enable": true,
+      "title": "Deal Of the day",
+      "viewAll": "See All"
+    },
+    "bestSaleProduct": {
+      "enable": true,
+      "title": "Top Selling",
+      "viewAll": "See All"
+    },
+    "offerProduct": {
+      "enable": true,
+      "title": "Available Offers",
+      "viewAll": "See All"
+    },
+    "suggestionProduct": {
+      "enable": true,
+      "title": "Recommendation For You",
+      "viewAll": "See All"
+    },
+    "vendor": {
+      "enable": false,
+      "title": "Vendor",
+      "viewAll": "See All"
+    },
+    "youMayLikeProduct": {
+      "enable": true,
+      "title": "You Might Like",
+      "viewAll": "See All"
+    },
+    "saleBanner": {
+      "enable": true
+    }
+  },
+  "productdetailview": {
+    "layout": "layout2"
+  },
+  "appsetup": {
+    "appName": "Twomenu Shop",
+    "primaryColor": "#343892",
+    "secondaryColor": "#f4c75e",
+    "backgroundColor": "#ffffff",
+    "textPrimaryColor": "#343892",
+    "textSecondaryColor": "#000000",
+    "consumerKey": "ck_20c6dfe8ca5286ea1d2cdc1a34ff02e81204f584",
+    "consumerSecret": "cs_b69464deb673b408e5b05abb5ddd159ca1202875",
+    "appUrl": "https://twomenu.shop/wp-json/"
+  }
+}

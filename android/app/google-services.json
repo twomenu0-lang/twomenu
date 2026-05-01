@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "161430194427",
+    "project_id": "twomenu-790a0",
+    "storage_bucket": "twomenu-790a0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:161430194427:android:c2c6b2e43f7d8800a9c85e",
+        "android_client_info": {
+          "package_name": "com.twomenu.shop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnJVuXp32nfkeqEg7VRc3-wnk3kK-iQkM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
