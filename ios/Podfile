@@ -1,4 +1,4 @@
-# إعدادات المنصة المعتمدة
+# النسخة الحاسمة لتخطي عناد Xcode
 platform :ios, '14.0'
 
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -43,37 +43,18 @@ post_install do |installer|
     target.build_configurations.each do |config|
       config.build_settings['ENABLE_BITCODE'] = 'NO'
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-      # إيقاف الـ Sandboxing الذي يسبب تداخل الملفات
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
     end
   end
 
-  # السحر هنا: أتمتة حل سحب وإفلات خطوات OneSignal لأجهزة الويندوز
+  # الضربة القاضية: حذف مرحلة نسخ الإضافة التي تسبب الدورة المفرغة
   installer.aggregate_targets.each do |target|
     target.user_project.targets.each do |user_target|
-
-      # تطبيق إيقاف الـ Sandboxing على التطبيق الرئيسي
-      user_target.build_configurations.each do |config|
-        config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
-      end
-
-      # إعادة ترتيب خطوات البناء لمنع الـ CYCLE POINT
       if user_target.name == 'Runner'
-        phases = user_target.build_phases
-
-        # البحث عن خطوة الإضافة (Embed Foundation Extensions)
-        embed_phase = phases.find do |phase|
-          (phase.respond_to?(:name) && phase.name == 'Embed Foundation Extensions') ||
-          (phase.class.name == 'Xcodeproj::Project::Object::PBXCopyFilesBuildPhase' && phase.dst_subfolder_spec == '13')
-        end
-
-        if embed_phase
-          # مسح الخطوة من مكانها الخاطئ ووضعها في نهاية طابور البناء
-          phases.delete(embed_phase)
-          phases << embed_phase
+        user_target.build_phases.delete_if do |phase|
+          phase.class.name == 'Xcodeproj::Project::Object::PBXCopyFilesBuildPhase' && phase.respond_to?(:dst_subfolder_spec) && phase.dst_subfolder_spec == '13'
         end
       end
-
     end
   end
 end
