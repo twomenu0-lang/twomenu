@@ -2,13 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
-import 'package:flutter_paystack/flutter_paystack.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:flutterwave_standard/core/flutterwave.dart';
-import 'package:flutterwave_standard/models/requests/customer.dart';
-import 'package:flutterwave_standard/models/requests/customizations.dart';
-import 'package:flutterwave_standard/models/responses/charge_response.dart';
-import 'package:flutterwave_standard/view/view_utils.dart';
 import 'package:intl/intl.dart';
 import '/../main.dart';
 import '/../models/CartModel.dart';
@@ -26,7 +19,6 @@ import '/../utils/Common.dart';
 import '/../utils/Constants.dart';
 import '/../utils/SharedPref.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../AppLocalizations.dart';
 import 'DashBoardScreen.dart';
 import 'PlaceOrderScreen.dart';
@@ -53,54 +45,30 @@ class OrderSummaryScreen extends StatefulWidget {
 
 class OrderSummaryScreenState extends State<OrderSummaryScreen> {
   final formKey = GlobalKey<FormState>();
-  final plugin = PaystackPlugin();
-  CheckoutMethod method = CheckoutMethod.card;
-
   var mOrderModel = OrderResponse();
-
-  late Razorpay _razorPay;
   List<PaymentClass>? paymentList = [];
 
   Shipping? shipping;
   Billing? billing;
 
-  //Method? method;
   NumberFormat nf = NumberFormat('##.00');
-  String? cardNumber;
-  String? cvv;
-  int? expiryMonth;
-  int? expiryYear;
-
   String? mTotalBalance;
-
-  bool isDisabled = false;
   bool isNativePayment = false;
 
   var mUserId, mCurrency;
-
-  var mBilling, mShipping;
-  var id;
-  var isEnableCoupon;
-
   int? paymentIndex = 0;
   int? currentTimeValue = 0;
   bool? isSelected = false;
   num mAmount = 0;
-  num remainAmount = 0;
 
   @override
   void initState() {
     super.initState();
     addList();
-    _razorPay = Razorpay();
-    _razorPay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
-    _razorPay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
-    _razorPay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
     init();
   }
 
   init() async {
-    plugin.initialize(publicKey: payStackPublicKey);
     setState(() {});
     fetchTotalBalance();
     if (getStringAsync(PAYMENTMETHOD) == PAYMENT_METHOD_NATIVE) {
@@ -126,35 +94,16 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
     }).catchError((error) {
       appStore.setLoading(false);
     });
-    paymentCount();
+    mAmount = double.parse(widget.mPrice);
   }
 
   addList() {
-    //if (IS_PAY_FROM_WALLET) paymentList!.add(PaymentClass(paymentIndex: 5, paymentMethod: 'Pay From Wallet'));
+    paymentList!.clear();
     paymentList!.add(PaymentClass(paymentIndex: 0, paymentMethod: 'Cash On Delivery'));
-    if (IS_STRIPE) paymentList!.add(PaymentClass(paymentIndex: 1, paymentMethod: 'Stripe Payment'));
-    if (IS_RAZORPAY) paymentList!.add(PaymentClass(paymentIndex: 2, paymentMethod: 'RazorPay'));
-    if (IS_FLUTTER_WAVE) paymentList!.add(PaymentClass(paymentIndex: 3, paymentMethod: 'FlutterWave'));
-    if (IS_PAY_STACK) paymentList!.add(PaymentClass(paymentIndex: 4, paymentMethod: 'PayStack'));
-
     setState(() {});
   }
 
-  void paymentCount() {
-    if (isSelected == true) {
-      if (widget.mPrice.toString().toDouble() < mTotalBalance.toDouble()) {
-        mAmount = widget.mPrice.toString().toDouble();
-      } else if (widget.mPrice.toString().toDouble() == mTotalBalance.toDouble()) {
-        mAmount = mTotalBalance.toDouble();
-      } else {
-        mAmount = double.parse(widget.mPrice) - mTotalBalance.toDouble();
-      }
-    } else {
-      mAmount = double.parse(widget.mPrice);
-    }
-  }
-
-  void createNativeOrder(String mPayMethod, String? mPayTitle, {bool isWallet = false, bool isPayment = false}) async {
+  void createNativeOrder(String mPayMethod, String? mPayTitle) async {
     hideKeyboard(context);
 
     List<LineItemsRequest> lineItems = [];
@@ -193,68 +142,18 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
       'shipping_lines': shippingLines
     };
     appStore.setLoading(true);
-    print("isWallet----" + isWallet.toString());
-    print("isPayment---" + isPayment.toString());
 
     createOrderApi(request).then((response) async {
       if (!mounted) return;
-
-      if (isWallet == true && isPayment == false) {
-        var request = {
-          "type": "debit",
-          "amount": mAmount,
-          "details": "",
-        };
-        log("mAmount" + mAmount.toString());
-
-        await addTransaction(request).then((res) async {
-          appStore.setLoading(false);
-          await PlaceOrderScreen(
-            mOrderID: response['id'],
-            total: mAmount,
-            transactionId: response['transaction_id'],
-            orderKey: response['order_key'],
-            paymentMethod: response['payment_method'],
-            dateCreated: response['date_created'],
-          ).launch(context, pageRouteAnimation: PageRouteAnimation.Scale);
-        }).catchError((error) {
-          print("Error" + error.toString());
-          toast(error.toString());
-        });
-      } else if (isPayment == true && isWallet == false) {
-        appStore.setLoading(false);
-        log("va;ue--" + response.toString());
-        await PlaceOrderScreen(
-          mOrderID: response['id'],
-          total: widget.mPrice,
-          transactionId: response['transaction_id'],
-          orderKey: response['order_key'],
-          paymentMethod: response['payment_method'],
-          dateCreated: response['date_created'],
-        ).launch(context, pageRouteAnimation: PageRouteAnimation.Scale);
-      } else if (isWallet == true && isPayment == true) {
-        log("both payments");
-        var req = {
-          "type": "debit",
-          "amount": mTotalBalance,
-          "details": "",
-        };
-        await addTransaction(req).then((res) async {
-          log("Done");
-          appStore.setLoading(false);
-          await PlaceOrderScreen(
-            mOrderID: response['id'],
-            total: widget.mPrice,
-            transactionId: response['transaction_id'],
-            orderKey: response['order_key'],
-            paymentMethod: response['payment_method'],
-            dateCreated: response['date_created'],
-          ).launch(context, pageRouteAnimation: PageRouteAnimation.Scale);
-        }).catchError((error) {
-          print("Error" + error.toString());
-          toast(error.toString());
-        });
-      }
+      appStore.setLoading(false);
+      await PlaceOrderScreen(
+        mOrderID: response['id'],
+        total: widget.mPrice,
+        transactionId: response['transaction_id'],
+        orderKey: response['order_key'],
+        paymentMethod: response['payment_method'],
+        dateCreated: response['date_created'],
+      ).launch(context, pageRouteAnimation: PageRouteAnimation.Scale);
     }).catchError((error) {
       appStore.setLoading(false);
       toast(error.toString());
@@ -262,19 +161,14 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
   }
 
   Future createWebViewOrder() async {
-    if (!accessAllowed) {
-      return;
-    }
-
+    if (!accessAllowed) return;
     var request = CreateOrderRequestModel();
-
     if (widget.shippingLines != null) {
       List<ShippingLines?> shippingLines = [];
       shippingLines.add(widget.shippingLines);
       request.shippingLines = shippingLines;
     }
     List<LineItemsRequest> lineItems = [];
-
     widget.mCartProduct!.forEach((item) {
       var lineItem = LineItemsRequest();
       lineItem.productId = item.proId;
@@ -284,77 +178,53 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
     });
 
     request.paymentMethod = "webview";
-    request.transactionId = "";
-    request.customerId = getIntAsync(USER_ID);
+    request.customerId = await isGuestUser() ? 0 : getIntAsync(USER_ID);
     request.status = "pending";
     request.setPaid = false;
-
     request.lineItems = lineItems;
     request.shipping = shipping;
     request.billing = billing;
-    createOrder(request);
-  }
 
-  void createOrder(CreateOrderRequestModel mCreateOrderRequestModel) async {
     appStore.setLoading(true);
-    await createOrderApi(mCreateOrderRequestModel.toJson()).then((response) {
+    await createOrderApi(request.toJson()).then((response) {
       if (!mounted) return;
       processPaymentApi(response['id']);
     }).catchError((error) {
       appStore.setLoading(false);
-      toast(error.toString(), print: true);
+      toast(error.toString());
     });
   }
 
   processPaymentApi(var mOrderId) async {
-    log(mOrderId);
     var request = {"order_id": mOrderId};
     getCheckOutUrl(request).then((res) async {
       if (!mounted) return;
-
       appStore.setLoading(false);
       bool isPaymentDone = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => WebViewPaymentScreen(checkoutUrl: res['checkout_url'])),
-          ) ??
-          false;
+        context,
+        MaterialPageRoute(builder: (context) => WebViewPaymentScreen(checkoutUrl: res['checkout_url'])),
+      ) ?? false;
       if (isPaymentDone) {
         appStore.setLoading(true);
         if (!await isGuestUser()) {
           clearCartItems().then((response) {
-            if (!mounted) return;
-
             appStore.setLoading(false);
             appStore.setCount(0);
             DashBoardScreen().launch(context, isNewTask: true);
-          }).catchError((error) {
-            appStore.setLoading(false);
-            toast(error.toString());
           });
         } else {
           appStore.setCount(0);
           removeKey(CART_DATA);
           DashBoardScreen().launch(context, isNewTask: true);
         }
-      } else {
-        deleteOrder(mOrderId).then((value) => {log(value)});
-        appStore.setCount(0);
       }
-    }).catchError((error) {});
+    }).catchError((error) { appStore.setLoading(false); });
   }
 
-  void onOrderNowClick() async {
-    if (isSelected == true) {
-      createNativeOrder('cod', "Cash On Delivery", isPayment: true, isWallet: true);
-    } else {
-      createNativeOrder('cod', "Cash On Delivery", isPayment: true);
+  void payments() {
+    if (paymentIndex == 0) {
+      createNativeOrder('cod', "Cash On Delivery");
     }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    //_razorPay.clear();
   }
 
   @override
@@ -376,134 +246,48 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(appLocalization.translate("lbl_shipping_address")!, style: boldTextStyle()).visible(shipping != null),
+                        Text(appLocalization.translate("lbl_shipping_address")!, style: boldTextStyle()),
                         4.height,
                         Text(
                           "${shipping!.firstName.validate()} ${shipping!.lastName.validate()}\n${shipping!.address1.validate()}\n${shipping!.city.validate()}\n${shipping!.state.validate()}-${shipping!.country.validate()}-${shipping!.postcode.validate()}",
                           style: secondaryTextStyle(),
-                        ).visible(shipping != null),
-                        4.height
+                        ),
                       ],
-                    ).paddingOnly(right: 16, left: 16),
-                  Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color).visible(isNativePayment == true),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(appLocalization.translate('lbl_payment_methods')!, style: boldTextStyle()).paddingLeft(16),
-                      8.height,
-                      Row(
-                        children: <Widget>[
-                          Container(
-                            width: 18,
-                            height: 18,
-                            padding: EdgeInsets.all(2),
-                            decoration: boxDecorationWithRoundedCorners(
-                              borderRadius: radius(4),
-                              backgroundColor: context.cardColor,
-                              border: Border.all(
-                                color: isSelected == true ? primaryColor! : Theme.of(context).textTheme.titleSmall!.color!,
+                    ).paddingSymmetric(horizontal: 16),
+                  Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color).visible(isNativePayment),
+                  if (isNativePayment)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(appLocalization.translate('lbl_payment_methods')!, style: boldTextStyle()).paddingLeft(16),
+                        8.height,
+                        AnimatedListView(
+                          physics: NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: paymentList!.length,
+                          itemBuilder: (context, index) {
+                            return Container(
+                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 20, height: 20,
+                                    decoration: boxDecorationWithRoundedCorners(
+                                      borderRadius: radius(4),
+                                      backgroundColor: context.cardColor,
+                                      border: Border.all(color: primaryColor!),
+                                    ),
+                                    child: Icon(Icons.done, color: primaryColor, size: 14),
+                                  ),
+                                  12.width,
+                                  Text(paymentList![index].paymentMethod!, style: boldTextStyle(color: primaryColor)),
+                                ],
                               ),
-                            ),
-                            child: Icon(Icons.done, color: primaryColor, size: 12).visible(isSelected == true),
-                          ),
-                          12.width,
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Pay From Wallet",
-                                  style: secondaryTextStyle(size: 16, color: isSelected == true ? primaryColor : Theme.of(context).textTheme.titleMedium!.color),
-                                ),
-                                isSelected == true ? Text(appLocalization.translate("lbl_available_bal")! + ' $mTotalBalance', style: secondaryTextStyle()) : SizedBox(),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ).paddingOnly(left: 16, right: 16, top: 12, bottom: 12).onTap(() {
-                        log(mTotalBalance);
-                        paymentCount();
-                        log(mAmount);
-                        if (mTotalBalance != "0.00") {
-                          isSelected = !isSelected!;
-                          paymentCount();
-                          if (widget.mPrice.toString().toDouble() <= mTotalBalance.toDouble() && isSelected == true) {
-                            currentTimeValue = null;
-                          }
-                        } else if (mTotalBalance == "0.00") {
-                          toast(appLocalization.translate('msg_zero_bal')!);
-                        }
-                        setState(() {});
-                      }),
-                      if (widget.mPrice.toString().toDouble() >= mTotalBalance.toDouble() && isSelected == true)
-                        Column(
-                          children: [
-                            4.height,
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [Text(appLocalization.translate("msg_remaining_amount")!, style: primaryTextStyle(size: 18)), PriceWidget(price: mAmount.toString(), size: 16)],
-                            ),
-                            Divider(color: Theme.of(context).textTheme.headlineMedium!.color)
-                          ],
-                        ).paddingOnly(left: 16, right: 16),
-                      AnimatedListView(
-                        physics: NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemBuilder: (context, index) {
-                          return Container(
-                            padding: EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: <Widget>[
-                                    Container(
-                                      width: 20,
-                                      height: 20,
-                                      padding: EdgeInsets.all(2),
-                                      decoration: boxDecorationWithRoundedCorners(
-                                        borderRadius: radius(4),
-                                        backgroundColor: context.cardColor,
-                                        border: Border.all(
-                                          color: currentTimeValue == index ? primaryColor! : Theme.of(context).textTheme.titleSmall!.color!,
-                                        ),
-                                      ),
-                                      child: Icon(Icons.done, color: primaryColor, size: 14).visible(currentTimeValue == index),
-                                    ),
-                                    12.width,
-                                    Expanded(
-                                      child: Text(
-                                        paymentList![index].paymentMethod!,
-                                        style: secondaryTextStyle(size: 16, color: currentTimeValue == index ? primaryColor : Theme.of(context).textTheme.titleMedium!.color),
-                                      ),
-                                    ),
-                                  ],
-                                ).onTap(
-                                  () {
-                                    if (widget.mPrice.toString().toDouble() >= mTotalBalance.toDouble()) {
-                                      setState(() {
-                                        currentTimeValue = 0;
-                                        currentTimeValue = index;
-                                        paymentIndex = paymentList![currentTimeValue.validate()].paymentIndex;
-                                      });
-                                    } else if (isSelected == false) {
-                                      setState(() {
-                                        log("value");
-                                        currentTimeValue = 0;
-                                        currentTimeValue = index;
-                                        paymentIndex = paymentList![currentTimeValue.validate()].paymentIndex;
-                                      });
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                        itemCount: paymentList!.length,
-                      ),
-                    ],
-                  ).paddingOnly(top: 8).visible(isNativePayment == true),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -511,50 +295,13 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
                       Text(appLocalization.translate("lbl_price_detail")!, style: boldTextStyle()),
                       8.height,
                       Divider(),
-                      8.height,
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(appLocalization.translate("lbl_total_mrp")!, style: secondaryTextStyle(size: 16)),
-                          PriceWidget(price: nf.format(widget.subtotal.validate()), color: Theme.of(context).textTheme.titleMedium!.color, size: 16)
+                          PriceWidget(price: nf.format(widget.subtotal.validate()), size: 16)
                         ],
                       ),
-                      4.height,
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(appLocalization.translate("lbl_discount_on_mrp")!, style: secondaryTextStyle(size: 16)),
-                          Row(
-                            children: [
-                              Text("-", style: primaryTextStyle(color: primaryColor)),
-                              PriceWidget(price: widget.mRPDiscount!.toStringAsFixed(2), size: 16),
-                            ],
-                          )
-                        ],
-                      ).paddingBottom(4).visible(widget.mRPDiscount != 0.0),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(appLocalization.translate('lbl_coupon_discount')!, style: secondaryTextStyle(size: 16)),
-                          Row(
-                            children: [
-                              Text("-", style: primaryTextStyle(color: primaryColor)),
-                              PriceWidget(price: widget.discount.validate(), size: 16, color: Theme.of(context).textTheme.titleMedium!.color),
-                            ],
-                          ),
-                        ],
-                      ).paddingBottom(4).visible(widget.discount != 0.0 && isEnableCoupon == true),
-                      widget.method != null
-                          ? Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(appLocalization.translate("lbl_Shipping")!, style: secondaryTextStyle(size: 16)),
-                                widget.method != null && widget.method!.cost != null && widget.method!.cost!.isNotEmpty
-                                    ? PriceWidget(price: widget.method!.cost.toString().validate(), color: Theme.of(context).textTheme.titleMedium!.color, size: 16)
-                                    : Text(appLocalization.translate('lbl_free')!, style: boldTextStyle(color: Colors.green))
-                              ],
-                            )
-                          : SizedBox(),
                       Divider(),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -573,282 +320,27 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
         ),
       ),
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: context.cardColor,
-          boxShadow: <BoxShadow>[
-            BoxShadow(color: Theme.of(context).hoverColor.withOpacity(0.8), blurRadius: 15.0, offset: Offset(0.0, 0.75)),
-          ],
-        ),
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(color: context.cardColor),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            PriceWidget(price: widget.mPrice, size: 16, color: Theme.of(context).textTheme.titleSmall!.color).expand(),
-            16.height,
+            PriceWidget(price: widget.mPrice, size: 16).expand(),
+            16.width,
             AppButton(
               text: appLocalization.translate('lbl_continue'),
               textStyle: primaryTextStyle(color: white),
-              color: isHalloween ? mChristmasColor : primaryColor,
-              onTap: () async {
-                if (appStore.isLoading) {
-                  return;
-                }
-                if (await isGuestUser()) {
-                  toast(appLocalization.translate('lbl_guest_payment_msg'));
+              color: primaryColor,
+              onTap: () {
+                if (isNativePayment) {
+                  payments();
                 } else {
-                  if (isNativePayment == false) {
-                    createWebViewOrder();
-                  } else {
-                    log("hello" + paymentIndex.toString());
-                    if (widget.mPrice.toString().toDouble() <= mTotalBalance.toDouble() && IS_PAY_FROM_WALLET && isSelected == true) {
-                      log("IS_PAY_FROM_WALLET");
-                      checkFormWallet();
-                    }
-                    // else if(widget.mPrice.toString().toDouble() >= mTotalBalance.toDouble()){
-                    //   payments();
-                    // }
-                    else {
-                      payments();
-                    }
-                  }
+                  createWebViewOrder();
                 }
               },
             ).expand(),
           ],
-        ).paddingAll(16),
+        ),
       ),
     );
-  }
-
-  void payments() {
-    if (paymentIndex == 0) {
-      log("IS_COD");
-      cod();
-    } else if (IS_STRIPE && paymentIndex == 1) {
-      log("IS_STRIPE");
-      stripePayment(context);
-    } else if (IS_RAZORPAY && paymentIndex == 2) {
-      log("IS_RAZORPAY");
-      openCheckout();
-    } else if (IS_FLUTTER_WAVE && paymentIndex == 3) {
-      flutterWaveCheckout();
-      log("IS_FLUTTER_WAVE");
-    } else if (IS_PAY_STACK && paymentIndex == 4) {
-      payStackCheckOut(context);
-      log("IS_PAY_STACK");
-    } else if (IS_PAY_FROM_WALLET && isSelected == true) {
-      log("IS_PAY_FROM_WALLET");
-      checkFormWallet();
-    }
-  }
-
-  void checkFormWallet() {
-    log("IS_PAY_FROM_WALLET");
-    paymentCount();
-    _wallet();
-  }
-
-  void stripePayment(BuildContext context) async {
-    paymentCount();
-
-    var request = {
-      'apiKey': stripPaymentKey,
-      'amount': mAmount * 100,
-      'currency': "INR",
-      'description': "556",
-    };
-    getStripeClientSecret(request).then(
-      (res) async {
-        SetupPaymentSheetParameters setupPaymentSheetParameters = SetupPaymentSheetParameters(
-          paymentIntentClientSecret: res['client_secret'],
-          style: ThemeMode.light,
-          appearance: PaymentSheetAppearance(colors: PaymentSheetAppearanceColors(primary: primaryColor)),
-          applePay: PaymentSheetApplePay(merchantCountryCode: getStringAsync(DEFAULT_CURRENCY).toUpperCase()),
-          googlePay: PaymentSheetGooglePay(merchantCountryCode: getStringAsync(DEFAULT_CURRENCY).toUpperCase(), testEnv: true),
-          merchantDisplayName: APP_NAME,
-          customerId: isIOS ? null : '1',
-          //customerEphemeralKeySecret: res.clientSecret.validate(),
-          //setupIntentClientSecret: res.clientSecret.validate(),
-        );
-        await Stripe.instance.initPaymentSheet(paymentSheetParameters: setupPaymentSheetParameters).then((value) async {
-          await Stripe.instance.presentPaymentSheet().then((value) async {
-            if (isSelected == true)
-              createNativeOrder('strippay', 'Stripe Payment', isPayment: true, isWallet: true);
-            else
-              createNativeOrder('strippay', 'Stripe Payment', isPayment: true);
-          });
-        }).catchError((e) {
-          toast("Payment Failed");
-          log("presentPaymentSheet ${e.toString()}");
-        });
-      },
-    ).catchError((e) {
-      log("SetupPaymentSheetParameters ${e.toString()}");
-    });
-  }
-
-  void cod() {
-    paymentCount();
-    onOrderNowClick();
-  }
-
-  void _wallet() {
-    log("Total Balance" + mTotalBalance.toString());
-    log("Product Price" + widget.mPrice.toString());
-    log("Product Price" + mAmount.toString());
-
-    if (widget.mPrice.toString().toDouble() <= mTotalBalance.toDouble()) {
-      createNativeOrder('wallet', "Wallet", isWallet: true, isPayment: false);
-    } else if (widget.mPrice.toString().toDouble() >= mTotalBalance.toDouble()) {
-      toast("Please select another payment method. Your balance is less compare to total");
-    } else if (mTotalBalance.toDouble() == 0) {
-      toast("Your balance is zero. Please add money and try again otherwise choose different payment method");
-    } else {
-      print("sorry");
-    }
-  }
-
-  void openCheckout() async {
-    paymentCount();
-    var options = {
-      'key': razorKey,
-      'amount': mAmount * 100,
-      'name': 'Twomenu Shop',
-      'theme.color': '#4358DD',
-      'description': 'Woocommerce Store',
-      'image': 'https://razorpay.com/assets/razorpay-glyph.svg',
-      'prefill': {'contact': billing!.phone, 'email': billing!.email},
-      'external': {
-        'wallets': ['paytm']
-      }
-    };
-
-    try {
-      _razorPay.open(options);
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-  }
-
-  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
-    log("Success:+$response");
-    Fluttertoast.showToast(msg: "SUCCESS: " + response.paymentId!);
-    if (!await isGuestUser()) {
-      if (isSelected == true) {
-        createNativeOrder('razorpay', "RazorPay", isPayment: true, isWallet: true);
-        clearCartItems().then((response) {
-          if (!mounted) return;
-          appStore.setCount(0);
-          DashBoardScreen().launch(context, isNewTask: true);
-          setState(() {});
-        }).catchError((error) {
-          appStore.setLoading(false);
-          toast(error.toString());
-        });
-      } else {
-        createNativeOrder('razorpay', "RazorPay", isPayment: true);
-        clearCartItems().then((response) {
-          if (!mounted) return;
-          appStore.setCount(0);
-          DashBoardScreen().launch(context, isNewTask: true);
-          setState(() {});
-        }).catchError((error) {
-          appStore.setLoading(false);
-          toast(error.toString());
-        });
-      }
-    } else {
-      appStore.setCount(0);
-      removeKey(CART_DATA);
-      DashBoardScreen().launch(context, isNewTask: true);
-    }
-  }
-
-  void _handlePaymentError(PaymentFailureResponse response) {
-    Fluttertoast.showToast(msg: "ERROR: " + response.code.toString() + " - " + response.message!);
-  }
-
-  void _handleExternalWallet(ExternalWalletResponse response) {
-    Fluttertoast.showToast(msg: "EXTERNAL_WALLET: " + response.walletName!);
-  }
-
-  //PayStack Payment
-  void payStackCheckOut(BuildContext context) async {
-    paymentCount();
-    formKey.currentState?.save();
-    Charge charge = Charge()
-      ..amount = (mAmount.toInt() * 100) // In base currency
-      ..email = billing!.email
-      ..currency = mCurrency
-      ..card = PaymentCard(number: cardNumber, cvc: cvv, expiryMonth: expiryMonth, expiryYear: expiryYear);
-
-    charge.reference = _getReference();
-
-    try {
-      CheckoutResponse response = await plugin.checkout(context, method: method, charge: charge, fullscreen: false, logo: MyLogo());
-      payStackUpdateStatus(response.reference, response.message);
-      if (response.message == SUCCESS) {
-        if (isSelected == true)
-          createNativeOrder('paystack', 'Paystack', isPayment: true, isWallet: true);
-        else
-          createNativeOrder('paystack', 'Paystack', isPayment: true);
-      } else {
-        toast("Payment Failed");
-      }
-    } catch (e) {
-      payStackShowMessage("Check console for error");
-      rethrow;
-    }
-  }
-
-  String _getReference() {
-    String platform;
-    if (Platform.isIOS) {
-      platform = 'iOS';
-    } else {
-      platform = 'Android';
-    }
-
-    return 'ChargedFrom${platform}_${DateTime.now().millisecondsSinceEpoch}';
-  }
-
-  void payStackUpdateStatus(String? reference, String message) {
-    payStackShowMessage(message, const Duration(seconds: 7));
-  }
-
-  void payStackShowMessage(String message, [Duration duration = const Duration(seconds: 4)]) {
-    toast(message);
-    log(message);
-  }
-
-  void flutterWaveCheckout() async {
-    final customer = Customer(
-      name: billing!.firstName.toString() + " " + billing!.lastName.toString(),
-      phoneNumber: billing!.phone.toString(),
-      email: billing!.email.toString(),
-    );
-
-    final Flutterwave flutterwave = Flutterwave(
-      publicKey: flutterWavePublicKey.validate(),
-      currency: mCurrency,
-      redirectUrl: "https://www.google.com",
-      txRef: DateTime.now().millisecond.toString(),
-      amount: mAmount.toString(),
-      customer: customer,
-      paymentOptions: "card, payattitude",
-      customization: Customization(title: "Test Payment"),
-      isTestMode: true,
-    );
-    final ChargeResponse response = await flutterwave.charge(context);
-    if (response.status == 'successful') {
-      if (isSelected == true)
-        createNativeOrder('flutterwave', 'FlutterWave', isPayment: true, isWallet: true);
-      else
-        createNativeOrder('flutterwave', 'FlutterWave', isPayment: true);
-
-      toast("Payment Successfully");
-      print("${response.toJson()}");
-    } else {
-      FlutterwaveViewUtils.showToast(context, 'Transaction Failed');
-    }
   }
 }

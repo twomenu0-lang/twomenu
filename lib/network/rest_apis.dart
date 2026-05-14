@@ -15,8 +15,9 @@ Future createCustomer(request) async {
   return handleResponse(await MightyAPI().postAsync('store/api/v1/auth/registration', request));
 }
 
+// ✅ تم التعديل: استخدام MightyStore API بدلاً من JWT
 Future login(request) async {
-  return handleResponse(await MightyAPI().postAsync('jwt-auth/v1/token', request));
+  return handleResponse(await MightyAPI().postAsync('store/api/v1/auth/login', request));
 }
 
 Future getProductDetail(int? productId) async {
@@ -229,10 +230,8 @@ Future<bool> updateProfile({File? file, String? toastMessage, bool showToast = t
 
   if (response.statusCode.isSuccessful()) {
     Map<String, dynamic> res = jsonDecode(response.body);
-
     await setValue(PROFILE_IMAGE, res['store_profile_image']);
     if (showToast) toast(toastMessage ?? res['message']);
-
     return true;
   } else {
     toast(errorSomethingWentWrong);
@@ -260,16 +259,13 @@ Future getBalance() async {
 }
 
 Future getWalletConfiguration() async {
-  // WalletConfigurationResponse value = await handleResponse(await MightyAPI().getAsync('store/api/v1/wallet/get-wallet-configuration',requireToken: true));
-  // print("valueee"+value.productTitle!);
-  return handleResponse(await MightyAPI().getAsync('store/api/v1/wallet/get-wallet-configuration',requireToken: true));
-// return value;
+  return handleResponse(await MightyAPI().getAsync('store/api/v1/wallet/get-wallet-configuration', requireToken: true));
 }
 
 Future addWallet(request) async {
   return handleResponse(await MightyAPI().postAsync('store/api/v1/wallet/add-to-wallet', request, requireToken: true));
 }
 
-Future deleteAccountApi() async{
-  return handleResponse(await MightyAPI().postAsync('store/api/v1/customer/delete-account',{}, requireToken: true));
+Future deleteAccountApi() async {
+  return handleResponse(await MightyAPI().postAsync('store/api/v1/customer/delete-account', {}, requireToken: true));
 }

@@ -12,7 +12,7 @@ class ExampleModel {
 }
 
 List<ExampleModel> mExampleList = [
-  ExampleModel("Default", "https://meetmighty.com/mobile/mightystore/wp-json/", "ck_035956c26811892f2504f67224e5d3af9a4840c4", "cs_e14522a17c14e8c6ed74426ffe03505bb9628ede", "#4358DD", ic_dashBoard_variant_1),
+  ExampleModel("Default", "https://meetmighty.com/mobile/Twomenu/wp-json/", "ck_035956c26811892f2504f67224e5d3af9a4840c4", "cs_e14522a17c14e8c6ed74426ffe03505bb9628ede", "#4358DD", ic_dashBoard_variant_1),
   ExampleModel("Grocery Store", "https://meetmighty.com/mobile/mightygrocery/wp-json/", "ck_8539e9b3c3d0d9421bd7f78d2fc3e81308c6280f", "cs_5af6894375a069ea109624ebfa70704c32061d79", "#5F9F0D", ic_dashBoard_variant_2),
   ExampleModel("Health Nutrition", "https://meetmighty.com/mobile/health-nutrition/wp-json/", "ck_a37e1e0bce7c4c396f9de2c49694c8e45d9a0735", "cs_bd607cb0c2936c8611d33153be31c234899e6f55", "#D50D56", ic_dashBoard_variant_3),
   ExampleModel("Watch Store", "https://meetmighty.com/mobile/smartwatch/wp-json/", "ck_976c28e62b5a3263c3d47cfd3adc4e2ce7bee5ae", "cs_b1b46ecc9dd856e61854f0f2981e93d0b6c9f903", "#ab978e", ic_dashBoard_variant_7),

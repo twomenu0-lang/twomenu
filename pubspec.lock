@@ -534,11 +534,10 @@ packages:
   flutter_paystack:
     dependency: "direct main"
     description:
-      path: "."
-      ref: master
-      resolved-ref: eaa6a87c1c984010c99cd464ef119a0266078cb9
-      url: "https://github.com/I-driod/flutter_paystack.git"
-    source: git
+      name: flutter_paystack
+      sha256: b2038c8f0cfa5a3bdb7b0e2016ceaedbc57e4445180ce6aea56cb0d83a016973
+      url: "https://pub.dev"
+    source: hosted
     version: "1.0.7"
   flutter_plugin_android_lifecycle:
     dependency: transitive
@@ -646,14 +645,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.3+1"
-  google_mobile_ads:
-    dependency: "direct main"
-    description:
-      name: google_mobile_ads
-      sha256: a4f59019f2c32769fb6c60ed8aa321e9c21a36297e2c4f23452b3e779a3e7a26
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.0.0"
   google_sign_in:
     dependency: "direct main"
     description:

@@ -7,12 +7,25 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:161430194427:android:c2c6b2e43f7d8800a9c85e",
+        "mobilesdk_app_id": "1:161430194427:android:f066a5e0103da32aa9c85e",
         "android_client_info": {
-          "package_name": "com.twomenu.shop"
+          "package_name": "shop.towmenu.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "161430194427-6v4qi0do8g7bu30getjsunq2vukdvj7r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "shop.towmenu.app",
+            "certificate_hash": "038a2d067f63fada1c8089dae1ebf8bc78a9d6d5"
+          }
+        },
+        {
+          "client_id": "161430194427-jm3oin9irkrpufgu7vv1o4oja7vo5dn8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBnJVuXp32nfkeqEg7VRc3-wnk3kK-iQkM"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "161430194427-jm3oin9irkrpufgu7vv1o4oja7vo5dn8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

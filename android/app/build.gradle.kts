@@ -1,3 +1,11 @@
+import java.util.Properties
+
+val keyProperties = Properties()
+val keyPropertiesFile = rootProject.file("key.properties")
+if (keyPropertiesFile.exists()) {
+    keyPropertiesFile.inputStream().use { keyProperties.load(it) }
+}
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -7,7 +15,7 @@ plugins {
 }
 
 android {
-    namespace = "com.twomenu.shop"
+    namespace = "shop.towmenu.app"
     compileSdk = 36
     ndkVersion = "28.2.13676358"
 
@@ -16,12 +24,23 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
-    kotlinOptions {
-        jvmTarget = "21"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+        }
+    }
+
+    signingConfigs {
+        create("release") {
+            keyAlias = keyProperties.getProperty("keyAlias") ?: ""
+            keyPassword = keyProperties.getProperty("keyPassword") ?: ""
+            storeFile = keyProperties.getProperty("storeFile")?.let { file(it) }
+            storePassword = keyProperties.getProperty("storePassword") ?: ""
+        }
     }
 
     defaultConfig {
-        applicationId = "com.twomenu.shop"
+        applicationId = "shop.towmenu.app"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode
@@ -31,7 +50,13 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }

@@ -25,7 +25,11 @@ class SplashScreenState extends State<SplashScreen> {
   }
 
   init() async {
-    setStatusBarColor(isHalloween ? mChristmasColor : primaryColor!, statusBarIconBrightness: Brightness.light, statusBarBrightness: Brightness.dark);
+    setStatusBarColor(
+      isHalloween ? mChristmasColor : primaryColor!,
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
+    );
     await Future.delayed(Duration(seconds: 2));
 
     String productId = await getProductIdFromNative();
@@ -53,12 +57,16 @@ class SplashScreenState extends State<SplashScreen> {
     var width = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.white,
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(splash, width: width * 0.65, height: 200, fit: BoxFit.cover),
-          Text(AppName, style: boldTextStyle(color: Theme.of(context).textTheme.titleSmall!.color, size: 26)),
+          Image.asset(
+            app_logo,
+            width: width * 0.70,
+            height: 220,
+            fit: BoxFit.contain,
+          ),
         ],
       ).center(),
     );

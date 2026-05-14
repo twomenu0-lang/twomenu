@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:mightystore/main.dart';
+import 'package:Twomenu/main.dart';
 
 import '/../models/WishListResponse.dart';
 import '/../network/rest_apis.dart';

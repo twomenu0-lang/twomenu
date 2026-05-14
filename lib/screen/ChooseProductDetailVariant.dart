@@ -108,7 +108,7 @@ class ChooseProductDetailVariantState extends State<ChooseProductDetailVariant> 
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset('images/mightystore/productDetail_$code.jpg', fit: BoxFit.cover, alignment: Alignment.topCenter).cornerRadiusWithClipRRect(8),
+          Image.asset('images/Twomenu/productDetail_$code.jpg', fit: BoxFit.cover, alignment: Alignment.topCenter).cornerRadiusWithClipRRect(8),
           AnimatedContainer(duration: Duration(milliseconds: 800), color: getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1) == code ? transparentColor : Colors.black45)
               .cornerRadiusWithClipRRect(8),
           AnimatedContainer(

@@ -39,7 +39,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   TextEditingController txtBillingCompanyName = TextEditingController();
   TextEditingController txtBillingAddress1 = TextEditingController();
   TextEditingController txtBillingAddress2 = TextEditingController();
-  TextEditingController txtBillingCity = TextEditingController();
+  TextEditingController txtBillingCity = TextEditingController(text: 'طامية');
   TextEditingController txtBillingPinCode = TextEditingController();
   TextEditingController txtBillingMobile = TextEditingController();
   TextEditingController txtBillingEmail = TextEditingController();
@@ -49,8 +49,12 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   TextEditingController txtShippingCompanyName = TextEditingController();
   TextEditingController txtShippingAddress1 = TextEditingController();
   TextEditingController txtShippingAddress2 = TextEditingController();
-  TextEditingController txtShippingCity = TextEditingController();
+  TextEditingController txtShippingCity = TextEditingController(text: 'طامية');
   TextEditingController txtShippingPinCode = TextEditingController();
+
+  static const String DEFAULT_COUNTRY_CODE = 'EG';
+  static const String DEFAULT_STATE_NAME = 'الفيوم';
+  static const String DEFAULT_CITY = 'طامية';
 
   bool isCheckBoxSelected = false;
 
@@ -84,12 +88,86 @@ class EditProfileScreenState extends State<EditProfileScreen> {
     }
     Timer(
       Duration(milliseconds: 300),
-      () => _controller.jumpTo(_controller.position.minScrollExtent),
+          () => _controller.jumpTo(_controller.position.minScrollExtent),
     );
+  }
+
+  void _applyDefaultCountryState(List<Country> countries, {String? existingBillingCountry, String? existingBillingState, String? existingShippingCountry, String? existingShippingState}) {
+    setState(() {
+      appStore.setLoading(false);
+      billingCountryList.addAll(countries);
+
+      if (billingCountryList.isNotEmpty) {
+        Country? egyptCountry = billingCountryList.firstWhere(
+              (c) => c.code == DEFAULT_COUNTRY_CODE,
+          orElse: () => billingCountryList[0],
+        );
+
+        if (existingBillingCountry != null && existingBillingCountry.isNotEmpty) {
+          selectedBillingCountry = billingCountryList.firstWhere(
+                (c) => c.code == existingBillingCountry,
+            orElse: () => egyptCountry,
+          );
+        } else {
+          selectedBillingCountry = egyptCountry;
+        }
+
+        if (existingShippingCountry != null && existingShippingCountry.isNotEmpty) {
+          selectedShippingCountry = billingCountryList.firstWhere(
+                (c) => c.code == existingShippingCountry,
+            orElse: () => egyptCountry,
+          );
+        } else {
+          selectedShippingCountry = egyptCountry;
+        }
+
+        billingStateList.clear();
+        billingStateList.addAll(selectedBillingCountry!.states!);
+
+        shippingStateList.clear();
+        shippingStateList.addAll(selectedShippingCountry!.states!);
+
+        if (billingStateList.isNotEmpty) {
+          if (existingBillingState != null && existingBillingState.isNotEmpty) {
+            selectedBillingState = billingStateList.firstWhere(
+                  (s) => s.code == existingBillingState || s.name == existingBillingState,
+              orElse: () => billingStateList.firstWhere(
+                    (s) => s.name != null && s.name.toString().contains(DEFAULT_STATE_NAME),
+                orElse: () => billingStateList[0],
+              ),
+            );
+          } else {
+            selectedBillingState = billingStateList.firstWhere(
+                  (s) => s.name != null && s.name.toString().contains(DEFAULT_STATE_NAME),
+              orElse: () => billingStateList[0],
+            );
+          }
+        }
+
+        if (shippingStateList.isNotEmpty) {
+          if (existingShippingState != null && existingShippingState.isNotEmpty) {
+            selectedShippingState = shippingStateList.firstWhere(
+                  (s) => s.code == existingShippingState || s.name == existingShippingState,
+              orElse: () => shippingStateList.firstWhere(
+                    (s) => s.name != null && s.name.toString().contains(DEFAULT_STATE_NAME),
+                orElse: () => shippingStateList[0],
+              ),
+            );
+          } else {
+            selectedShippingState = shippingStateList.firstWhere(
+                  (s) => s.name != null && s.name.toString().contains(DEFAULT_STATE_NAME),
+              orElse: () => shippingStateList[0],
+            );
+          }
+        }
+      }
+    });
   }
 
   Future<void> getCustomerInfo() async {
     appStore.setLoading(true);
+
+    String? existingBillingCountry, existingBillingState, existingShippingCountry, existingShippingState;
 
     if (getStringAsync(GUEST_USER_DATA).isNotEmpty) {
       CustomerData mUserData = CustomerData.fromJson(jsonDecode(getStringAsync(GUEST_USER_DATA)));
@@ -100,7 +178,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       txtBillingLastName.text = mUserData.billing!.lastName!;
       txtBillingAddress1.text = mUserData.billing!.address1!;
       txtBillingAddress2.text = mUserData.billing!.address2!;
-      txtBillingCity.text = mUserData.billing!.city!;
+      txtBillingCity.text = mUserData.billing!.city!.isNotEmpty ? mUserData.billing!.city! : DEFAULT_CITY;
       txtBillingPinCode.text = mUserData.billing!.postcode!;
       txtBillingMobile.text = mUserData.billing!.phone!;
       txtBillingEmail.text = mUserData.billing!.email!;
@@ -108,85 +186,46 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       txtShippingLastName.text = mUserData.shipping!.lastName!;
       txtShippingAddress1.text = mUserData.shipping!.address1!;
       txtShippingAddress2.text = mUserData.shipping!.address2!;
-      txtShippingCity.text = mUserData.shipping!.city!;
+      txtShippingCity.text = mUserData.shipping!.city!.isNotEmpty ? mUserData.shipping!.city! : DEFAULT_CITY;
       txtShippingPinCode.text = mUserData.shipping!.postcode!;
       isCheckBoxSelected = false;
+
+      existingBillingCountry = mUserData.billing!.country;
+      existingBillingState = mUserData.billing!.state;
+      existingShippingCountry = mUserData.shipping!.country;
+      existingShippingState = mUserData.shipping!.state;
+
       await setValue(FIRST_NAME, mUserData.shipping!.firstName);
       await setValue(LAST_NAME, mUserData.shipping!.lastName);
     }
 
     await getCountries().then((value) async {
       await setValue(COUNTRIES, jsonEncode(value));
-      setCountryStatePrefData(value);
+      Iterable list = value;
+      var countries = list.map((model) => Country.fromJson(model)).toList();
+      _applyDefaultCountryState(
+        countries,
+        existingBillingCountry: existingBillingCountry,
+        existingBillingState: existingBillingState,
+        existingShippingCountry: existingShippingCountry,
+        existingShippingState: existingShippingState,
+      );
     }).catchError((error) {
       appStore.setLoading(false);
       toast(error);
     });
+
     setState(() {});
-  }
-
-  setCountryStatePrefData(List<dynamic> value) {
-    var txtBillingCountry, txtBillingState, txtShippingCountry, txtShippingState;
-    if (getStringAsync(GUEST_USER_DATA).isNotEmpty) {
-      CustomerData mUserData = CustomerData.fromJson(jsonDecode(getStringAsync(GUEST_USER_DATA)));
-      txtBillingCountry = mUserData.billing!.country;
-      txtBillingState = mUserData.billing!.state;
-      txtShippingCountry = mUserData.shipping!.country;
-      txtShippingState = mUserData.shipping!.state;
-    }
-
-    Iterable list = value;
-    var countries = list.map((model) => Country.fromJson(model)).toList();
-    setState(() {
-      appStore.setLoading(false);
-      billingCountryList.addAll(countries);
-      if (billingCountryList.isNotEmpty) {
-        selectedBillingCountry = billingCountryList[0];
-        selectedShippingCountry = billingCountryList[0];
-        if (txtBillingCountry != null || txtShippingCountry != null) {
-          billingCountryList.forEach((element) {
-            if (txtBillingCountry != null && txtBillingCountry.toString().isNotEmpty && element.code == txtBillingCountry) {
-              selectedBillingCountry = element;
-            }
-            if (txtShippingCountry != null && txtShippingCountry.toString().isNotEmpty && element.code == txtShippingCountry) {
-              selectedShippingCountry = element;
-            }
-          });
-        }
-        billingStateList.clear();
-        shippingStateList.clear();
-        billingStateList.addAll(selectedBillingCountry!.states!);
-        shippingStateList.addAll(selectedShippingCountry!.states!);
-        selectedBillingState = billingStateList.isNotEmpty ? billingStateList[0] : null;
-        selectedShippingState = shippingStateList.isNotEmpty ? shippingStateList[0] : null;
-
-        if (txtBillingState != null) {
-          billingStateList.forEach((element) {
-            if (txtBillingState != null && txtBillingState.toString().isNotEmpty && element.name == txtBillingState) {
-              selectedBillingState = element;
-            }
-          });
-        }
-
-        if (txtShippingState != null) {
-          shippingStateList.forEach((element) {
-            if (txtShippingState != null && txtShippingState.toString().isNotEmpty && element.name == txtShippingState) {
-              selectedShippingState = element;
-            }
-          });
-        }
-      }
-    });
   }
 
   Future getCustomerData() async {
     id = getIntAsync(USER_ID);
-
     appStore.setLoading(true);
 
     await getCustomer(id).then((res) async {
       appStore.setLoading(false);
       if (!mounted) return;
+
       txtFirstName.text = res['first_name'];
       txtLastName.text = res['last_name'];
       txtEmail.text = res['email'];
@@ -195,86 +234,43 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       txtBillingCompanyName.text = res['billing']['company'];
       txtBillingAddress1.text = res['billing']['address_1'];
       txtBillingAddress2.text = res['billing']['address_2'];
-      txtBillingCity.text = res['billing']['city'];
+      txtBillingCity.text = (res['billing']['city'] as String).isNotEmpty ? res['billing']['city'] : DEFAULT_CITY;
       txtBillingPinCode.text = res['billing']['postcode'];
-
       txtBillingMobile.text = res['billing']['phone'];
       txtBillingEmail.text = res['billing']['email'];
-
       txtShippingFirstName.text = res['shipping']['first_name'];
       txtShippingLastName.text = res['shipping']['last_name'];
       txtShippingCompanyName.text = res['shipping']['company'];
       txtShippingAddress1.text = res['shipping']['address_1'];
       txtShippingAddress2.text = res['shipping']['address_2'];
-      txtShippingCity.text = res['shipping']['city'];
+      txtShippingCity.text = (res['shipping']['city'] as String).isNotEmpty ? res['shipping']['city'] : DEFAULT_CITY;
       txtShippingPinCode.text = res['shipping']['postcode'];
-
       isCheckBoxSelected = false;
+
       await setValue(FIRST_NAME, res['first_name']);
       await setValue(LAST_NAME, res['last_name']);
 
       await getCountries().then((value) async {
         await setValue(COUNTRIES, jsonEncode(value));
-        setCountryStateData(value, res);
+        Iterable list = value;
+        var countries = list.map((model) => Country.fromJson(model)).toList();
+        _applyDefaultCountryState(
+          countries,
+          existingBillingCountry: res['billing']['country'],
+          existingBillingState: res['billing']['state'],
+          existingShippingCountry: res['shipping']['country'],
+          existingShippingState: res['shipping']['state'],
+        );
       }).catchError((error) {
         appStore.setLoading(false);
         toast(error);
       });
+
       setState(() {});
     }).catchError((error) {
       if (!mounted) return;
       appStore.setLoading(false);
       log("Error1: " + error.toString());
-    });
-  }
-
-  setCountryStateData(List<dynamic> value, res) {
-    var txtBillingCountry = res['billing']['country'];
-    var txtBillingState = res['billing']['state'];
-    var txtShippingCountry = res['shipping']['country'];
-    var txtShippingState = res['shipping']['state'];
-
-    Iterable list = value;
-    var countries = list.map((model) => Country.fromJson(model)).toList();
-    setState(() {
-      appStore.setLoading(false);
-      billingCountryList.addAll(countries);
-      if (billingCountryList.isNotEmpty) {
-        selectedBillingCountry = billingCountryList[0];
-        selectedShippingCountry = billingCountryList[0];
-        if (txtBillingCountry != null || txtShippingCountry != null) {
-          billingCountryList.forEach((element) {
-            if (txtBillingCountry != null && txtBillingCountry.toString().isNotEmpty && element.code == txtBillingCountry) {
-              selectedBillingCountry = element;
-            }
-            if (txtShippingCountry != null && txtShippingCountry.toString().isNotEmpty && element.code == txtShippingCountry) {
-              selectedShippingCountry = element;
-            }
-          });
-        }
-        billingStateList.clear();
-        shippingStateList.clear();
-        billingStateList.addAll(selectedBillingCountry!.states!);
-        shippingStateList.addAll(selectedShippingCountry!.states!);
-        selectedBillingState = billingStateList.isNotEmpty ? billingStateList[0] : null;
-        selectedShippingState = shippingStateList.isNotEmpty ? shippingStateList[0] : null;
-
-        if (txtBillingState != null) {
-          billingStateList.forEach((element) {
-            if (txtBillingState != null && txtBillingState.toString().isNotEmpty && element.code == txtBillingState) {
-              selectedBillingState = element;
-            }
-          });
-        }
-
-        if (txtShippingState != null) {
-          shippingStateList.forEach((element) {
-            if (txtShippingState != null && txtShippingState.toString().isNotEmpty && element.code == txtShippingState) {
-              selectedShippingState = element;
-            }
-          });
-        }
-      }
     });
   }
 
@@ -301,7 +297,6 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       txtShippingPinCode.text = '';
     }
     log(txtShippingFirstName.text);
-
     setState(() {});
   }
 
@@ -314,6 +309,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     var appLocalization = AppLocalizations.of(context)!;
+
     saveUser() async {
       if (formKey.currentState!.validate()) {
         formKey.currentState!.save();
@@ -371,14 +367,9 @@ class EditProfileScreenState extends State<EditProfileScreen> {
           await updateCustomer(id, request).then((res) async {
             if (!mounted) return;
             appStore.setLoading(false);
-
             await setValue(FIRST_NAME, txtFirstName.text);
             await setValue(LAST_NAME, txtLastName.text);
             await setValue(USER_EMAIL, txtEmail.text);
-            log("FIRST_NAME:" + FIRST_NAME);
-            log("LAST_NAME:" + LAST_NAME);
-            log("USER_EMAIL:" + USER_EMAIL);
-
             await setValue(BILLING, jsonEncode(mBilling));
             await setValue(SHIPPING, jsonEncode(mShipping));
             toast(appLocalization.translate("toast_txt_profile_saved"), print: true);
@@ -425,19 +416,13 @@ class EditProfileScreenState extends State<EditProfileScreen> {
 
     imgFromCamera() async {
       File image = File((await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 100))!.path);
-
-      setState(() {
-        imageFile = image;
-      });
+      setState(() { imageFile = image; });
       uploadImg();
     }
 
     imgFromGallery() async {
       File image = File((await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 50))!.path);
-
-      setState(() {
-        imageFile = image;
-      });
+      setState(() { imageFile = image; });
       uploadImg();
     }
 
@@ -452,17 +437,11 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                   ListTile(
                       leading: Icon(Icons.photo_library, color: Theme.of(context).iconTheme.color),
                       title: Text(appLocalization.translate('lbl_photo_library')!),
-                      onTap: () {
-                        imgFromGallery();
-                        finish(context);
-                      }),
+                      onTap: () { imgFromGallery(); finish(context); }),
                   ListTile(
                     leading: Icon(Icons.photo_camera, color: Theme.of(context).iconTheme.color),
                     title: Text(appLocalization.translate('lbl_camera')!),
-                    onTap: () {
-                      imgFromCamera();
-                      finish(context);
-                    },
+                    onTap: () { imgFromCamera(); finish(context); },
                   ),
                 ],
               ),
@@ -474,8 +453,8 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       borderRadius: radius(100),
       child: imageFile == null
           ? avatar.isEmpty
-              ? Image.asset(User_Profile, width: 100, height: 100, fit: BoxFit.cover)
-              : commonCacheImageWidget(avatar, width: 100, height: 100, fit: BoxFit.cover)
+          ? Image.asset(User_Profile, width: 100, height: 100, fit: BoxFit.cover)
+          : commonCacheImageWidget(avatar, width: 100, height: 100, fit: BoxFit.cover)
           : Image.file(imageFile!, width: 100, height: 100, fit: BoxFit.cover),
     );
 
@@ -502,12 +481,12 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                         Container(
                           height: 35,
                           decoration: BoxDecoration(
-                              shape: BoxShape.circle, border: Border.all(color: Theme.of(context).textTheme.titleMedium!.color!, width: 1), color: Theme.of(context).scaffoldBackgroundColor),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Theme.of(context).textTheme.titleMedium!.color!, width: 1),
+                              color: Theme.of(context).scaffoldBackgroundColor),
                           child: IconButton(
                             icon: Icon(Icons.camera_alt, size: 20, color: Theme.of(context).textTheme.titleMedium!.color),
-                            onPressed: (() {
-                              showPicker(context);
-                            }),
+                            onPressed: (() { showPicker(context); }),
                           ),
                         ).visible(!getBoolAsync(IS_SOCIAL_LOGIN))
                       ],
@@ -515,6 +494,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                     8.height,
                     Text(appLocalization.translate("lbl_add_personal_detail")!, style: boldTextStyle(size: 18)),
                     16.height,
+                    // ✅ Personal Info - بدون isAlpha
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -524,6 +504,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                             hintText: appLocalization.translate('hint_first_name'),
                             validator: (String? v) {
                               if (v!.trim().isEmpty) return appLocalization.translate('hint_first_name')! + (' ') + appLocalization.translate('error_field_required')!;
+                              return null;
                             },
                           ),
                         ),
@@ -534,6 +515,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                             hintText: appLocalization.translate('hint_last_name'),
                             validator: (String? v) {
                               if (v!.trim().isEmpty) return appLocalization.translate('hint_last_name')! + (' ') + appLocalization.translate('error_field_required')!;
+                              return null;
                             },
                           ),
                         )
@@ -545,11 +527,13 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                       validator: (String? v) {
                         if (v!.trim().isEmpty) return appLocalization.translate('lbl_email')! + (' ') + appLocalization.translate('error_field_required')!;
                         if (!v.trim().validateEmail()) return appLocalization.translate('error_wrong_email');
+                        return null;
                       },
                     ),
                     Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color),
                     Text(appLocalization.translate("lbl_add_billing_address")!, style: boldTextStyle(size: 18)),
                     16.height,
+                    // ✅ Billing Names - بدون isAlpha
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -559,7 +543,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                             hintText: appLocalization.translate('hint_first_name'),
                             validator: (String? v) {
                               if (v!.trim().isEmpty) return appLocalization.translate('hint_first_name')! + (' ') + appLocalization.translate('error_field_required')!;
-                              if (!v.trim().isAlpha()) return appLocalization.translate('error_only_alphabet');
+                              return null;
                             },
                           ),
                         ),
@@ -570,7 +554,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                             hintText: appLocalization.translate('hint_last_name'),
                             validator: (String? v) {
                               if (v!.trim().isEmpty) return appLocalization.translate('hint_last_name')! + (' ') + appLocalization.translate('error_field_required')!;
-                              if (!v.trim().isAlpha()) return appLocalization.translate('error_only_alphabet');
+                              return null;
                             },
                           ),
                         ),
@@ -581,6 +565,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                       hintText: appLocalization.translate('hint_add1'),
                       validator: (String? v) {
                         if (v!.trim().isEmpty) return appLocalization.translate('hint_add1')! + (' ') + appLocalization.translate('error_field_required')!;
+                        return null;
                       },
                     ),
                     SimpleEditText(
@@ -588,34 +573,19 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                       hintText: appLocalization.translate('hint_add2'),
                       validator: (String? v) {
                         if (v!.trim().isEmpty) return appLocalization.translate('hint_add2')! + (' ') + appLocalization.translate('error_field_required')!;
+                        return null;
                       },
                     ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: SimpleEditText(
-                            mController: txtBillingCity,
-                            hintText: appLocalization.translate('hint_city'),
-                            validator: (String? v) {
-                              if (v!.trim().isEmpty) return appLocalization.translate('hint_city')! + (' ') + appLocalization.translate('error_field_required')!;
-                            },
-                          ),
-                        ),
-                        16.width,
-                        Expanded(
-                          child: SimpleEditText(
-                            mController: txtBillingPinCode,
-                            keyboardType: TextInputType.number,
-                            hintText: appLocalization.translate('hint_pin_code'),
-                            validator: (String? v) {
-                              if (v!.trim().isEmpty) return appLocalization.translate('hint_pin_code')! + (' ') + appLocalization.translate('error_field_required')!;
-                              if (!v.trim().isDigit()) return appLocalization.translate('error_only_alphabet');
-                            },
-                          ),
-                        )
-                      ],
+                    // ✅ City فقط - بدون Pincode
+                    SimpleEditText(
+                      mController: txtBillingCity,
+                      hintText: appLocalization.translate('hint_city'),
+                      validator: (String? v) {
+                        if (v!.trim().isEmpty) return appLocalization.translate('hint_city')! + (' ') + appLocalization.translate('error_field_required')!;
+                        return null;
+                      },
                     ),
+                    // ✅ Country & State Dropdowns
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -659,31 +629,29 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                           decoration: boxDecorationWithRoundedCorners(border: Border.all(width: 0.2), backgroundColor: context.cardColor),
                           child: selectedBillingState != null
                               ? DropdownButton(
-                                  dropdownColor: context.cardColor,
-                                  value: selectedBillingState,
-                                  isExpanded: true,
-                                  underline: SizedBox(),
-                                  onChanged: (dynamic value) {
-                                    setState(() {
-                                      selectedBillingState = value;
-                                      if (isCheckBoxSelected) {
-                                        selectedShippingState = selectedBillingState;
-                                      }
-                                    });
-                                  },
-                                  items: billingStateList.map((value) {
-                                    return DropdownMenuItem(
-                                      value: value,
-                                      child: FittedBox(
-                                        fit: BoxFit.fitWidth,
-                                        child: Text(
-                                          value.name != null && value.name.toString().isNotEmpty ? value.name : "NA",
-                                          style: primaryTextStyle(color: Theme.of(context).textTheme.titleMedium!.color),
-                                        ).paddingOnly(left: 16, right: 16, top: 8, bottom: 8),
-                                      ),
-                                    );
-                                  }).toList(),
-                                )
+                            dropdownColor: context.cardColor,
+                            value: selectedBillingState,
+                            isExpanded: true,
+                            underline: SizedBox(),
+                            onChanged: (dynamic value) {
+                              setState(() {
+                                selectedBillingState = value;
+                                if (isCheckBoxSelected) { selectedShippingState = selectedBillingState; }
+                              });
+                            },
+                            items: billingStateList.map((value) {
+                              return DropdownMenuItem(
+                                value: value,
+                                child: FittedBox(
+                                  fit: BoxFit.fitWidth,
+                                  child: Text(
+                                    value.name != null && value.name.toString().isNotEmpty ? value.name : "NA",
+                                    style: primaryTextStyle(color: Theme.of(context).textTheme.titleMedium!.color),
+                                  ).paddingOnly(left: 16, right: 16, top: 8, bottom: 8),
+                                ),
+                              );
+                            }).toList(),
+                          )
                               : Text("NA", style: primaryTextStyle(color: Theme.of(context).textTheme.titleMedium!.color)).paddingOnly(top: 12, bottom: 12).center(),
                         ).expand()
                       ],
@@ -695,6 +663,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                       hintText: appLocalization.translate('hint_mobile_no'),
                       validator: (String? v) {
                         if (v!.trim().isEmpty) return appLocalization.translate('hint_mobile_no')! + (' ') + appLocalization.translate('error_field_required')!;
+                        return null;
                       },
                     ),
                     SimpleEditText(
@@ -703,6 +672,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                       validator: (String? v) {
                         if (v!.trim().isEmpty) return appLocalization.translate('lbl_email')! + (' ') + appLocalization.translate('error_field_required')!;
                         if (!v.trim().validateEmail()) return appLocalization.translate('error_wrong_email');
+                        return null;
                       },
                     ),
                     Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color),
@@ -713,7 +683,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                         Row(
                           children: [
                             Text(appLocalization.translate('lbl_same')!, style: secondaryTextStyle(color: Theme.of(context).textTheme.titleSmall!.color, size: 16)),
-                            Icon(isCheckBoxSelected == true ? Icons.check_box : Icons.check_box_outline_blank, color: /*isCheckBoxSelected == true ? context.cardColor :*/ greyColor, size: 30).onTap(() {
+                            Icon(isCheckBoxSelected == true ? Icons.check_box : Icons.check_box_outline_blank, color: greyColor, size: 30).onTap(() {
                               isCheckBoxSelected = !isCheckBoxSelected;
                               fillShipping();
                               setState(() {});
@@ -723,6 +693,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                       ],
                     ),
                     16.height,
+                    // ✅ Shipping Names - بدون isAlpha
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -732,7 +703,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                             hintText: appLocalization.translate('hint_first_name'),
                             validator: (String? v) {
                               if (v!.trim().isEmpty) return appLocalization.translate('hint_first_name')! + (' ') + appLocalization.translate('error_field_required')!;
-                              if (!v.trim().isAlpha()) return appLocalization.translate('error_only_alphabet');
+                              return null;
                             },
                           ),
                         ),
@@ -743,7 +714,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                             hintText: appLocalization.translate('hint_last_name'),
                             validator: (String? v) {
                               if (v!.trim().isEmpty) return appLocalization.translate('hint_last_name')! + (' ') + appLocalization.translate('error_field_required')!;
-                              if (!v.trim().isAlpha()) return appLocalization.translate('error_only_alphabet');
+                              return null;
                             },
                           ),
                         )
@@ -754,6 +725,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                       hintText: appLocalization.translate('hint_add1'),
                       validator: (String? v) {
                         if (v!.trim().isEmpty) return appLocalization.translate('hint_add1')! + (' ') + appLocalization.translate('error_field_required')!;
+                        return null;
                       },
                     ),
                     SimpleEditText(
@@ -761,33 +733,19 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                       hintText: appLocalization.translate('hint_add2'),
                       validator: (String? v) {
                         if (v!.trim().isEmpty) return appLocalization.translate('hint_add2')! + (' ') + appLocalization.translate('error_field_required')!;
+                        return null;
                       },
                     ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: SimpleEditText(
-                            mController: txtShippingCity,
-                            hintText: appLocalization.translate('hint_city'),
-                            validator: (String? v) {
-                              if (v!.trim().isEmpty) return appLocalization.translate('hint_city')! + (' ') + appLocalization.translate('error_field_required')!;
-                            },
-                          ),
-                        ),
-                        16.width,
-                        Expanded(
-                          child: SimpleEditText(
-                            mController: txtShippingPinCode,
-                            hintText: appLocalization.translate('hint_pin_code'),
-                            validator: (String? v) {
-                              if (v!.trim().isEmpty) return appLocalization.translate('hint_pin_code')! + (' ') + appLocalization.translate('error_field_required')!;
-                              if (!v.trim().isDigit()) return appLocalization.translate('error_only_alphabet');
-                            },
-                          ),
-                        )
-                      ],
+                    // ✅ Shipping City فقط - بدون Pincode
+                    SimpleEditText(
+                      mController: txtShippingCity,
+                      hintText: appLocalization.translate('hint_city'),
+                      validator: (String? v) {
+                        if (v!.trim().isEmpty) return appLocalization.translate('hint_city')! + (' ') + appLocalization.translate('error_field_required')!;
+                        return null;
+                      },
                     ),
+                    // ✅ Shipping Country & State
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -824,29 +782,28 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                         Container(
                           decoration: boxDecorationWithRoundedCorners(border: Border.all(width: 0.2), backgroundColor: context.cardColor),
                           child: selectedShippingState != null
-                              ? DropdownButton(dropdownColor: context.cardColor,
-                                  value: selectedShippingState,
-                                  isExpanded: true,
-                                  underline: SizedBox(),
-                                  onChanged: (dynamic value) {
-                                    setState(() {
-                                      selectedShippingState = value;
-                                    });
-                                  },
-                                  items: shippingStateList.map((value) {
-                                    return DropdownMenuItem(
-                                      value: value,
-                                      child: FittedBox(
-                                        fit: BoxFit.fitWidth,
-                                        child: Text(
-                                          value.name != null && value.name.toString().isNotEmpty ? value.name : "NA",
-                                          textAlign: TextAlign.center,
-                                          style: primaryTextStyle(),
-                                        ).paddingOnly(left: 16, right: 16, top: 8, bottom: 8),
-                                      ),
-                                    );
-                                  }).toList(),
-                                )
+                              ? DropdownButton(
+                            dropdownColor: context.cardColor,
+                            value: selectedShippingState,
+                            isExpanded: true,
+                            underline: SizedBox(),
+                            onChanged: (dynamic value) {
+                              setState(() { selectedShippingState = value; });
+                            },
+                            items: shippingStateList.map((value) {
+                              return DropdownMenuItem(
+                                value: value,
+                                child: FittedBox(
+                                  fit: BoxFit.fitWidth,
+                                  child: Text(
+                                    value.name != null && value.name.toString().isNotEmpty ? value.name : "NA",
+                                    textAlign: TextAlign.center,
+                                    style: primaryTextStyle(),
+                                  ).paddingOnly(left: 16, right: 16, top: 8, bottom: 8),
+                                ),
+                              );
+                            }).toList(),
+                          )
                               : Text("NA", style: primaryTextStyle(color: Theme.of(context).textTheme.titleMedium!.color)).paddingOnly(top: 12, bottom: 12).center(),
                         ).expand()
                       ],
@@ -866,9 +823,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
           textStyle: primaryTextStyle(color: white),
           text: appLocalization.translate("lbl_save"),
           color: isHalloween ? mChristmasColor : primaryColor,
-          onTap: () {
-            saveUser();
-          },
+          onTap: () { saveUser(); },
         ).paddingAll(16),
       ),
     );

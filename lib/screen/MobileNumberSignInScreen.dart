@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +12,6 @@ import '/../utils/AppWidget.dart';
 import '/../utils/Constants.dart';
 import '/../utils/AppImages.dart';
 import 'package:nb_utils/nb_utils.dart';
-
 import 'DashBoardScreen.dart';
 
 class MobileNumberSignInScreen extends StatefulWidget {
@@ -30,28 +28,54 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   late String _verificationId;
   late String phoneNo;
-  String code = "+91";
+  String code = "+20";
   String? smsOTP;
   String? data;
   var passwordCont = TextEditingController();
 
+  /// تنظيف رقم الهاتف: حذف الصفر الأول وإضافة كود الدولة
+  String cleanPhoneNumber(String input, String dialCode) {
+    String cleaned = input.trim();
+    // حذف الصفر الأول لو موجود
+    if (cleaned.startsWith('0')) {
+      cleaned = cleaned.substring(1);
+    }
+    return dialCode + cleaned;
+  }
+
   void verifyPhoneNumber() async {
-    PhoneVerificationCompleted verificationCompleted = (AuthCredential phoneAuthCredential) async {};
+    appStore.setLoading(true);
+
+    PhoneVerificationCompleted verificationCompleted = (AuthCredential phoneAuthCredential) async {
+      await _auth.signInWithCredential(phoneAuthCredential).then((result) async {
+        var request = {"username": this.data, "password": this.data};
+        signInApi(request);
+      }).catchError((e) {
+        toast(e.toString());
+        appStore.setLoading(false);
+      });
+    };
+
     PhoneVerificationFailed verificationFailed = (FirebaseAuthException authException) {
+      appStore.setLoading(false);
       if (authException.code == 'invalid-phone-number') {
-        toast('The provided phone number is not valid.');
-        throw 'The provided phone number is not valid.';
+        toast('رقم الهاتف غير صحيح');
       } else {
-        toast(authException.toString());
-        throw authException.toString();
+        toast(authException.message.toString());
       }
     };
+
     PhoneCodeSent codeSent = (String verificationId, [int? forceResendingToken]) async {
-      toast('Please check your phone for the verification code.');
+      appStore.setLoading(false);
+      toast('تم إرسال كود التحقق');
       _verificationId = verificationId;
-      smsOTPDialog(context).then((value) {});
+      smsOTPDialog(context);
     };
-    PhoneCodeAutoRetrievalTimeout codeAutoRetrievalTimeout = (String verificationId) {};
+
+    PhoneCodeAutoRetrievalTimeout codeAutoRetrievalTimeout = (String verificationId) {
+      _verificationId = verificationId;
+    };
+
     try {
       await _auth.verifyPhoneNumber(
           phoneNumber: this.phoneNo,
@@ -60,26 +84,26 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
           codeSent: codeSent,
           codeAutoRetrievalTimeout: codeAutoRetrievalTimeout);
     } catch (e) {
-      toast("Failed to Verify Phone Number: $e");
+      appStore.setLoading(false);
+      toast("خطأ: $e");
     }
   }
 
   void signInWithPhoneNumber() async {
     appStore.setLoading(true);
+    AuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: _verificationId, smsCode: smsOTP.validate());
 
-    AuthCredential credential = PhoneAuthProvider.credential(verificationId: _verificationId, smsCode: smsOTP.validate());
-
-    await FirebaseAuth.instance.signInWithCredential(credential).then((result) async {
+    await _auth.signInWithCredential(credential).then((result) async {
       var request = {"username": this.data, "password": this.data};
       signInApi(request);
     }).catchError((e) {
-      toast(e.toString());
+      toast("كود التحقق خاطئ أو منتهي");
       appStore.setLoading(false);
     });
   }
 
   void signInApi(req) async {
-    appStore.setLoading(true);
     await login(req).then((res) async {
       if (!mounted) return;
       await setValue(USER_ID, res['user_id']);
@@ -101,45 +125,39 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
       appStore.setLoading(false);
       DashBoardScreen().launch(context, isNewTask: true);
     }).catchError((error) {
-      log("Error" + error.toString());
+      log("Error: " + error.toString());
       appStore.setLoading(false);
-      if (error.toString().contains('The username or password you entered is incorrect.')) {
-        finish(context);
-        SignUpScreen(userName: this.data.toString()).launch(context);
-      }
+      // ✅ التوجيه لصفحة التسجيل تلقائياً لو المستخدم مش موجود
+      finish(context);
+      SignUpScreen(userName: this.data.toString()).launch(context);
     });
   }
 
-  Future<bool?> smsOTPDialog(BuildContext context) {
+  Future<void> smsOTPDialog(BuildContext context) {
     return showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return new AlertDialog(
-          backgroundColor: Theme
-              .of(context)
-              .scaffoldBackgroundColor,
-          title: Text(AppLocalizations.of(context)!.translate('lbl_enter_sms_code')!, style: boldTextStyle(color: Theme
-              .of(context)
-              .textTheme
-              .titleMedium!
-              .color)),
+        return AlertDialog(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          title: Text(
+              AppLocalizations.of(context)!.translate('lbl_enter_sms_code')!,
+              style: boldTextStyle(
+                  color: Theme.of(context).textTheme.titleMedium!.color)),
           content: Container(
-            height: 85,
-            child: Column(
-              children: [
-                OTPTextField(
-                  pinLength: 6,
-                  fieldWidth: 30,
-                  onChanged: (pin) {
-                    print("Changed: " + pin);
-                  },
-                  onCompleted: (pin) {
-                    this.smsOTP = pin;
-                    print("Completed: " + pin);
-                  },
-                ),
-              ],
+            width: context.width(),
+            height: 100,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: OTPTextField(
+                pinLength: 6,
+                fieldWidth: 35,
+                onChanged: (pin) {},
+                onCompleted: (pin) {
+                  this.smsOTP = pin;
+                  log("OTP Completed: $pin");
+                },
+              ),
             ),
           ),
           contentPadding: EdgeInsets.all(10),
@@ -148,9 +166,14 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
               width: context.width(),
               text: AppLocalizations.of(context)!.translate('lbl_done'),
               onTap: () {
-                hideKeyboard(context);
-                Navigator.pop(context);
-                signInWithPhoneNumber();
+                if (smsOTP != null && smsOTP!.length == 6) {
+                  hideKeyboard(context);
+                  Navigator.pop(context);
+                  toast("جاري التحقق...");
+                  signInWithPhoneNumber();
+                } else {
+                  toast("أدخل الكود كاملاً (6 أرقام)");
+                }
               },
               textStyle: primaryTextStyle(color: white),
               color: primaryColor,
@@ -179,20 +202,19 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
                   24.height,
                   Container(
                     decoration: boxDecorationWithRoundedCorners(
-                        backgroundColor: Theme
-                            .of(context)
-                            .cardTheme
-                            .color!, borderRadius: radius(8), border: Border.all(color: Theme
-                        .of(context)
-                        .textTheme
-                        .titleMedium!
-                        .color!)),
+                        backgroundColor: Theme.of(context).cardTheme.color!,
+                        borderRadius: radius(8),
+                        border: Border.all(
+                            color: Theme.of(context)
+                                .textTheme
+                                .titleMedium!
+                                .color!)),
                     padding: EdgeInsets.only(left: 8),
                     child: Row(
                       children: <Widget>[
                         CountryCodePicker(
+                          initialSelection: 'EG',
                           onChanged: (value) {
-                            log("Value" + value.dialCode!);
                             this.code = value.dialCode.toString();
                           },
                           backgroundColor: Colors.transparent,
@@ -200,28 +222,33 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
                           padding: EdgeInsets.all(4),
                           dialogTextStyle: secondaryTextStyle(),
                           searchStyle: secondaryTextStyle(),
-                          searchDecoration: InputDecoration(labelStyle: secondaryTextStyle()),
-                          dialogBackgroundColor: Theme
-                              .of(context)
-                              .cardTheme
-                              .color,
-                          boxDecoration: BoxDecoration(borderRadius: radius(4), color: Theme
-                              .of(context)
-                              .cardTheme
-                              .color!),
+                          searchDecoration: InputDecoration(
+                              labelStyle: secondaryTextStyle()),
+                          dialogBackgroundColor:
+                          Theme.of(context).cardTheme.color,
+                          boxDecoration: BoxDecoration(
+                              borderRadius: radius(4),
+                              color: Theme.of(context).cardTheme.color!),
                           textStyle: primaryTextStyle(),
                         ),
-                        Container(height: 30.0, width: 1.0, color: primaryColor, margin: EdgeInsets.only(left: 10.0, right: 10.0)),
+                        Container(
+                            height: 30.0,
+                            width: 1.0,
+                            color: primaryColor,
+                            margin: EdgeInsets.only(
+                                left: 10.0, right: 10.0)),
                         Expanded(
                           child: TextFormField(
                             keyboardType: TextInputType.number,
-                            maxLength: 10,
+                            maxLength: 11,
                             style: secondaryTextStyle(size: 18),
                             controller: passwordCont,
                             decoration: InputDecoration(
                               counterText: "",
-                              contentPadding: EdgeInsets.fromLTRB(16, 0, 16, 0),
-                              hintText: appLocalization.translate('lbl_enter_mobile_number'),
+                              contentPadding:
+                              EdgeInsets.fromLTRB(16, 0, 16, 0),
+                              hintText: appLocalization
+                                  .translate('lbl_enter_mobile_number'),
                               hintStyle: secondaryTextStyle(size: 18),
                               border: InputBorder.none,
                             ),
@@ -235,16 +262,35 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
                       width: context.width(),
                       text: appLocalization.translate('lbl_verify_now'),
                       onTap: () {
+                        if (passwordCont.text.isEmpty) {
+                          toast("يرجى إدخال رقم الهاتف");
+                          return;
+                        }
                         hideKeyboard(context);
-                        this.phoneNo = this.code + passwordCont.text.toString();
-                        this.data = passwordCont.text.toString();
+
+                        // ✅ تنظيف الرقم: حذف الصفر الأول تلقائياً
+                        this.phoneNo = cleanPhoneNumber(
+                            passwordCont.text.toString(), this.code);
+
+                        // ✅ data بدون صفر للاستخدام كـ username في WooCommerce
+                        String cleaned = passwordCont.text.trim();
+                        if (cleaned.startsWith('0')) {
+                          cleaned = cleaned.substring(1);
+                        }
+                        this.data = cleaned;
+
+                        log("Phone to Firebase: ${this.phoneNo}");
+                        log("Username to WooCommerce: ${this.data}");
+
                         verifyPhoneNumber();
                       },
                       textStyle: primaryTextStyle(color: white),
                       color: primaryColor),
                 ],
               ).center().paddingAll(16),
-              Observer(builder: (context) => mProgress().visible(appStore.isLoading)),
+              Observer(
+                  builder: (context) =>
+                      mProgress().visible(appStore.isLoading)),
             ],
           ),
         ),

@@ -106,7 +106,7 @@ class ChooseDashboardPageVariantState extends State<ChooseDashboardPageVariant> 
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset("images/mightystore/dashBoard$code.jpg", fit: BoxFit.cover, alignment: Alignment.topCenter).cornerRadiusWithClipRRect(8),
+          Image.asset("images/Twomenu/dashBoard$code.jpg", fit: BoxFit.cover, alignment: Alignment.topCenter).cornerRadiusWithClipRRect(8),
           AnimatedContainer(
             duration: Duration(milliseconds: 800),
             color: getIntAsync(DASHBOARD_PAGE_VARIANT, defaultValue: 1) == code ? transparentColor : Colors.black45,

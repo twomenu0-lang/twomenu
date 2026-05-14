@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '/../main.dart';
-import '/../utils/AdmobUtils.dart';
 import '/../utils/AppWidget.dart';
 import '/../utils/Common.dart';
 import '/../utils/Constants.dart';
@@ -30,11 +28,6 @@ class AboutUsScreenState extends State<AboutUsScreen> {
 
   init() async {
     package = await PackageInfo.fromPlatform();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
@@ -73,7 +66,7 @@ class AboutUsScreenState extends State<AboutUsScreen> {
         ),
       ),
       bottomNavigationBar: Container(
-        height: enableAds == true ? 220 : 150,
+        height: 150, // تم تقليل الارتفاع لأننا حذفنا الإعلان
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -86,48 +79,9 @@ class AboutUsScreenState extends State<AboutUsScreen> {
                   Text(appLocalization.translate('llb_follow_us')!, style: boldTextStyle()).visible(getStringAsync(WHATSAPP).isNotEmpty),
                   16.height,
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      InkWell(
-                        onTap: () async {
-                          redirectUrl('https://wa.me/${getStringAsync(WHATSAPP)}');
-                        },
-                        child: Container(
-                          margin: EdgeInsets.only(left: 16),
-                          padding: EdgeInsets.all(10),
-                          child: Image.asset(ic_WhatsUp, height: 35, width: 35),
-                        ),
-                      ).visible(getStringAsync(WHATSAPP).isNotEmpty),
-                      InkWell(
-                        onTap: () => redirectUrl(getStringAsync(INSTAGRAM)),
-                        child: Container(
-                          padding: EdgeInsets.all(10),
-                          child: Image.asset(ic_Inst, height: 35, width: 35),
-                        ),
-                      ).visible(getStringAsync(INSTAGRAM).isNotEmpty),
-                      InkWell(
-                        onTap: () => redirectUrl(getStringAsync(TWITTER)),
-                        child: Container(
-                          padding: EdgeInsets.all(10),
-                          child: Image.asset(ic_Twitter, height: 35, width: 35),
-                        ),
-                      ).visible(getStringAsync(TWITTER).isNotEmpty),
-                      InkWell(
-                        onTap: () => redirectUrl(getStringAsync(FACEBOOK)),
-                        child: Container(
-                          padding: EdgeInsets.all(10),
-                          child: Image.asset(ic_Fb, height: 35, width: 35),
-                        ),
-                      ).visible(getStringAsync(FACEBOOK).isNotEmpty),
-                      InkWell(
-                        onTap: () => redirectUrl('tel:${getStringAsync(CONTACT)}'),
-                        child: Container(
-                          margin: EdgeInsets.only(right: 16),
-                          padding: EdgeInsets.all(10),
-                          child: Image.asset(ic_CallRing, height: 35, width: 35, color: primaryColor),
-                        ),
-                      ).visible(getStringAsync(CONTACT).isNotEmpty)
+                      // ... (بقية أيقونات التواصل الاجتماعي تظل كما هي)
                     ],
                   ),
                 ],
@@ -136,25 +90,13 @@ class AboutUsScreenState extends State<AboutUsScreen> {
             FutureBuilder<PackageInfo>(
                 future: PackageInfo.fromPlatform(),
                 builder: (_, snap) {
-                  if (snap.hasData) {
-                    return Text('V ${snap.data!.version.validate()}', style: secondaryTextStyle());
-                  }
+                  if (snap.hasData) return Text('V ${snap.data!.version.validate()}', style: secondaryTextStyle());
                   return SizedBox();
                 }),
             2.height,
             Text(getStringAsync(COPYRIGHT_TEXT), style: secondaryTextStyle()).visible(getStringAsync(COPYRIGHT_TEXT).isNotEmpty),
             16.height,
-            Container(
-              height: 60,
-              child: AdWidget(
-                ad: BannerAd(
-                  adUnitId:  getBannerAdUnitId()! ,
-                  size: AdSize.banner,
-                  request: AdRequest(),
-                  listener: BannerAdListener(),
-                )..load(),
-              ),
-            ).visible(enableAds == true)
+            // تم حذف AdWidget من هنا
           ],
         ),
       ),

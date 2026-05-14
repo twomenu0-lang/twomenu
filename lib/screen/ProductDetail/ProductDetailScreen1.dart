@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:intl/intl.dart';
 import '/../component/HtmlWidget.dart';
 import '/../component/VideoPlayDialog.dart';
@@ -14,7 +13,6 @@ import '/../screen/ViewAllScreen.dart';
 import '/../screen/ZoomImageScreen.dart';
 import '/../utils/AppBarWidget.dart';
 import '/../utils/Countdown.dart';
-import '/../utils/AdmobUtils.dart';
 import '/../utils/AppWidget.dart';
 import '/../utils/Colors.dart';
 import '/../utils/Common.dart';
@@ -48,7 +46,6 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
   List<Widget> productImg = [];
   List<String?> productImg1 = [];
 
-  InterstitialAd? interstitialAd;
   GlobalKey<ScaffoldState> scaffoldState = GlobalKey();
   PageController _pageController = PageController(initialPage: 0);
 
@@ -85,7 +82,6 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
 
   init() async {
     afterBuildCreated(() {
-      adShow();
       productDetail();
       fetchReviewData();
       setTimer();
@@ -95,43 +91,6 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
   @override
   void setState(fn) {
     if (mounted) super.setState(fn);
-  }
-
-  adShow() async {
-    if (interstitialAd == null) {
-      print('Warning: attempt to show interstitial before loaded.');
-      return;
-    }
-    interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-      onAdShowedFullScreenContent: (InterstitialAd ad) => print('ad onAdShowedFullScreenContent.'),
-      onAdDismissedFullScreenContent: (InterstitialAd ad) {
-        print('$ad onAdDismissedFullScreenContent.');
-        ad.dispose();
-        _createInterstitialAd();
-      },
-      onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
-        print('$ad onAdFailedToShowFullScreenContent: $error');
-        ad.dispose();
-        _createInterstitialAd();
-      },
-    );
-    enableAds ? interstitialAd!.show() : SizedBox();
-  }
-
-  void _createInterstitialAd() {
-    InterstitialAd.load(
-        adUnitId: getInterstitialAdUnitId()!,
-        request: AdRequest(),
-        adLoadCallback: InterstitialAdLoadCallback(
-          onAdLoaded: (InterstitialAd ad) {
-            print('$ad loaded');
-            interstitialAd = ad;
-          },
-          onAdFailedToLoad: (LoadAdError error) {
-            print('InterstitialAd failed to load: $error.');
-            interstitialAd = null;
-          },
-        ));
   }
 
   @override
@@ -334,13 +293,13 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
       itemBuilder: (context, i) {
         return productDetailNew!.attributes![i].options != null
             ? Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(productDetailNew!.attributes![i].name + " : ", style: boldTextStyle(size: 14)).visible(productDetailNew!.attributes![i].options!.isNotEmpty),
-                  4.height,
-                  Text(getAllAttribute(productDetailNew!.attributes![i]), maxLines: 4, style: secondaryTextStyle()).expand(),
-                ],
-              ).paddingOnly(left: 8)
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(productDetailNew!.attributes![i].name + " : ", style: boldTextStyle(size: 14)).visible(productDetailNew!.attributes![i].options!.isNotEmpty),
+            4.height,
+            Text(getAllAttribute(productDetailNew!.attributes![i]), maxLines: 4, style: secondaryTextStyle()).expand(),
+          ],
+        ).paddingOnly(left: 8)
             : SizedBox();
       },
     );
@@ -364,33 +323,33 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
           int diff = DateTime.parse(productDetailNew!.dateOnSaleFrom.validate()).difference(DateTime.now()).inMilliseconds;
           return diff > 0
               ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color),
-                    Text(appLocalization!.translate('lbl_upcoming_sale_on_this_item')!, style: boldTextStyle()).paddingAll(16),
-                    Container(
-                      margin: EdgeInsets.only(left: 16, right: 16, bottom: 10),
-                      decoration: boxDecorationWithRoundedCorners(borderRadius: radius(8), backgroundColor: primaryColor!.withOpacity(0.2)),
-                      width: context.width(),
-                      padding: EdgeInsets.fromLTRB(2, 8, 2, 8),
-                      child: Marquee(
-                        directionMarguee: DirectionMarguee.oneDirection,
-                        child: Text(
-                          appLocalization.translate('lbl_sale_start_from')! +
-                              " " +
-                              productDetailNew!.dateOnSaleFrom! +
-                              " " +
-                              appLocalization.translate('lbl_to')! +
-                              " " +
-                              productDetailNew!.dateOnSaleTo! +
-                              ". " +
-                              appLocalization.translate('lbl_ge_amazing_discounts_on_the_products')!,
-                          style: secondaryTextStyle(color: Theme.of(context).textTheme.titleSmall!.color, size: 16),
-                        ).paddingLeft(16),
-                      ),
-                    ),
-                  ],
-                )
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color),
+              Text(appLocalization!.translate('lbl_upcoming_sale_on_this_item')!, style: boldTextStyle()).paddingAll(16),
+              Container(
+                margin: EdgeInsets.only(left: 16, right: 16, bottom: 10),
+                decoration: boxDecorationWithRoundedCorners(borderRadius: radius(8), backgroundColor: primaryColor!.withOpacity(0.2)),
+                width: context.width(),
+                padding: EdgeInsets.fromLTRB(2, 8, 2, 8),
+                child: Marquee(
+                  directionMarguee: DirectionMarguee.oneDirection,
+                  child: Text(
+                    appLocalization.translate('lbl_sale_start_from')! +
+                        " " +
+                        productDetailNew!.dateOnSaleFrom! +
+                        " " +
+                        appLocalization.translate('lbl_to')! +
+                        " " +
+                        productDetailNew!.dateOnSaleTo! +
+                        ". " +
+                        appLocalization.translate('lbl_ge_amazing_discounts_on_the_products')!,
+                    style: secondaryTextStyle(color: Theme.of(context).textTheme.titleSmall!.color, size: 16),
+                  ).paddingLeft(16),
+                ),
+              ),
+            ],
+          )
               : SizedBox();
         } else {
           return SizedBox();
@@ -424,10 +383,10 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
                             color: mReviewModel[index].rating == 1
                                 ? redColor
                                 : mReviewModel[index].rating == 2
-                                    ? yellowColor
-                                    : mReviewModel[index].rating == 3
-                                        ? yellowColor
-                                        : Color(0xFF66953A),
+                                ? yellowColor
+                                : mReviewModel[index].rating == 3
+                                ? yellowColor
+                                : Color(0xFF66953A),
                             borderRadius: BorderRadius.all(Radius.circular(8))),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -471,8 +430,8 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
             ],
           )
               .onTap(() {
-                ReviewScreen(mProductId: widget.mProId).launch(context);
-              })
+            ReviewScreen(mProductId: widget.mProId).launch(context);
+          })
               .paddingAll(16)
               .visible(mReviewModel.length >= 5 && productDetailNew!.reviewsAllowed == true),
         ],
@@ -588,10 +547,10 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
                                   child: Text(
                                     product[i].inStock! == true
                                         ? product[i].type! == 'external'
-                                            ? product[i].buttonText!
-                                            : cartStore.isItemInCart(product[i].id.validate())
-                                                ? appLocalization.translate('lbl_remove_cart')!.toUpperCase()
-                                                : appLocalization.translate('lbl_add_to_cart')!.toUpperCase()
+                                        ? product[i].buttonText!
+                                        : cartStore.isItemInCart(product[i].id.validate())
+                                        ? appLocalization.translate('lbl_remove_cart')!.toUpperCase()
+                                        : appLocalization.translate('lbl_add_to_cart')!.toUpperCase()
                                         : appLocalization.translate('lbl_sold_out')!.toUpperCase(),
                                     textAlign: TextAlign.center,
                                     style: boldTextStyle(color: product[i].inStock == false ? primaryColor : white, size: 12),
@@ -612,14 +571,14 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
                                 }),
                                 product[i].onSale!
                                     ? Row(
-                                        children: [
-                                          PriceWidget(
-                                              price: product[i].salePrice.toString().validate().isNotEmpty ? product[i].salePrice.toString() : product[i].price.toString().validate(), size: 16),
-                                          2.width,
-                                          PriceWidget(price: product[i].regularPrice.toString(), size: 12, isLineThroughEnabled: true, color: Theme.of(context).textTheme.titleSmall!.color)
-                                              .visible(product[i].salePrice.toString().isNotEmpty),
-                                        ],
-                                      )
+                                  children: [
+                                    PriceWidget(
+                                        price: product[i].salePrice.toString().validate().isNotEmpty ? product[i].salePrice.toString() : product[i].price.toString().validate(), size: 16),
+                                    2.width,
+                                    PriceWidget(price: product[i].regularPrice.toString(), size: 12, isLineThroughEnabled: true, color: Theme.of(context).textTheme.titleSmall!.color)
+                                        .visible(product[i].salePrice.toString().isNotEmpty),
+                                  ],
+                                )
                                     : PriceWidget(price: double.parse(product[i].price.toString()).toStringAsFixed(2), size: 18),
                               ],
                             ).paddingOnly(left: 8),
@@ -638,155 +597,155 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
 
     final videoSlider = productDetailNew != null
         ? Container(
-            height: 450,
-            width: MediaQuery.of(context).size.width,
-            decoration: boxDecorationWithRoundedCorners(
-                borderRadius: BorderRadius.only(topRight: Radius.circular(20), topLeft: Radius.circular(20)), backgroundColor: Theme.of(context).scaffoldBackgroundColor),
-            child: Stack(
-              children: [
-                PageView(
-                    children: productImg,
-                    controller: _pageController,
-                    onPageChanged: (index) {
-                      selectIndex = index;
-                      setState(() {});
-                    }),
-                AnimatedPositioned(
-                  duration: Duration(seconds: 1),
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: DotIndicator(pages: productImg, indicatorColor: primaryColor, pageController: _pageController),
-                ),
-              ],
-            ),
-          )
+      height: 450,
+      width: MediaQuery.of(context).size.width,
+      decoration: boxDecorationWithRoundedCorners(
+          borderRadius: BorderRadius.only(topRight: Radius.circular(20), topLeft: Radius.circular(20)), backgroundColor: Theme.of(context).scaffoldBackgroundColor),
+      child: Stack(
+        children: [
+          PageView(
+              children: productImg,
+              controller: _pageController,
+              onPageChanged: (index) {
+                selectIndex = index;
+                setState(() {});
+              }),
+          AnimatedPositioned(
+            duration: Duration(seconds: 1),
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: DotIndicator(pages: productImg, indicatorColor: primaryColor, pageController: _pageController),
+          ),
+        ],
+      ),
+    )
         : SizedBox();
 
     final imgSlider = productDetailNew != null
         ? Container(
-            height: 450,
-            width: MediaQuery.of(context).size.width,
-            decoration: boxDecorationWithRoundedCorners(borderRadius: BorderRadius.only(topRight: Radius.circular(20), topLeft: Radius.circular(20)), backgroundColor: context.cardColor),
-            margin: EdgeInsets.only(bottom: 16),
-            child: Stack(
-              children: [
-                PageView(
-                  children: productImg1.map((i) {
-                    return commonCacheImageWidget(i.validate(), fit: BoxFit.cover, height: 400, width: double.infinity)
-                        .cornerRadiusWithClipRRectOnly(topLeft: 20, topRight: 20)
-                        .paddingOnly(bottom: 24)
-                        .onTap(() {
-                      ZoomImageScreen(mImgList: productDetailNew!.images, ind: selectIndex).launch(context);
-                    });
-                  }).toList(),
-                  controller: _pageController,
-                  onPageChanged: (index) {
-                    selectIndex = index;
-                    setState(() {});
-                  },
-                ),
-                AnimatedPositioned(
-                    duration: Duration(seconds: 1), bottom: 0, left: 0, right: 0, child: DotIndicator(pages: productImg1, indicatorColor: primaryColor, pageController: _pageController)),
-              ],
-            ),
-          )
+      height: 450,
+      width: MediaQuery.of(context).size.width,
+      decoration: boxDecorationWithRoundedCorners(borderRadius: BorderRadius.only(topRight: Radius.circular(20), topLeft: Radius.circular(20)), backgroundColor: context.cardColor),
+      margin: EdgeInsets.only(bottom: 16),
+      child: Stack(
+        children: [
+          PageView(
+            children: productImg1.map((i) {
+              return commonCacheImageWidget(i.validate(), fit: BoxFit.cover, height: 400, width: double.infinity)
+                  .cornerRadiusWithClipRRectOnly(topLeft: 20, topRight: 20)
+                  .paddingOnly(bottom: 24)
+                  .onTap(() {
+                ZoomImageScreen(mImgList: productDetailNew!.images, ind: selectIndex).launch(context);
+              });
+            }).toList(),
+            controller: _pageController,
+            onPageChanged: (index) {
+              selectIndex = index;
+              setState(() {});
+            },
+          ),
+          AnimatedPositioned(
+              duration: Duration(seconds: 1), bottom: 0, left: 0, right: 0, child: DotIndicator(pages: productImg1, indicatorColor: primaryColor, pageController: _pageController)),
+        ],
+      ),
+    )
         : SizedBox();
 
     // Check Wish list
     final mFavourite = productDetailNew != null
         ? Observer(builder: (context) {
-            return GestureDetector(
-              onTap: () {
-                if (productDetailNew!.type! == 'external') {
-                  toast(appLocalization!.translate('lbl_external_wishlist_msg')!);
-                } else {
-                  checkWishList(productDetailNew, context);
-                  setState(() {});
-                }
-              },
-              child: Container(
-                padding: EdgeInsets.all(10),
-                decoration: boxDecorationWithRoundedCorners(borderRadius: radius(8), backgroundColor: Theme.of(context).cardTheme.color!, border: Border.all(color: primaryColor!)),
-                child: Text(
-                    wishListStore.isItemInWishlist(productDetailNew!.id!) == false
-                        ? appLocalization!.translate('lbl_wish_list')!.toUpperCase()
-                        : appLocalization!.translate('lbl_wishlisted')!.toUpperCase(),
-                    textAlign: TextAlign.center,
-                    style: boldTextStyle(color: primaryColor, wordSpacing: 2)),
-              ),
-            ).paddingOnly(bottom: 4).visible(productDetailNew!.isAddedWishList != null);
-          })
+      return GestureDetector(
+        onTap: () {
+          if (productDetailNew!.type! == 'external') {
+            toast(appLocalization!.translate('lbl_external_wishlist_msg')!);
+          } else {
+            checkWishList(productDetailNew, context);
+            setState(() {});
+          }
+        },
+        child: Container(
+          padding: EdgeInsets.all(10),
+          decoration: boxDecorationWithRoundedCorners(borderRadius: radius(8), backgroundColor: Theme.of(context).cardTheme.color!, border: Border.all(color: primaryColor!)),
+          child: Text(
+              wishListStore.isItemInWishlist(productDetailNew!.id!) == false
+                  ? appLocalization!.translate('lbl_wish_list')!.toUpperCase()
+                  : appLocalization!.translate('lbl_wishlisted')!.toUpperCase(),
+              textAlign: TextAlign.center,
+              style: boldTextStyle(color: primaryColor, wordSpacing: 2)),
+        ),
+      ).paddingOnly(bottom: 4).visible(productDetailNew!.isAddedWishList != null);
+    })
         : SizedBox();
 
     final mCartData = productDetailNew != null
         ? Observer(
-          builder: (context) {
-            return GestureDetector(
-                onTap: () {
-                  if (productDetailNew!.inStock == true) {
-                    if (mIsExternalProduct) {
-                      WebViewExternalProductScreen(mExternal_URL: mExternalUrl, title: appLocalization!.translate('lbl_external_product')).launch(context);
-                    } else if (!getBoolAsync(IS_LOGGED_IN)) {
-                      SignInScreen().launch(context, pageRouteAnimation: PageRouteAnimation.Slide);
-                    } else {
-                      addCart(data: productDetailNew!);
-                      init();
-                      setState(() {});
-                    }
-                  }
+        builder: (context) {
+          return GestureDetector(
+            onTap: () {
+              if (productDetailNew!.inStock == true) {
+                if (mIsExternalProduct) {
+                  WebViewExternalProductScreen(mExternal_URL: mExternalUrl, title: appLocalization!.translate('lbl_external_product')).launch(context);
+                } else if (!getBoolAsync(IS_LOGGED_IN)) {
+                  SignInScreen().launch(context, pageRouteAnimation: PageRouteAnimation.Slide);
+                } else {
+                  addCart(data: productDetailNew!);
+                  init();
                   setState(() {});
-                },
-                child: Container(
-                  padding: EdgeInsets.all(10),
-                  decoration: boxDecorationWithRoundedCorners(
-                      borderRadius: radius(8),
-                      backgroundColor: productDetailNew!.inStock!
-                          ? (cartStore.isItemInCart(productDetailNew!.id.validate()) ? Theme.of(context).cardTheme.color! : primaryColor!)
-                          : textSecondaryColorGlobal.withOpacity(0.3),
-                      border: Border.all(color: cartStore.isItemInCart(productDetailNew!.id.validate()) ? primaryColor! : Colors.transparent)),
-                  child: Text(
-                    productDetailNew!.inStock! == true
-                        ? productDetailNew!.type! == 'external'
-                            ? productDetailNew!.buttonText!
-                            : cartStore.isItemInCart(productDetailNew!.id.validate())
-                                ? appLocalization!.translate('lbl_remove_cart')!.toUpperCase()
-                                : appLocalization!.translate('lbl_add_to_cart')!.toUpperCase()
-                        : appLocalization!.translate('lbl_sold_out')!.toUpperCase(),
-                    textAlign: TextAlign.center,
-                    style: boldTextStyle(color: cartStore.isItemInCart(productDetailNew!.id.validate()) ? primaryColor : white, wordSpacing: 2),
-                  ),
-                ),
-              );
-          }
-        )
+                }
+              }
+              setState(() {});
+            },
+            child: Container(
+              padding: EdgeInsets.all(10),
+              decoration: boxDecorationWithRoundedCorners(
+                  borderRadius: radius(8),
+                  backgroundColor: productDetailNew!.inStock!
+                      ? (cartStore.isItemInCart(productDetailNew!.id.validate()) ? Theme.of(context).cardTheme.color! : primaryColor!)
+                      : textSecondaryColorGlobal.withOpacity(0.3),
+                  border: Border.all(color: cartStore.isItemInCart(productDetailNew!.id.validate()) ? primaryColor! : Colors.transparent)),
+              child: Text(
+                productDetailNew!.inStock! == true
+                    ? productDetailNew!.type! == 'external'
+                    ? productDetailNew!.buttonText!
+                    : cartStore.isItemInCart(productDetailNew!.id.validate())
+                    ? appLocalization!.translate('lbl_remove_cart')!.toUpperCase()
+                    : appLocalization!.translate('lbl_add_to_cart')!.toUpperCase()
+                    : appLocalization!.translate('lbl_sold_out')!.toUpperCase(),
+                textAlign: TextAlign.center,
+                style: boldTextStyle(color: cartStore.isItemInCart(productDetailNew!.id.validate()) ? primaryColor : white, wordSpacing: 2),
+              ),
+            ),
+          );
+        }
+    )
         : SizedBox();
 
     Widget mGetPrice() {
       final mPrice = productDetailNew != null
           ? productDetailNew!.onSale == true
-              ? Row(
-                  children: [
-                    PriceWidget(
-                        price: productDetailNew!.salePrice.toString().isNotEmpty
-                            ? double.parse(productDetailNew!.salePrice.toString()).toStringAsFixed(2)
-                            : double.parse(productDetailNew!.price.validate().toString()).toStringAsFixed(2),
-                        size: 18),
-                    PriceWidget(
-                            price: double.parse(productDetailNew!.regularPrice.toString()).toStringAsFixed(2),
-                            size: 14,
-                            color: Theme.of(context).textTheme.titleMedium!.color,
-                            isLineThroughEnabled: true)
-                        .visible(productDetailNew!.salePrice.toString().isNotEmpty && productDetailNew!.onSale == true),
-                    8.width,
-                    mDiscount().visible(productDetailNew!.salePrice.toString().isNotEmpty && productDetailNew!.onSale == true)
-                  ],
-                )
-              : Row(
-                  children: [
-                    PriceWidget(price: double.parse(productDetailNew!.price.toString()).toStringAsFixed(2), size: 18),
-                  ],
-                )
+          ? Row(
+        children: [
+          PriceWidget(
+              price: productDetailNew!.salePrice.toString().isNotEmpty
+                  ? double.parse(productDetailNew!.salePrice.toString()).toStringAsFixed(2)
+                  : double.parse(productDetailNew!.price.validate().toString()).toStringAsFixed(2),
+              size: 18),
+          PriceWidget(
+              price: double.parse(productDetailNew!.regularPrice.toString()).toStringAsFixed(2),
+              size: 14,
+              color: Theme.of(context).textTheme.titleMedium!.color,
+              isLineThroughEnabled: true)
+              .visible(productDetailNew!.salePrice.toString().isNotEmpty && productDetailNew!.onSale == true),
+          8.width,
+          mDiscount().visible(productDetailNew!.salePrice.toString().isNotEmpty && productDetailNew!.onSale == true)
+        ],
+      )
+          : Row(
+        children: [
+          PriceWidget(price: double.parse(productDetailNew!.price.toString()).toStringAsFixed(2), size: 18),
+        ],
+      )
           : SizedBox();
       return mPrice;
     }
@@ -822,162 +781,162 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
 
     final body = productDetailNew != null
         ? SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          productDetailNew!.images!.isNotEmpty
+              ? productDetailNew!.woofVideoEmbed != null && !productDetailNew!.woofVideoEmbed!.url.isEmptyOrNull
+              ? videoSlider
+              : imgSlider
+              : SizedBox(),
+          Container(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                productDetailNew!.images!.isNotEmpty
-                    ? productDetailNew!.woofVideoEmbed != null && !productDetailNew!.woofVideoEmbed!.url.isEmptyOrNull
-                        ? videoSlider
-                        : imgSlider
-                    : SizedBox(),
-                Container(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      8.height,
-                      if (productDetailNew!.onSale == true)
-                        FittedBox(
-                          child: Container(
-                            padding: EdgeInsets.fromLTRB(6, 2, 6, 2),
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.all(Radius.circular(4))),
-                            child: Text(appLocalization!.translate('lbl_sale')!, style: boldTextStyle(color: Colors.white, size: 12)),
-                          ).cornerRadiusWithClipRRectOnly(topLeft: 0, bottomLeft: 4).paddingOnly(left: 16, right: 16, bottom: 8),
-                        ),
-                      Text(productDetailNew!.name!, style: boldTextStyle(size: 18)).paddingOnly(left: 16, right: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          if (productDetailNew!.type != 'grouped') mGetPrice(),
-                          FittedBox(
-                            child: Container(
-                              decoration: boxDecorationWithRoundedCorners(borderRadius: radius(4), backgroundColor: Theme.of(context).cardTheme.color!, border: Border.all(color: view_color)),
-                              padding: EdgeInsets.fromLTRB(4, 4, 4, 4),
-                              margin: EdgeInsets.only(right: 8),
-                              child: RichText(
-                                text: TextSpan(
-                                  children: [
-                                    TextSpan(text: rating.toString() + " ", style: secondaryTextStyle(size: 14)),
-                                    WidgetSpan(child: Icon(Icons.star, size: 14, color: yellowColor)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ).onTap(() async {
-                            final bool result = await ReviewScreen(mProductId: widget.mProId).launch(context);
-                            if (result == true) {
-                              init();
-                              setState(() {});
-                            }
-                          })
-                        ],
-                      ).paddingOnly(top: 4, left: 16, right: 8, bottom: 4).visible(!productDetailNew!.type!.contains("grouped")),
-                      if (productDetailNew!.type != 'grouped') mSavePrice(),
-                      if (productDetailNew!.store != null)
-                        Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color)
-                            .visible(productDetailNew!.store!.shopName.validate().isNotEmpty),
-                      if (productDetailNew!.store != null)
-                        Row(
-                          children: [
-                            Text(appLocalization!.translate('lbl_sold_by')!, style: primaryTextStyle(size: 14, color: Theme.of(context).textTheme.titleMedium!.color))
-                                .visible(productDetailNew!.store!.shopName.validate().isNotEmpty),
-                            8.width,
-                            Text(productDetailNew!.store!.shopName != null ? productDetailNew!.store!.shopName! : '', style: boldTextStyle(color: primaryColor)).onTap(() {
-                              VendorProfileScreen(mVendorId: productDetailNew!.store!.id).launch(context);
-                            })
-                          ],
-                        ).paddingOnly(top: 8, left: 16, right: 8, bottom: 8).visible(productDetailNew!.store!.shopName.validate().isNotEmpty),
-                      Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color)
-                          .visible(productDetailNew!.onSale! && productDetailNew!.dateOnSaleFrom!.isNotEmpty),
-                      if (productDetailNew!.onSale!) productDetailNew!.dateOnSaleFrom!.isNotEmpty ? mSpecialPrice(appLocalization!.translate('lbl_special_msg')) : SizedBox(),
-                      if (productDetailNew!.type == "variable" || productDetailNew!.type == "variation")
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color),
-                            Text(appLocalization!.translate('lbl_Available')!, style: boldTextStyle()).paddingOnly(left: 16, right: 16),
-                            Container(
-                              margin: EdgeInsets.only(left: 14.0, right: 16.0, top: 8),
-                              decoration: boxDecorationWithRoundedCorners(borderRadius: radius(8), backgroundColor: Theme.of(context).colorScheme.background),
-                              padding: EdgeInsets.only(left: 8, right: 8),
-                              child: Theme(
-                                data: Theme.of(context).copyWith(canvasColor: Theme.of(context).cardTheme.color),
-                                child: DropdownButton(
-                                  value: mSelectedVariation,
-                                  isExpanded: true,
-                                  underline: SizedBox(),
-                                  onChanged: (dynamic value) {
-                                    setState(() {
-                                      mSelectedVariation = value;
-                                      int index = mProductOptions.indexOf(value);
-                                      mProducts.forEach((product) {
-                                        if (mProductVariationsIds[index] == product.id) {
-                                          this.productDetailNew = product;
-                                        }
-                                      });
-                                      setPriceDetail();
-                                      mImage();
-                                    });
-                                  },
-                                  items: mProductOptions.map((value) {
-                                    log(mProductOptions);
-                                    return DropdownMenuItem(value: value, child: Text(value!, style: primaryTextStyle(color: Theme.of(context).textTheme.titleMedium!.color)));
-                                  }).toList(),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ).visible(mProductOptions.length != 0)
-                      else if (productDetailNew!.type == "grouped")
-                        mGroupAttribute(product)
-                      else if (productDetailNew!.type == "simple")
-                        Container()
-                      else if (productDetailNew!.type == "external")
-                        mExternalAttribute()
-                      else
-                        mOtherAttribute(),
-                      mUpcomingSale().visible(!productDetailNew!.onSale!),
-                      Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color)
-                          .visible(productDetailNew!.description!.isNotEmpty),
-                      Text(appLocalization!.translate('lbl_product_details')!, style: boldTextStyle()).paddingOnly(top: 4, left: 16, right: 16).visible(productDetailNew!.description!.isNotEmpty),
-                      HtmlWidget(postContent: productDetailNew!.description).paddingOnly(left: 10).visible(productDetailNew!.description!.isNotEmpty),
-                      if (productDetailNew!.attributes != null) mSetAttribute().paddingBottom(8),
-                      Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color)
-                          .visible(productDetailNew!.shortDescription.toString().isNotEmpty),
-                      Text(appLocalization.translate('lbl_short_description')!, style: boldTextStyle())
-                          .paddingOnly(top: 4, left: 16, right: 16)
-                          .visible(productDetailNew!.shortDescription.toString().isNotEmpty),
-                      HtmlWidget(postContent: productDetailNew!.shortDescription).paddingOnly(left: 10, right: 16).visible(productDetailNew!.shortDescription.toString().isNotEmpty),
-                      Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color)
-                          .visible(productDetailNew!.categories != null && productDetailNew!.categories!.isNotEmpty),
-                      if (productDetailNew!.categories != null && productDetailNew!.categories!.isNotEmpty)
-                        Text(appLocalization.translate('lbl_category')!, style: boldTextStyle()).paddingOnly(top: 4, left: 16, right: 16).visible(productDetailNew!.categories != null),
-                      if (productDetailNew!.categories != null && productDetailNew!.categories!.isNotEmpty)
-                        Wrap(
-                          children: productDetailNew!.categories!.map((e) {
-                            return Container(
-                              margin: EdgeInsets.only(right: 8, bottom: 10),
-                              padding: EdgeInsets.all(8),
-                              decoration:
-                                  boxDecorationWithRoundedCorners(borderRadius: radius(8), backgroundColor: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).colorScheme.background),
-                              child: Text(e.name!, style: secondaryTextStyle()),
-                            ).onTap(() {
-                              ViewAllScreen(e.name, isCategory: true, categoryId: e.id).launch(context);
-                            });
-                          }).toList(),
-                        ).paddingOnly(top: 16, left: 16, right: 16),
-                      Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color).visible(productDetailNew!.upSellId!.isNotEmpty),
-                      if (productDetailNew!.upSellIds != null) upSaleProductList(productDetailNew!.upSellId!).visible(productDetailNew!.upSellId!.isNotEmpty),
-                      Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color).visible(mReviewModel.isNotEmpty),
-                      8.height,
-                      _review(),
-                      40.height,
-                    ],
+                8.height,
+                if (productDetailNew!.onSale == true)
+                  FittedBox(
+                    child: Container(
+                      padding: EdgeInsets.fromLTRB(6, 2, 6, 2),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.all(Radius.circular(4))),
+                      child: Text(appLocalization!.translate('lbl_sale')!, style: boldTextStyle(color: Colors.white, size: 12)),
+                    ).cornerRadiusWithClipRRectOnly(topLeft: 0, bottomLeft: 4).paddingOnly(left: 16, right: 16, bottom: 8),
                   ),
-                )
+                Text(productDetailNew!.name!, style: boldTextStyle(size: 18)).paddingOnly(left: 16, right: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (productDetailNew!.type != 'grouped') mGetPrice(),
+                    FittedBox(
+                      child: Container(
+                        decoration: boxDecorationWithRoundedCorners(borderRadius: radius(4), backgroundColor: Theme.of(context).cardTheme.color!, border: Border.all(color: view_color)),
+                        padding: EdgeInsets.fromLTRB(4, 4, 4, 4),
+                        margin: EdgeInsets.only(right: 8),
+                        child: RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(text: rating.toString() + " ", style: secondaryTextStyle(size: 14)),
+                              WidgetSpan(child: Icon(Icons.star, size: 14, color: yellowColor)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ).onTap(() async {
+                      final bool result = await ReviewScreen(mProductId: widget.mProId).launch(context);
+                      if (result == true) {
+                        init();
+                        setState(() {});
+                      }
+                    })
+                  ],
+                ).paddingOnly(top: 4, left: 16, right: 8, bottom: 4).visible(!productDetailNew!.type!.contains("grouped")),
+                if (productDetailNew!.type != 'grouped') mSavePrice(),
+                if (productDetailNew!.store != null)
+                  Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color)
+                      .visible(productDetailNew!.store!.shopName.validate().isNotEmpty),
+                if (productDetailNew!.store != null)
+                  Row(
+                    children: [
+                      Text(appLocalization!.translate('lbl_sold_by')!, style: primaryTextStyle(size: 14, color: Theme.of(context).textTheme.titleMedium!.color))
+                          .visible(productDetailNew!.store!.shopName.validate().isNotEmpty),
+                      8.width,
+                      Text(productDetailNew!.store!.shopName != null ? productDetailNew!.store!.shopName! : '', style: boldTextStyle(color: primaryColor)).onTap(() {
+                        VendorProfileScreen(mVendorId: productDetailNew!.store!.id).launch(context);
+                      })
+                    ],
+                  ).paddingOnly(top: 8, left: 16, right: 8, bottom: 8).visible(productDetailNew!.store!.shopName.validate().isNotEmpty),
+                Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color)
+                    .visible(productDetailNew!.onSale! && productDetailNew!.dateOnSaleFrom!.isNotEmpty),
+                if (productDetailNew!.onSale!) productDetailNew!.dateOnSaleFrom!.isNotEmpty ? mSpecialPrice(appLocalization!.translate('lbl_special_msg')) : SizedBox(),
+                if (productDetailNew!.type == "variable" || productDetailNew!.type == "variation")
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color),
+                      Text(appLocalization!.translate('lbl_Available')!, style: boldTextStyle()).paddingOnly(left: 16, right: 16),
+                      Container(
+                        margin: EdgeInsets.only(left: 14.0, right: 16.0, top: 8),
+                        decoration: boxDecorationWithRoundedCorners(borderRadius: radius(8), backgroundColor: Theme.of(context).colorScheme.background),
+                        padding: EdgeInsets.only(left: 8, right: 8),
+                        child: Theme(
+                          data: Theme.of(context).copyWith(canvasColor: Theme.of(context).cardTheme.color),
+                          child: DropdownButton(
+                            value: mSelectedVariation,
+                            isExpanded: true,
+                            underline: SizedBox(),
+                            onChanged: (dynamic value) {
+                              setState(() {
+                                mSelectedVariation = value;
+                                int index = mProductOptions.indexOf(value);
+                                mProducts.forEach((product) {
+                                  if (mProductVariationsIds[index] == product.id) {
+                                    this.productDetailNew = product;
+                                  }
+                                });
+                                setPriceDetail();
+                                mImage();
+                              });
+                            },
+                            items: mProductOptions.map((value) {
+                              log(mProductOptions);
+                              return DropdownMenuItem(value: value, child: Text(value!, style: primaryTextStyle(color: Theme.of(context).textTheme.titleMedium!.color)));
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ).visible(mProductOptions.length != 0)
+                else if (productDetailNew!.type == "grouped")
+                  mGroupAttribute(product)
+                else if (productDetailNew!.type == "simple")
+                    Container()
+                  else if (productDetailNew!.type == "external")
+                      mExternalAttribute()
+                    else
+                      mOtherAttribute(),
+                mUpcomingSale().visible(!productDetailNew!.onSale!),
+                Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color)
+                    .visible(productDetailNew!.description!.isNotEmpty),
+                Text(appLocalization!.translate('lbl_product_details')!, style: boldTextStyle()).paddingOnly(top: 4, left: 16, right: 16).visible(productDetailNew!.description!.isNotEmpty),
+                HtmlWidget(postContent: productDetailNew!.description).paddingOnly(left: 10).visible(productDetailNew!.description!.isNotEmpty),
+                if (productDetailNew!.attributes != null) mSetAttribute().paddingBottom(8),
+                Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color)
+                    .visible(productDetailNew!.shortDescription.toString().isNotEmpty),
+                Text(appLocalization.translate('lbl_short_description')!, style: boldTextStyle())
+                    .paddingOnly(top: 4, left: 16, right: 16)
+                    .visible(productDetailNew!.shortDescription.toString().isNotEmpty),
+                HtmlWidget(postContent: productDetailNew!.shortDescription).paddingOnly(left: 10, right: 16).visible(productDetailNew!.shortDescription.toString().isNotEmpty),
+                Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color)
+                    .visible(productDetailNew!.categories != null && productDetailNew!.categories!.isNotEmpty),
+                if (productDetailNew!.categories != null && productDetailNew!.categories!.isNotEmpty)
+                  Text(appLocalization.translate('lbl_category')!, style: boldTextStyle()).paddingOnly(top: 4, left: 16, right: 16).visible(productDetailNew!.categories != null),
+                if (productDetailNew!.categories != null && productDetailNew!.categories!.isNotEmpty)
+                  Wrap(
+                    children: productDetailNew!.categories!.map((e) {
+                      return Container(
+                        margin: EdgeInsets.only(right: 8, bottom: 10),
+                        padding: EdgeInsets.all(8),
+                        decoration:
+                        boxDecorationWithRoundedCorners(borderRadius: radius(8), backgroundColor: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).colorScheme.background),
+                        child: Text(e.name!, style: secondaryTextStyle()),
+                      ).onTap(() {
+                        ViewAllScreen(e.name, isCategory: true, categoryId: e.id).launch(context);
+                      });
+                    }).toList(),
+                  ).paddingOnly(top: 16, left: 16, right: 16),
+                Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color).visible(productDetailNew!.upSellId!.isNotEmpty),
+                if (productDetailNew!.upSellIds != null) upSaleProductList(productDetailNew!.upSellId!).visible(productDetailNew!.upSellId!.isNotEmpty),
+                Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color).visible(mReviewModel.isNotEmpty),
+                8.height,
+                _review(),
+                40.height,
               ],
             ),
           )
+        ],
+      ),
+    )
         : SizedBox();
 
     return Scaffold(
@@ -987,7 +946,7 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
           leading: IconButton(
             icon: Icon(Icons.arrow_back, color: white),
             onPressed: () {
-              finish(context,false);
+              finish(context, false);
               appStore.setLoading(false);
             },
           ),
@@ -1006,16 +965,16 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
         );
       }),
       bottomNavigationBar: Container(
-              width: context.width(),
-              decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                boxShadow: <BoxShadow>[
-                  BoxShadow(color: Theme.of(context).hoverColor.withOpacity(0.8), blurRadius: 15.0, offset: Offset(0.0, 0.75)),
-                ],
-              ),
-              child: Row(
-                children: [mFavourite.expand(flex: 1), 16.width, mCartData.expand(flex: 1)],
-              ).paddingOnly(top: 8, bottom: 8, right: 16, left: 16).visible(productDetailNew != null && productDetailNew!.type != 'grouped'))
+          width: context.width(),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            boxShadow: <BoxShadow>[
+              BoxShadow(color: Theme.of(context).hoverColor.withOpacity(0.8), blurRadius: 15.0, offset: Offset(0.0, 0.75)),
+            ],
+          ),
+          child: Row(
+            children: [mFavourite.expand(flex: 1), 16.width, mCartData.expand(flex: 1)],
+          ).paddingOnly(top: 8, bottom: 8, right: 16, left: 16).visible(productDetailNew != null && productDetailNew!.type != 'grouped'))
           .visible(productDetailNew != null),
     );
   }

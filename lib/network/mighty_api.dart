@@ -37,7 +37,6 @@ class MightyAPI {
     var url = this.url + endpoint;
     var containsQueryParams = url.contains("?");
 
-    // If website is HTTPS based, no need for OAuth, just return the URL with CS and CK as query params
     if (this.isHttps == true) {
       return url +
           (containsQueryParams == true
@@ -84,7 +83,7 @@ class MightyAPI {
       var baseString = method + "&" + Uri.encodeQueryComponent(containsQueryParams == true ? url.split("?")[0] : url) + "&" + Uri.encodeQueryComponent(parameterString);
 
       var signingKey = consumerSecret! + "&" + tokenSecret;
-      var hmacSha1 = new crypto.Hmac(crypto.sha1, utf8.encode(signingKey)); // HMAC-SHA1
+      var hmacSha1 = new crypto.Hmac(crypto.sha1, utf8.encode(signingKey));
       var signature = hmacSha1.convert(utf8.encode(baseString));
 
       var finalSignature = base64Encode(signature.bytes);
@@ -101,10 +100,26 @@ class MightyAPI {
     }
   }
 
+  // ✅ method جديدة للـ JWT login — بدون OAuth params
+  Future<http.Response> postJwtAsync(String endPoint, Map data) async {
+    var fullUrl = this.url + endPoint;
+    log('JWT POST: $fullUrl');
+
+    var headers = {
+      HttpHeaders.contentTypeHeader: 'application/json; charset=utf-8',
+      HttpHeaders.cacheControlHeader: 'no-cache',
+    };
+
+    var client = new http.Client();
+    var response = await client.post(Uri.parse(fullUrl), body: jsonEncode(data), headers: headers);
+
+    print('JWT Status: ${response.statusCode}');
+    print('JWT Response: ${response.body}');
+    return response;
+  }
+
   Future<http.Response> getAsync(String endPoint, {requireToken = false}) async {
     var url = this._getOAuthURL("GET", endPoint);
-
-    //log(url);
 
     var headers = {
       HttpHeaders.contentTypeHeader: 'application/json; charset=utf-8',
@@ -120,14 +135,12 @@ class MightyAPI {
     final response = await http.get(Uri.parse(url), headers: headers);
     log('${response.statusCode} $url');
     log(response.body);
-    if(response.statusCode==401||response.statusCode==403)
-{  
-    Map<String, dynamic> responseMap = json.decode(response.body);
-
-    log(responseMap['code']);
-    if (responseMap['code'] == 'jwt_auth_user_not_found'||responseMap['code'] == 'jwt_auth_invalid_token') {
-      setLogoutData(getContext);
-    }
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      Map<String, dynamic> responseMap = json.decode(response.body);
+      log(responseMap['code']);
+      if (responseMap['code'] == 'jwt_auth_user_not_found' || responseMap['code'] == 'jwt_auth_invalid_token') {
+        setLogoutData(getContext);
+      }
     }
 
     return response;
@@ -135,7 +148,6 @@ class MightyAPI {
 
   Future<http.Response> postAsync(String endPoint, Map data, {requireToken = false}) async {
     var url = this._getOAuthURL("POST", endPoint);
-    //log(url);
 
     var headers = {
       HttpHeaders.contentTypeHeader: 'application/json; charset=utf-8',
