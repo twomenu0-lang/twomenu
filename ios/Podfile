@@ -48,4 +48,17 @@ post_install do |installer|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
     end
   end
+
+  # حل مشكلة الـ CYCLE POINT الخاصة بـ OneSignal
+  installer.aggregate_targets.each do |target|
+    target.user_project.targets.each do |user_target|
+      if user_target.name == 'OneSignalNotificationServiceExtension'
+        user_target.build_phases.each do |phase|
+          if phase.respond_to?(:name) && phase.name == '[CP] Copy Pods Resources'
+            user_target.build_phases.delete(phase)
+          end
+        end
+      end
+    end
+  end
 end
