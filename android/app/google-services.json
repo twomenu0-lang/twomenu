@@ -22,6 +22,22 @@
           }
         },
         {
+          "client_id": "161430194427-ilq5302okecjv5kamq6sfdt05gql5vg0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "shop.towmenu.app",
+            "certificate_hash": "09ac257765fecdb537956575fe8616e1c3c85391"
+          }
+        },
+        {
+          "client_id": "161430194427-t38gkgubm9c62kogvqv2pjbthcmh1s6u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "shop.towmenu.app",
+            "certificate_hash": "f847531c79de639fb15bd7d5c4c9ad6d5bc46ed5"
+          }
+        },
+        {
           "client_id": "161430194427-jm3oin9irkrpufgu7vv1o4oja7vo5dn8.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -37,6 +53,13 @@
             {
               "client_id": "161430194427-jm3oin9irkrpufgu7vv1o4oja7vo5dn8.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "161430194427-05838qmficrahlg3m977l3qqge3uie9v.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "shop.towmenu.app"
+              }
             }
           ]
         }

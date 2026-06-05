@@ -11,8 +11,8 @@ class OrderResponse {
   var customerNote;
   var customerUserAgent;
   var dateCompleted;
-  var dateCreated;
-  var dateModified;
+  var dateCreated; // ← String مش Object
+  var dateModified; // ← String مش Object
   var datePaid;
   var discountTax;
   var discountTotal;
@@ -36,37 +36,37 @@ class OrderResponse {
 
   OrderResponse(
       {this.billing,
-      this.cartHash,
-      this.cartTax,
-      this.createdVia,
-      this.currency,
-      this.customerId,
-      this.customerIpAddress,
-      this.customerNote,
-      this.customerUserAgent,
-      this.dateCompleted,
-      this.dateCreated,
-      this.dateModified,
-      this.datePaid,
-      this.discountTax,
-      this.discountTotal,
-      this.id,
-      this.lineItems,
-      this.metaData,
-      this.number,
-      this.orderKey,
-      this.parentId,
-      this.paymentMethod,
-      this.paymentMethodTitle,
-      this.pricesIncludeTax,
-      this.shipping,
-      this.shippingTax,
-      this.shippingTotal,
-      this.status,
-      this.total,
-      this.totalTax,
-      this.transactionId,
-      this.version});
+        this.cartHash,
+        this.cartTax,
+        this.createdVia,
+        this.currency,
+        this.customerId,
+        this.customerIpAddress,
+        this.customerNote,
+        this.customerUserAgent,
+        this.dateCompleted,
+        this.dateCreated,
+        this.dateModified,
+        this.datePaid,
+        this.discountTax,
+        this.discountTotal,
+        this.id,
+        this.lineItems,
+        this.metaData,
+        this.number,
+        this.orderKey,
+        this.parentId,
+        this.paymentMethod,
+        this.paymentMethodTitle,
+        this.pricesIncludeTax,
+        this.shipping,
+        this.shippingTax,
+        this.shippingTotal,
+        this.status,
+        this.total,
+        this.totalTax,
+        this.transactionId,
+        this.version});
 
   factory OrderResponse.fromJson(Map<String, dynamic> json) {
     return OrderResponse(
@@ -80,14 +80,23 @@ class OrderResponse {
       customerNote: json['customer_note'],
       customerUserAgent: json['customer_user_agent'],
       dateCompleted: json['date_completed'],
-      dateCreated: json['date_created'] != null ? DateCreated.fromJson(json['date_created']) : null,
-      dateModified: json['date_modified'] != null ? DateModified.fromJson(json['date_modified']) : null,
+      // ← التعديل الأساسي: نقرأ الـ date كـ String مباشرة
+      dateCreated: json['date_created'] is String
+          ? json['date_created']
+          : (json['date_created'] is Map ? json['date_created']['date'] : null),
+      dateModified: json['date_modified'] is String
+          ? json['date_modified']
+          : (json['date_modified'] is Map ? json['date_modified']['date'] : null),
       datePaid: json['date_paid'],
       discountTax: json['discount_tax'],
       discountTotal: json['discount_total'],
       id: json['id'],
-      lineItems: json['line_items'] != null ? (json['line_items'] as List).map((i) => LineItem.fromJson(i)).toList() : null,
-      metaData: json['meta_data'] != null ? (json['meta_data'] as List).map((i) => MetaData.fromJson(i)).toList() : null,
+      lineItems: json['line_items'] != null
+          ? (json['line_items'] as List).map((i) => LineItem.fromJson(i)).toList()
+          : null,
+      metaData: json['meta_data'] != null
+          ? (json['meta_data'] as List).map((i) => MetaData.fromJson(i)).toList()
+          : null,
       number: json['number'],
       orderKey: json['order_key'],
       parentId: json['parent_id'],
@@ -116,6 +125,8 @@ class OrderResponse {
     data['customer_note'] = this.customerNote;
     data['customer_user_agent'] = this.customerUserAgent;
     data['date_completed'] = this.dateCompleted;
+    data['date_created'] = this.dateCreated;
+    data['date_modified'] = this.dateModified;
     data['date_paid'] = this.datePaid;
     data['discount_tax'] = this.discountTax;
     data['discount_total'] = this.discountTotal;
@@ -135,12 +146,6 @@ class OrderResponse {
     data['version'] = this.version;
     if (this.billing != null) {
       data['billing'] = this.billing!.toJson();
-    }
-    if (this.dateCreated != null) {
-      data['date_created'] = this.dateCreated.toJson();
-    }
-    if (this.dateModified != null) {
-      data['date_modified'] = this.dateModified.toJson();
     }
     if (this.lineItems != null) {
       data['line_items'] = this.lineItems!.map((v) => v.toJson()).toList();
@@ -184,8 +189,6 @@ class LineItem {
   List<MetaData>? metaData;
   String? name;
   int? orderId;
-
-  // ignore: non_constant_identifier_names
   int? pId;
   List<ProductImage>? productImages;
   int? quantity;
@@ -196,30 +199,33 @@ class LineItem {
   String? totalTax;
   int? variationId;
 
-  // ignore: non_constant_identifier_names
   LineItem(
       {this.productId,
-      this.metaData,
-      this.name,
-      this.orderId,
-      this.pId,
-      this.productImages,
-      this.quantity,
-      this.subtotal,
-      this.subtotalTax,
-      this.taxClass,
-      this.total,
-      this.totalTax,
-      this.variationId});
+        this.metaData,
+        this.name,
+        this.orderId,
+        this.pId,
+        this.productImages,
+        this.quantity,
+        this.subtotal,
+        this.subtotalTax,
+        this.taxClass,
+        this.total,
+        this.totalTax,
+        this.variationId});
 
   factory LineItem.fromJson(Map<String, dynamic> json) {
     return LineItem(
       productId: json['id'],
-      metaData: json['meta_data'] != null ? (json['meta_data'] as List).map((i) => MetaData.fromJson(i)).toList() : null,
+      metaData: json['meta_data'] != null
+          ? (json['meta_data'] as List).map((i) => MetaData.fromJson(i)).toList()
+          : null,
       name: json['name'],
       orderId: json['order_id'],
       pId: json['product_id'],
-      productImages: json['product_images'] != null ? (json['product_images'] as List).map((i) => ProductImage.fromJson(i)).toList() : null,
+      productImages: json['product_images'] != null
+          ? (json['product_images'] as List).map((i) => ProductImage.fromJson(i)).toList()
+          : null,
       quantity: json['quantity'],
       subtotal: json['subtotal'],
       subtotalTax: json['subtotal_tax'],
@@ -262,7 +268,14 @@ class ProductImage {
   int? position;
   String? src;
 
-  ProductImage({this.alt, this.dateCreated, this.dateModified, this.id, this.name, this.position, this.src});
+  ProductImage(
+      {this.alt,
+        this.dateCreated,
+        this.dateModified,
+        this.id,
+        this.name,
+        this.position,
+        this.src});
 
   factory ProductImage.fromJson(Map<String, dynamic> json) {
     return ProductImage(
@@ -344,7 +357,12 @@ class Value {
   String? trackingProductCode;
   String? trackingProvider;
 
-  Value({this.dateShipped, this.trackingId, this.trackingNumber, this.trackingProductCode, this.trackingProvider});
+  Value(
+      {this.dateShipped,
+        this.trackingId,
+        this.trackingNumber,
+        this.trackingProductCode,
+        this.trackingProvider});
 
   factory Value.fromJson(Map<String, dynamic> json) {
     return Value(

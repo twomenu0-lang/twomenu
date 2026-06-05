@@ -33,7 +33,7 @@ class WalkThroughScreenState extends State<WalkThroughScreen> {
             Image.asset(walk_Img1, height: context.height() * 0.4, fit: BoxFit.contain).paddingAll(24),
             20.height,
             Text('أكتر من منيو.. في مكان واحد', style: boldTextStyle(size: 24)).paddingOnly(top: 16, left: 16),
-            Text('ليه تشتت نفسك بين كل المحلات  في تومنايو  جمعنالك كل اللي بيتك محتاجه في  مكان واحد ومنظم ', textAlign: TextAlign.center, style: secondaryTextStyle(size: 16)).paddingOnly(right: 24, left: 16, top: 8)
+            Text('ليه تشتت نفسك بين كل المحلات  في تومنيو  جمعنالك كل اللي بيتك محتاجه في  مكان واحد ومنظم ', textAlign: TextAlign.center, style: secondaryTextStyle(size: 16)).paddingOnly(right: 24, left: 16, top: 8)
           ],
         ),
       ),

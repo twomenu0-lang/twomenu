@@ -22,6 +22,7 @@ dependencies:
   firebase_auth: ^5.5.4
   firebase_crashlytics: ^4.3.6
   firebase_analytics: ^11.4.6
+  firebase_app_check: ^0.3.2+4
   firebase_remote_config: ^5.4.4
 
   # UI

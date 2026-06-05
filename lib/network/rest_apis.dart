@@ -15,7 +15,6 @@ Future createCustomer(request) async {
   return handleResponse(await MightyAPI().postAsync('store/api/v1/auth/registration', request));
 }
 
-// ✅ تم التعديل: استخدام MightyStore API بدلاً من JWT
 Future login(request) async {
   return handleResponse(await MightyAPI().postAsync('store/api/v1/auth/login', request));
 }
@@ -137,8 +136,15 @@ Future deleteReview(id1) async {
   return handleResponse(await MightyAPI().deleteAsync('wc/v3/products/reviews/$id1'));
 }
 
+// ✅ الإصلاح النهائي:
+// store API يرجع [] فارغة رغم وجود طلبات (مشكلة السيرفر في ربط الطلبات بالـ customer_id).
+// wc/v3/orders مع requireToken: false يستخدم Consumer Key/Secret مباشرة وهو ما يعمل في المتصفح.
 Future getOrders() async {
-  return handleResponse(await MightyAPI().getAsync('store/api/v1/woocommerce/get-customer-orders', requireToken: true));
+  final userId = getIntAsync(USER_ID);
+  return handleResponse(await MightyAPI().getAsync(
+    'wc/v3/orders?customer=$userId&per_page=50&orderby=date&order=desc',
+    requireToken: false,
+  ));
 }
 
 Future getOrdersTracking(orderId) async {

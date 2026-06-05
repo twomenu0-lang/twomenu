@@ -137,9 +137,34 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     });
   }
 
+  // ✅ helper آمن لجلب صورة المنتج من line item
+  String? _getItemImage(LineItem item) {
+    if (item.productImages != null && item.productImages!.isNotEmpty) {
+      return item.productImages![0].src;
+    }
+    return null;
+  }
+
+  // ✅ placeholder موحد للمنتجات بدون صورة
+  Widget _productPlaceholder({double size = 85}) {
+    return Container(
+      height: size,
+      width: size,
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(Icons.shopping_bag_outlined, color: Colors.grey, size: size * 0.45),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     var appLocalization = AppLocalizations.of(context)!;
+
+    final lineItems = widget.mOrderModel?.lineItems ?? [];
+    final firstItem = lineItems.isNotEmpty ? lineItems[0] : null;
+    final firstImageSrc = firstItem != null ? _getItemImage(firstItem) : null;
 
     Widget mData(OrderTracking orderTracking) {
       Tracking tracking;
@@ -148,7 +173,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         tracking = Tracking.fromJson(x);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[Text(tracking.status.validate(), style: boldTextStyle()), Text(tracking.message.validate(), style: secondaryTextStyle())],
+          children: <Widget>[
+            Text(tracking.status.validate(), style: boldTextStyle()),
+            Text(tracking.message.validate(), style: secondaryTextStyle())
+          ],
         );
       } on FormatException catch (e) {
         log(e);
@@ -227,10 +255,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           Container(
                             width: MediaQuery.of(context).size.width,
                             padding: EdgeInsets.all(6),
-                            decoration: boxDecorationWithRoundedCorners(borderRadius: radius(8), backgroundColor: Theme.of(context).colorScheme.background),
+                            decoration: boxDecorationWithRoundedCorners(
+                                borderRadius: radius(8),
+                                backgroundColor: Theme.of(context).colorScheme.background),
                             child: SingleChildScrollView(
                               child: Theme(
-                                data: Theme.of(context).copyWith(canvasColor: Theme.of(context).cardTheme.color),
+                                data: Theme.of(context)
+                                    .copyWith(canvasColor: Theme.of(context).cardTheme.color),
                                 child: DropdownButton<String>(
                                   value: mValue,
                                   isExpanded: true,
@@ -274,7 +305,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(appLocalization.translate('lbl_cancel_order')!, style: primaryTextStyle(color: primaryColor)),
+                Text(appLocalization.translate('lbl_cancel_order')!,
+                    style: primaryTextStyle(color: primaryColor)),
                 Icon(Icons.chevron_right),
               ],
             ),
@@ -290,35 +322,68 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
             16.height,
-            commonCacheImageWidget(widget.mOrderModel!.lineItems![0].productImages![0].src, height: 160, width: 160, fit: BoxFit.cover).cornerRadiusWithClipRRect(16).center(),
-            Text(widget.mOrderModel!.lineItems![0].name!, overflow: TextOverflow.ellipsis, maxLines: 2, textAlign: TextAlign.center, style: boldTextStyle())
-                .center()
-                .paddingOnly(left: 20, right: 20, top: 10, bottom: 10),
+
+            // ✅ الصورة الرئيسية - آمنة من null
+            (firstImageSrc != null && firstImageSrc.isNotEmpty
+                ? commonCacheImageWidget(firstImageSrc,
+                height: 160, width: 160, fit: BoxFit.cover)
+                .cornerRadiusWithClipRRect(16)
+                : _productPlaceholder(size: 160))
+                .center(),
+
+            // ✅ اسم المنتج - آمن من null
+            Text(
+              firstItem?.name ?? '#${widget.mOrderModel?.id ?? ''}',
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              style: boldTextStyle(),
+            ).center().paddingOnly(left: 20, right: 20, top: 10, bottom: 10),
+
             Container(
               width: context.width(),
-              decoration: boxDecorationWithRoundedCorners(borderRadius: radius(8), backgroundColor: Theme.of(context).colorScheme.background),
+              decoration: boxDecorationWithRoundedCorners(
+                  borderRadius: radius(8),
+                  backgroundColor: Theme.of(context).colorScheme.background),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(widget.mOrderModel!.status.toUpperCase(), style: boldTextStyle(color: primaryColor)),
+                  Text((widget.mOrderModel?.status ?? '').toUpperCase(),
+                      style: boldTextStyle(color: primaryColor)),
                   4.height,
-                  Text(appLocalization.translate('lbl_deliver_on')! + " " + createDateFormat(value), style: secondaryTextStyle()).visible(value!.isNotEmpty)
+                  Text(appLocalization.translate('lbl_deliver_on')! + " " + createDateFormat(value),
+                      style: secondaryTextStyle())
+                      .visible(value!.isNotEmpty)
                 ],
               ).paddingAll(16),
             ).paddingOnly(left: 16, bottom: 16, right: 16),
+
             GestureDetector(
               onTap: () {
-                WebViewExternalProductScreen(mExternal_URL: mGetTrackingModel[0].trackingLink, title: "Track your order").launch(context);
+                WebViewExternalProductScreen(
+                    mExternal_URL: mGetTrackingModel[0].trackingLink,
+                    title: "Track your order")
+                    .launch(context);
               },
               child: Container(
                 width: context.width(),
-                decoration: boxDecorationWithRoundedCorners(borderRadius: radius(8), backgroundColor: Theme.of(context).colorScheme.background),
-                child: Text(appLocalization.translate('lbl_tracking')!, style: boldTextStyle(color: primaryColor)).paddingAll(16).center(),
+                decoration: boxDecorationWithRoundedCorners(
+                    borderRadius: radius(8),
+                    backgroundColor: Theme.of(context).colorScheme.background),
+                child: Text(appLocalization.translate('lbl_tracking')!,
+                    style: boldTextStyle(color: primaryColor))
+                    .paddingAll(16)
+                    .center(),
               )
                   .paddingOnly(left: 16, bottom: 16, right: 16)
-                  .visible(mGetTrackingModel.isNotEmpty && (widget.mOrderModel!.status == "pending" || widget.mOrderModel!.status == "processing" || widget.mOrderModel!.status == "on-hold")),
+                  .visible(mGetTrackingModel.isNotEmpty &&
+                  (widget.mOrderModel!.status == "pending" ||
+                      widget.mOrderModel!.status == "processing" ||
+                      widget.mOrderModel!.status == "on-hold")),
             ),
+
             Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color),
+
             Container(
               width: context.width(),
               margin: EdgeInsets.only(bottom: 8),
@@ -327,19 +392,31 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   8.height,
-                  Text(appLocalization.translate('lbl_delivery_address')!, style: boldTextStyle(size: 16)),
+                  Text(appLocalization.translate('lbl_delivery_address')!,
+                      style: boldTextStyle(size: 16)),
                   10.height,
-                  Text(widget.mOrderModel!.shipping!.firstName! + " " + widget.mOrderModel!.shipping!.lastName!, style: boldTextStyle(size: 14)),
+                  // ✅ عنوان الشحن - آمن من null
+                  Text(
+                    '${widget.mOrderModel?.shipping?.firstName ?? ''} ${widget.mOrderModel?.shipping?.lastName ?? ''}'.trim(),
+                    style: boldTextStyle(size: 14),
+                  ),
                   2.height,
                   Text(
-                    widget.mOrderModel!.shipping!.address1! + " " + widget.mOrderModel!.shipping!.city! + " " + widget.mOrderModel!.shipping!.country! + " " + widget.mOrderModel!.shipping!.state!,
+                    [
+                      widget.mOrderModel?.shipping?.address1 ?? '',
+                      widget.mOrderModel?.shipping?.city ?? '',
+                      widget.mOrderModel?.shipping?.country ?? '',
+                      widget.mOrderModel?.shipping?.state ?? '',
+                    ].where((s) => s.isNotEmpty).join(' '),
                     style: secondaryTextStyle(size: 14),
                   ),
                   4.height,
                 ],
               ),
             ),
-            Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color).visible(mOrderTrackingModel.isNotEmpty),
+
+            Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color)
+                .visible(mOrderTrackingModel.isNotEmpty),
             Container(
               margin: EdgeInsets.only(bottom: 8),
               padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -350,7 +427,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 ],
               ),
             ).visible(mOrderTrackingModel.isNotEmpty),
-            Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color).visible(widget.mOrderModel!.lineItems!.length > 1),
+
+            Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color)
+                .visible(lineItems.length > 1),
+
+            // ✅ قائمة المنتجات الأخرى - آمنة من null
             Container(
               width: context.width(),
               margin: EdgeInsets.only(bottom: 8),
@@ -359,25 +440,30 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   8.height,
-                  Text(appLocalization.translate('lbl_other_item_in_cart')!, style: boldTextStyle(size: 18)),
-                  Text(appLocalization.translate('lbl_order_id')! + widget.mOrderModel!.id.toString(), style: secondaryTextStyle()),
+                  Text(appLocalization.translate('lbl_other_item_in_cart')!,
+                      style: boldTextStyle(size: 18)),
+                  Text(appLocalization.translate('lbl_order_id')! +
+                      (widget.mOrderModel?.id?.toString() ?? ''),
+                      style: secondaryTextStyle()),
                   16.height,
                   AnimatedListView(
                     scrollDirection: Axis.vertical,
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
-                    itemCount: widget.mOrderModel!.lineItems!.length,
+                    itemCount: lineItems.length,
                     itemBuilder: (context, i) {
+                      final item = lineItems[i];
+                      final itemImageSrc = _getItemImage(item);
                       return GestureDetector(
                         onTap: () {
-                          if (getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1) == 1) {
-                            ProductDetailScreen1(mProId: widget.mOrderModel!.lineItems![0].productId).launch(context);
-                          } else if (getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1) == 2) {
-                            ProductDetailScreen2(mProId: widget.mOrderModel!.lineItems![0].productId).launch(context);
-                          } else if (getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1) == 3) {
-                            ProductDetailScreen3(mProId: widget.mOrderModel!.lineItems![0].productId).launch(context);
+                          final productId = lineItems[i].productId;
+                          final variant = getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1);
+                          if (variant == 2) {
+                            ProductDetailScreen2(mProId: productId).launch(context);
+                          } else if (variant == 3) {
+                            ProductDetailScreen3(mProId: productId).launch(context);
                           } else {
-                            ProductDetailScreen1(mProId: widget.mOrderModel!.lineItems![0].productId).launch(context);
+                            ProductDetailScreen1(mProId: productId).launch(context);
                           }
                         },
                         child: Container(
@@ -386,19 +472,30 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              commonCacheImageWidget(widget.mOrderModel!.lineItems![i].productImages![0].src.validate(), height: 85, width: 85, fit: BoxFit.cover).cornerRadiusWithClipRRect(8),
+                              // ✅ صورة المنتج في القائمة - آمنة من null
+                              (itemImageSrc != null && itemImageSrc.isNotEmpty
+                                  ? commonCacheImageWidget(itemImageSrc,
+                                  height: 85, width: 85, fit: BoxFit.cover)
+                                  .cornerRadiusWithClipRRect(8)
+                                  : _productPlaceholder(size: 85)),
                               Expanded(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(widget.mOrderModel!.lineItems![i].name!, style: primaryTextStyle(), maxLines: 2),
+                                    Text(item.name ?? '', style: primaryTextStyle(), maxLines: 2),
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        PriceWidget(price: widget.mOrderModel!.lineItems![i].total.toString(), size: 18.toDouble()),
+                                        PriceWidget(
+                                            price: item.total?.toString() ?? '0',
+                                            size: 18.toDouble()),
                                         4.width,
-                                        Text(appLocalization.translate('lbl_qty')! + " " + widget.mOrderModel!.lineItems![i].quantity.toString(), style: primaryTextStyle()),
+                                        Text(
+                                            appLocalization.translate('lbl_qty')! +
+                                                " " +
+                                                (item.quantity?.toString() ?? '0'),
+                                            style: primaryTextStyle()),
                                       ],
                                     )
                                   ],
@@ -412,14 +509,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   ),
                 ],
               ),
-            ).visible(widget.mOrderModel!.lineItems!.length > 1),
+            ).visible(lineItems.length > 1),
+
             Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color),
             8.height,
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(appLocalization.translate('lbl_Shipping')!, style: secondaryTextStyle(size: 16)),
-                Text(widget.mOrderModel!.shippingTotal.toString().toInt() != 0 ? getStringAsync(DEFAULT_CURRENCY) + widget.mOrderModel!.shippingTotal : "Free", style: primaryTextStyle()),
+                Text(
+                    (widget.mOrderModel?.shippingTotal?.toString().toInt() ?? 0) != 0
+                        ? getStringAsync(DEFAULT_CURRENCY) +
+                        (widget.mOrderModel?.shippingTotal?.toString() ?? '')
+                        : "Free",
+                    style: primaryTextStyle()),
               ],
             ).paddingSymmetric(horizontal: 16),
             Divider(),
@@ -427,23 +530,35 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(appLocalization.translate("lbl_payment_methods")!, style: boldTextStyle()),
-                Text(widget.mOrderModel!.paymentMethod.toString().capitalizeFirstLetter(), style: primaryTextStyle()),
+                Text((widget.mOrderModel?.paymentMethod?.toString() ?? '').capitalizeFirstLetter(),
+                    style: primaryTextStyle()),
               ],
             ).paddingSymmetric(horizontal: 16, vertical: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(appLocalization.translate("lbl_total_order_price")!, style: boldTextStyle()),
-                PriceWidget(price: widget.mOrderModel!.total, size: 16),
+                PriceWidget(price: widget.mOrderModel?.total, size: 16),
               ],
             ).paddingSymmetric(horizontal: 16, vertical: 8),
+
+            // ✅ الخصم - آمن من null
             RichTextWidget(
               list: [
-                TextSpan(text: appLocalization.translate('lbl_you_saved')! + " ", style: secondaryTextStyle()),
-                TextSpan(text: widget.mOrderModel!.discountTotal, style: boldTextStyle(color: context.accentColor)),
-                TextSpan(text: " " + appLocalization.translate('lbl_on_this_order')!, style: secondaryTextStyle()),
+                TextSpan(
+                    text: appLocalization.translate('lbl_you_saved')! + " ",
+                    style: secondaryTextStyle()),
+                TextSpan(
+                    text: widget.mOrderModel?.discountTotal?.toString() ?? '0',
+                    style: boldTextStyle(color: context.accentColor)),
+                TextSpan(
+                    text: " " + appLocalization.translate('lbl_on_this_order')!,
+                    style: secondaryTextStyle()),
               ],
-            ).paddingSymmetric(horizontal: 8).visible(int.parse(widget.mOrderModel!.discountTotal) > 0),
+            ).paddingSymmetric(horizontal: 8).visible(
+                int.tryParse(widget.mOrderModel?.discountTotal?.toString() ?? '0') != null &&
+                    int.parse(widget.mOrderModel?.discountTotal?.toString() ?? '0') > 0),
+
             Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color),
             Container(
               width: context.width(),
@@ -453,15 +568,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   8.height,
-                  Text(appLocalization.translate('lbl_update_sent_to')!, style: boldTextStyle(size: 18)),
+                  Text(appLocalization.translate('lbl_update_sent_to')!,
+                      style: boldTextStyle(size: 18)),
                   10.height,
                   RichText(
                     text: TextSpan(
                       children: [
                         WidgetSpan(
-                          child: Icon(Icons.call, size: 16, color: Theme.of(context).textTheme.titleMedium!.color).paddingRight(10),
+                          child: Icon(Icons.call,
+                              size: 16,
+                              color: Theme.of(context).textTheme.titleMedium!.color)
+                              .paddingRight(10),
                         ),
-                        TextSpan(text: widget.mOrderModel!.billing!.phone, style: secondaryTextStyle()),
+                        TextSpan(
+                            text: widget.mOrderModel?.billing?.phone ?? '',
+                            style: secondaryTextStyle()),
                       ],
                     ),
                   ),
@@ -469,8 +590,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   RichText(
                     text: TextSpan(
                       children: [
-                        WidgetSpan(child: Icon(Icons.email, size: 16, color: Theme.of(context).textTheme.titleMedium!.color).paddingRight(10)),
-                        TextSpan(text: widget.mOrderModel!.billing!.email, style: secondaryTextStyle()),
+                        WidgetSpan(
+                            child: Icon(Icons.email,
+                                size: 16,
+                                color: Theme.of(context).textTheme.titleMedium!.color)
+                                .paddingRight(10)),
+                        TextSpan(
+                            text: widget.mOrderModel?.billing?.email ?? '',
+                            style: secondaryTextStyle()),
                       ],
                     ),
                   ),
@@ -484,7 +611,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
 
     return Scaffold(
-      appBar: mTop(context, appLocalization.translate('lbl_order_details'), showBack: true) as PreferredSizeWidget?,
+      appBar: mTop(context, appLocalization.translate('lbl_order_details'), showBack: true)
+      as PreferredSizeWidget?,
       body: BodyCornerWidget(
         child: Stack(
           children: [

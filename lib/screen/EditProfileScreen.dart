@@ -38,7 +38,6 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   TextEditingController txtBillingLastName = TextEditingController();
   TextEditingController txtBillingCompanyName = TextEditingController();
   TextEditingController txtBillingAddress1 = TextEditingController();
-  TextEditingController txtBillingAddress2 = TextEditingController();
   TextEditingController txtBillingCity = TextEditingController(text: 'طامية');
   TextEditingController txtBillingPinCode = TextEditingController();
   TextEditingController txtBillingMobile = TextEditingController();
@@ -48,7 +47,6 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   TextEditingController txtShippingLastName = TextEditingController();
   TextEditingController txtShippingCompanyName = TextEditingController();
   TextEditingController txtShippingAddress1 = TextEditingController();
-  TextEditingController txtShippingAddress2 = TextEditingController();
   TextEditingController txtShippingCity = TextEditingController(text: 'طامية');
   TextEditingController txtShippingPinCode = TextEditingController();
 
@@ -56,7 +54,8 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   static const String DEFAULT_STATE_NAME = 'الفيوم';
   static const String DEFAULT_CITY = 'طامية';
 
-  bool isCheckBoxSelected = false;
+  // ✅ افتراضياً: نفس الفواتير محدد
+  bool isCheckBoxSelected = true;
 
   List<Country> billingCountryList = [];
   List<CountryState> billingStateList = [];
@@ -76,7 +75,20 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
+    // ✅ مستمع لتحديث billing/shipping أسماء تلقائياً عند تغيير الاسم الأول أو الكنية
+    txtFirstName.addListener(_syncNamesToAddresses);
+    txtLastName.addListener(_syncNamesToAddresses);
     init();
+  }
+
+  /// ✅ sync تلقائي: أسماء billing وshipping تتبع txtFirstName/txtLastName دائماً
+  void _syncNamesToAddresses() {
+    txtBillingFirstName.text = txtFirstName.text;
+    txtBillingLastName.text = txtLastName.text;
+    if (isCheckBoxSelected) {
+      txtShippingFirstName.text = txtFirstName.text;
+      txtShippingLastName.text = txtLastName.text;
+    }
   }
 
   init() async {
@@ -92,7 +104,11 @@ class EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  void _applyDefaultCountryState(List<Country> countries, {String? existingBillingCountry, String? existingBillingState, String? existingShippingCountry, String? existingShippingState}) {
+  void _applyDefaultCountryState(List<Country> countries,
+      {String? existingBillingCountry,
+        String? existingBillingState,
+        String? existingShippingCountry,
+        String? existingShippingState}) {
     setState(() {
       appStore.setLoading(false);
       billingCountryList.addAll(countries);
@@ -160,6 +176,11 @@ class EditProfileScreenState extends State<EditProfileScreen> {
             );
           }
         }
+
+        // ✅ إذا كان الـ checkbox محدد افتراضياً، اجعل shipping = billing
+        if (isCheckBoxSelected) {
+          fillShipping();
+        }
       }
     });
   }
@@ -174,29 +195,28 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       txtFirstName.text = mUserData.firstName!;
       txtLastName.text = mUserData.lastName!;
       txtEmail.text = mUserData.email;
-      txtBillingFirstName.text = mUserData.billing!.firstName!;
-      txtBillingLastName.text = mUserData.billing!.lastName!;
+      // ✅ أسماء billing تأتي من الاسم الأساسي
+      txtBillingFirstName.text = mUserData.firstName!;
+      txtBillingLastName.text = mUserData.lastName!;
       txtBillingAddress1.text = mUserData.billing!.address1!;
-      txtBillingAddress2.text = mUserData.billing!.address2!;
       txtBillingCity.text = mUserData.billing!.city!.isNotEmpty ? mUserData.billing!.city! : DEFAULT_CITY;
       txtBillingPinCode.text = mUserData.billing!.postcode!;
       txtBillingMobile.text = mUserData.billing!.phone!;
       txtBillingEmail.text = mUserData.billing!.email!;
-      txtShippingFirstName.text = mUserData.shipping!.firstName!;
-      txtShippingLastName.text = mUserData.shipping!.lastName!;
+      // ✅ أسماء shipping تأتي من الاسم الأساسي
+      txtShippingFirstName.text = mUserData.firstName!;
+      txtShippingLastName.text = mUserData.lastName!;
       txtShippingAddress1.text = mUserData.shipping!.address1!;
-      txtShippingAddress2.text = mUserData.shipping!.address2!;
       txtShippingCity.text = mUserData.shipping!.city!.isNotEmpty ? mUserData.shipping!.city! : DEFAULT_CITY;
       txtShippingPinCode.text = mUserData.shipping!.postcode!;
-      isCheckBoxSelected = false;
 
       existingBillingCountry = mUserData.billing!.country;
       existingBillingState = mUserData.billing!.state;
       existingShippingCountry = mUserData.shipping!.country;
       existingShippingState = mUserData.shipping!.state;
 
-      await setValue(FIRST_NAME, mUserData.shipping!.firstName);
-      await setValue(LAST_NAME, mUserData.shipping!.lastName);
+      await setValue(FIRST_NAME, mUserData.firstName);
+      await setValue(LAST_NAME, mUserData.lastName);
     }
 
     await getCountries().then((value) async {
@@ -229,23 +249,22 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       txtFirstName.text = res['first_name'];
       txtLastName.text = res['last_name'];
       txtEmail.text = res['email'];
-      txtBillingFirstName.text = res['billing']['first_name'];
-      txtBillingLastName.text = res['billing']['last_name'];
+      // ✅ أسماء billing تأتي من الاسم الأساسي
+      txtBillingFirstName.text = res['first_name'];
+      txtBillingLastName.text = res['last_name'];
       txtBillingCompanyName.text = res['billing']['company'];
       txtBillingAddress1.text = res['billing']['address_1'];
-      txtBillingAddress2.text = res['billing']['address_2'];
       txtBillingCity.text = (res['billing']['city'] as String).isNotEmpty ? res['billing']['city'] : DEFAULT_CITY;
       txtBillingPinCode.text = res['billing']['postcode'];
       txtBillingMobile.text = res['billing']['phone'];
       txtBillingEmail.text = res['billing']['email'];
-      txtShippingFirstName.text = res['shipping']['first_name'];
-      txtShippingLastName.text = res['shipping']['last_name'];
+      // ✅ أسماء shipping تأتي من الاسم الأساسي
+      txtShippingFirstName.text = res['first_name'];
+      txtShippingLastName.text = res['last_name'];
       txtShippingCompanyName.text = res['shipping']['company'];
       txtShippingAddress1.text = res['shipping']['address_1'];
-      txtShippingAddress2.text = res['shipping']['address_2'];
       txtShippingCity.text = (res['shipping']['city'] as String).isNotEmpty ? res['shipping']['city'] : DEFAULT_CITY;
       txtShippingPinCode.text = res['shipping']['postcode'];
-      isCheckBoxSelected = false;
 
       await setValue(FIRST_NAME, res['first_name']);
       await setValue(LAST_NAME, res['last_name']);
@@ -280,28 +299,29 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       txtShippingLastName.text = txtBillingLastName.text;
       txtShippingCompanyName.text = txtBillingCompanyName.text;
       txtShippingAddress1.text = txtBillingAddress1.text;
-      txtShippingAddress2.text = txtBillingAddress2.text;
       txtShippingCity.text = txtBillingCity.text;
       txtShippingPinCode.text = txtBillingPinCode.text;
       selectedShippingCountry = selectedBillingCountry;
-      shippingStateList.clear();
-      shippingStateList.addAll(selectedShippingCountry!.states!);
-      selectedShippingState = shippingStateList.isNotEmpty ? selectedBillingState : null;
+      if (selectedShippingCountry != null) {
+        shippingStateList.clear();
+        shippingStateList.addAll(selectedShippingCountry!.states!);
+        selectedShippingState = shippingStateList.isNotEmpty ? selectedBillingState : null;
+      }
     } else {
       txtShippingFirstName.text = '';
       txtShippingLastName.text = '';
       txtShippingCompanyName.text = '';
       txtShippingAddress1.text = '';
-      txtShippingAddress2.text = '';
-      txtShippingCity.text = '';
+      txtShippingCity.text = DEFAULT_CITY;
       txtShippingPinCode.text = '';
     }
-    log(txtShippingFirstName.text);
     setState(() {});
   }
 
   @override
   void dispose() {
+    txtFirstName.removeListener(_syncNamesToAddresses);
+    txtLastName.removeListener(_syncNamesToAddresses);
     _controller.dispose();
     super.dispose();
   }
@@ -321,7 +341,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
         mBilling.lastName = txtBillingLastName.text;
         mBilling.company = txtBillingCompanyName.text;
         mBilling.address1 = txtBillingAddress1.text;
-        mBilling.address2 = txtBillingAddress2.text;
+        mBilling.address2 = '';
         mBilling.city = txtBillingCity.text;
         mBilling.postcode = txtBillingPinCode.text;
         mBilling.country = selectedBillingCountry != null ? selectedBillingCountry!.code.toString() : "";
@@ -334,7 +354,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
         mShipping.lastName = txtShippingLastName.text;
         mShipping.company = txtShippingCompanyName.text;
         mShipping.address1 = txtShippingAddress1.text;
-        mShipping.address2 = txtShippingAddress2.text;
+        mShipping.address2 = '';
         mShipping.city = txtShippingCity.text;
         mShipping.postcode = txtShippingPinCode.text;
         mShipping.country = selectedShippingCountry != null ? selectedShippingCountry!.code.toString() : "";
@@ -494,7 +514,8 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                     8.height,
                     Text(appLocalization.translate("lbl_add_personal_detail")!, style: boldTextStyle(size: 18)),
                     16.height,
-                    // ✅ Personal Info - بدون isAlpha
+
+                    // ✅ الاسم الأول والكنية - يتم sync تلقائي لـ billing وshipping
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -530,36 +551,12 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                         return null;
                       },
                     ),
+
                     Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color),
                     Text(appLocalization.translate("lbl_add_billing_address")!, style: boldTextStyle(size: 18)),
                     16.height,
-                    // ✅ Billing Names - بدون isAlpha
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: SimpleEditText(
-                            mController: txtBillingFirstName,
-                            hintText: appLocalization.translate('hint_first_name'),
-                            validator: (String? v) {
-                              if (v!.trim().isEmpty) return appLocalization.translate('hint_first_name')! + (' ') + appLocalization.translate('error_field_required')!;
-                              return null;
-                            },
-                          ),
-                        ),
-                        16.width,
-                        Expanded(
-                          child: SimpleEditText(
-                            mController: txtBillingLastName,
-                            hintText: appLocalization.translate('hint_last_name'),
-                            validator: (String? v) {
-                              if (v!.trim().isEmpty) return appLocalization.translate('hint_last_name')! + (' ') + appLocalization.translate('error_field_required')!;
-                              return null;
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
+
+                    // ✅ حقل العنوان 1 فقط (حُذف العنوان 2)
                     SimpleEditText(
                       mController: txtBillingAddress1,
                       hintText: appLocalization.translate('hint_add1'),
@@ -568,15 +565,8 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                         return null;
                       },
                     ),
-                    SimpleEditText(
-                      mController: txtBillingAddress2,
-                      hintText: appLocalization.translate('hint_add2'),
-                      validator: (String? v) {
-                        if (v!.trim().isEmpty) return appLocalization.translate('hint_add2')! + (' ') + appLocalization.translate('error_field_required')!;
-                        return null;
-                      },
-                    ),
-                    // ✅ City فقط - بدون Pincode
+
+                    // ✅ المدينة
                     SimpleEditText(
                       mController: txtBillingCity,
                       hintText: appLocalization.translate('hint_city'),
@@ -585,7 +575,8 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                         return null;
                       },
                     ),
-                    // ✅ Country & State Dropdowns
+
+                    // ✅ الدولة والمحافظة - مصر والفيوم افتراضياً
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -657,6 +648,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                       ],
                     ).visible(billingCountryList.isNotEmpty),
                     16.height,
+
                     SimpleEditText(
                       mController: txtBillingMobile,
                       keyboardType: TextInputType.number,
@@ -675,7 +667,10 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                         return null;
                       },
                     ),
+
                     Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color),
+
+                    // ✅ عنوان الشحن مع checkbox "نفس الفواتير" - محدد افتراضياً
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -683,7 +678,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                         Row(
                           children: [
                             Text(appLocalization.translate('lbl_same')!, style: secondaryTextStyle(color: Theme.of(context).textTheme.titleSmall!.color, size: 16)),
-                            Icon(isCheckBoxSelected == true ? Icons.check_box : Icons.check_box_outline_blank, color: greyColor, size: 30).onTap(() {
+                            Icon(isCheckBoxSelected ? Icons.check_box : Icons.check_box_outline_blank, color: greyColor, size: 30).onTap(() {
                               isCheckBoxSelected = !isCheckBoxSelected;
                               fillShipping();
                               setState(() {});
@@ -693,121 +688,90 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                       ],
                     ),
                     16.height,
-                    // ✅ Shipping Names - بدون isAlpha
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: SimpleEditText(
-                            mController: txtShippingFirstName,
-                            hintText: appLocalization.translate('hint_first_name'),
-                            validator: (String? v) {
-                              if (v!.trim().isEmpty) return appLocalization.translate('hint_first_name')! + (' ') + appLocalization.translate('error_field_required')!;
-                              return null;
-                            },
-                          ),
-                        ),
-                        16.width,
-                        Expanded(
-                          child: SimpleEditText(
-                            mController: txtShippingLastName,
-                            hintText: appLocalization.translate('hint_last_name'),
-                            validator: (String? v) {
-                              if (v!.trim().isEmpty) return appLocalization.translate('hint_last_name')! + (' ') + appLocalization.translate('error_field_required')!;
-                              return null;
-                            },
-                          ),
-                        )
-                      ],
-                    ),
-                    SimpleEditText(
-                      mController: txtShippingAddress1,
-                      hintText: appLocalization.translate('hint_add1'),
-                      validator: (String? v) {
-                        if (v!.trim().isEmpty) return appLocalization.translate('hint_add1')! + (' ') + appLocalization.translate('error_field_required')!;
-                        return null;
-                      },
-                    ),
-                    SimpleEditText(
-                      mController: txtShippingAddress2,
-                      hintText: appLocalization.translate('hint_add2'),
-                      validator: (String? v) {
-                        if (v!.trim().isEmpty) return appLocalization.translate('hint_add2')! + (' ') + appLocalization.translate('error_field_required')!;
-                        return null;
-                      },
-                    ),
-                    // ✅ Shipping City فقط - بدون Pincode
-                    SimpleEditText(
-                      mController: txtShippingCity,
-                      hintText: appLocalization.translate('hint_city'),
-                      validator: (String? v) {
-                        if (v!.trim().isEmpty) return appLocalization.translate('hint_city')! + (' ') + appLocalization.translate('error_field_required')!;
-                        return null;
-                      },
-                    ),
-                    // ✅ Shipping Country & State
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          decoration: boxDecorationWithRoundedCorners(border: Border.all(width: 0.2), backgroundColor: context.cardColor),
-                          child: DropdownButton(
-                            value: selectedShippingCountry,
-                            isExpanded: true,
-                            dropdownColor: context.cardColor,
-                            underline: SizedBox(),
-                            onChanged: (dynamic value) {
-                              setState(() {
-                                selectedShippingCountry = value;
-                                shippingStateList.clear();
-                                shippingStateList.addAll(selectedShippingCountry!.states!);
-                                selectedShippingState = selectedShippingCountry!.states!.isNotEmpty ? shippingStateList[0] : null;
-                              });
-                            },
-                            items: billingCountryList.map((value) {
-                              return DropdownMenuItem(
-                                value: value,
-                                child: FittedBox(
-                                  fit: BoxFit.fitWidth,
-                                  child: Text(
-                                    value.name != null && value.name.toString().isNotEmpty ? value.name : "NA",
-                                    style: primaryTextStyle(color: Theme.of(context).textTheme.titleMedium!.color),
-                                  ).paddingOnly(left: 16, right: 16, top: 8, bottom: 8),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ).expand(),
-                        16.width,
-                        Container(
-                          decoration: boxDecorationWithRoundedCorners(border: Border.all(width: 0.2), backgroundColor: context.cardColor),
-                          child: selectedShippingState != null
-                              ? DropdownButton(
-                            dropdownColor: context.cardColor,
-                            value: selectedShippingState,
-                            isExpanded: true,
-                            underline: SizedBox(),
-                            onChanged: (dynamic value) {
-                              setState(() { selectedShippingState = value; });
-                            },
-                            items: shippingStateList.map((value) {
-                              return DropdownMenuItem(
-                                value: value,
-                                child: FittedBox(
-                                  fit: BoxFit.fitWidth,
-                                  child: Text(
-                                    value.name != null && value.name.toString().isNotEmpty ? value.name : "NA",
-                                    textAlign: TextAlign.center,
-                                    style: primaryTextStyle(),
-                                  ).paddingOnly(left: 16, right: 16, top: 8, bottom: 8),
-                                ),
-                              );
-                            }).toList(),
-                          )
-                              : Text("NA", style: primaryTextStyle(color: Theme.of(context).textTheme.titleMedium!.color)).paddingOnly(top: 12, bottom: 12).center(),
-                        ).expand()
-                      ],
-                    ).visible(billingCountryList.isNotEmpty),
+
+                    // ✅ حقول الشحن - تظهر فقط عند إلغاء تحديد "نفس الفواتير"
+                    if (!isCheckBoxSelected) ...[
+                      SimpleEditText(
+                        mController: txtShippingAddress1,
+                        hintText: appLocalization.translate('hint_add1'),
+                        validator: (String? v) {
+                          if (v!.trim().isEmpty) return appLocalization.translate('hint_add1')! + (' ') + appLocalization.translate('error_field_required')!;
+                          return null;
+                        },
+                      ),
+                      SimpleEditText(
+                        mController: txtShippingCity,
+                        hintText: appLocalization.translate('hint_city'),
+                        validator: (String? v) {
+                          if (v!.trim().isEmpty) return appLocalization.translate('hint_city')! + (' ') + appLocalization.translate('error_field_required')!;
+                          return null;
+                        },
+                      ),
+
+                      // ✅ Shipping Country & State
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            decoration: boxDecorationWithRoundedCorners(border: Border.all(width: 0.2), backgroundColor: context.cardColor),
+                            child: DropdownButton(
+                              value: selectedShippingCountry,
+                              isExpanded: true,
+                              dropdownColor: context.cardColor,
+                              underline: SizedBox(),
+                              onChanged: (dynamic value) {
+                                setState(() {
+                                  selectedShippingCountry = value;
+                                  shippingStateList.clear();
+                                  shippingStateList.addAll(selectedShippingCountry!.states!);
+                                  selectedShippingState = selectedShippingCountry!.states!.isNotEmpty ? shippingStateList[0] : null;
+                                });
+                              },
+                              items: billingCountryList.map((value) {
+                                return DropdownMenuItem(
+                                  value: value,
+                                  child: FittedBox(
+                                    fit: BoxFit.fitWidth,
+                                    child: Text(
+                                      value.name != null && value.name.toString().isNotEmpty ? value.name : "NA",
+                                      style: primaryTextStyle(color: Theme.of(context).textTheme.titleMedium!.color),
+                                    ).paddingOnly(left: 16, right: 16, top: 8, bottom: 8),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ).expand(),
+                          16.width,
+                          Container(
+                            decoration: boxDecorationWithRoundedCorners(border: Border.all(width: 0.2), backgroundColor: context.cardColor),
+                            child: selectedShippingState != null
+                                ? DropdownButton(
+                              dropdownColor: context.cardColor,
+                              value: selectedShippingState,
+                              isExpanded: true,
+                              underline: SizedBox(),
+                              onChanged: (dynamic value) {
+                                setState(() { selectedShippingState = value; });
+                              },
+                              items: shippingStateList.map((value) {
+                                return DropdownMenuItem(
+                                  value: value,
+                                  child: FittedBox(
+                                    fit: BoxFit.fitWidth,
+                                    child: Text(
+                                      value.name != null && value.name.toString().isNotEmpty ? value.name : "NA",
+                                      textAlign: TextAlign.center,
+                                      style: primaryTextStyle(),
+                                    ).paddingOnly(left: 16, right: 16, top: 8, bottom: 8),
+                                  ),
+                                );
+                              }).toList(),
+                            )
+                                : Text("NA", style: primaryTextStyle(color: Theme.of(context).textTheme.titleMedium!.color)).paddingOnly(top: 12, bottom: 12).center(),
+                          ).expand()
+                        ],
+                      ).visible(billingCountryList.isNotEmpty),
+                    ],
                   ],
                 ),
               ),

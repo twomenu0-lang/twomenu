@@ -24,12 +24,11 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class CategoriesScreenState extends State<CategoriesScreen> {
+  // ✅ ScrollController واحد بس يتربط بالـ SingleChildScrollView
   ScrollController scrollController = ScrollController();
 
   String errorMsg = '';
-
   bool isLastPage = false;
-
   int crossAxisCount = 2;
   int page = 1;
 
@@ -44,6 +43,7 @@ class CategoriesScreenState extends State<CategoriesScreen> {
   init() async {
     await fetchCategoryData();
     crossAxisCount = getIntAsync(CATEGORY_CROSS_AXIS_COUNT, defaultValue: 2);
+    // ✅ ربط الـ scrollController بالـ listener للـ pagination
     scrollController.addListener(() async {
       await scrollHandler();
     });
@@ -52,7 +52,10 @@ class CategoriesScreenState extends State<CategoriesScreen> {
 
   scrollHandler() {
     setState(() {
-      if (scrollController.position.pixels == scrollController.position.maxScrollExtent && !appStore.isLoading && isLastPage == false) {
+      if (scrollController.position.pixels ==
+          scrollController.position.maxScrollExtent &&
+          !appStore.isLoading &&
+          isLastPage == false) {
         page++;
         loadMoreData(page);
       }
@@ -66,7 +69,8 @@ class CategoriesScreenState extends State<CategoriesScreen> {
       appStore.setLoading(false);
       setState(() {
         Iterable list = res;
-        mCategoryModel.addAll(list.map((model) => Category.fromJson(model)).toList());
+        mCategoryModel
+            .addAll(list.map((model) => Category.fromJson(model)).toList());
         if (mCategoryModel.isEmpty) {
           isLastPage = true;
         }
@@ -84,20 +88,22 @@ class CategoriesScreenState extends State<CategoriesScreen> {
         return LayoutSelectionCategory(
           crossAxisCount: crossAxisCount,
           callBack: (crossValue) {
-            crossAxisCount = crossValue;
-            setState(() {});
+            // ✅ تغيير التخطيط بدون إعادة إنشاء الـ ScrollController
+            setState(() {
+              crossAxisCount = crossValue;
+            });
           },
         );
       },
     );
   }
 
-  // @override
-  // void dispose() {
-  //   print("dispose-------");
-  //   super.dispose();
-  //   // scrollController.dispose();
-  // }
+  @override
+  void dispose() {
+    // ✅ التخلص من الـ ScrollController بشكل صحيح
+    scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +119,8 @@ class CategoriesScreenState extends State<CategoriesScreen> {
             onPressed: () {
               layoutSelectionBottomSheet(context);
             },
-            icon: Icon(MaterialCommunityIcons.view_dashboard_outline, color: Colors.white, size: 30),
+            icon: Icon(MaterialCommunityIcons.view_dashboard_outline,
+                color: Colors.white, size: 30),
           )
         ],
       ) as PreferredSizeWidget?,
@@ -121,72 +128,157 @@ class CategoriesScreenState extends State<CategoriesScreen> {
         child: Stack(
           alignment: Alignment.topLeft,
           children: [
+            // ✅ الحل الرئيسي: SingleChildScrollView مع scrollController
+            // بيغلف الـ Column كلها عشان الـ scroll يشتغل في كل الأحوال
             if (mCategoryModel.isNotEmpty)
-              Column(
-                children: [
-                  crossAxisCount != 1
-                      ? AlignedGridView.count(
-                          itemCount: mCategoryModel.length,
-                          shrinkWrap: true,
-                          crossAxisCount: 2,
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          itemBuilder: (context, index) {
-                            return GestureDetector(
-                              onTap: () {
-                                ViewAllScreen(mCategoryModel[index].name, isCategory: true, categoryId: mCategoryModel[index].id).launch(context);
-                              },
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Container(
-                                      decoration: boxDecorationWithRoundedCorners(
-                                          borderRadius: radius(8), backgroundColor: Theme.of(context).colorScheme.background, border: Border.all(color: Theme.of(context).colorScheme.background)),
-                                      child: mCategoryModel[index].image != null
-                                          ? commonCacheImageWidget(mCategoryModel[index].image!.src.validate(), height: 160, width: w, fit: BoxFit.cover).cornerRadiusWithClipRRect(8)
-                                          : Image.asset(ic_placeholder_logo, width: w, height: 160, fit: BoxFit.fill).cornerRadiusWithClipRRect(8)),
-                                  Text(parseHtmlString(mCategoryModel[index].name.validate()), textAlign: TextAlign.center, style: primaryTextStyle(), maxLines: 1)
-                                ],
+              SingleChildScrollView(
+                controller: scrollController,
+                physics: AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                    crossAxisCount != 1
+                    // ✅ Grid View: shrinkWrap: true + NeverScrollableScrollPhysics
+                    // لأن الـ SingleChildScrollView فوقه هو اللي بيتحكم في الـ scroll
+                        ? AlignedGridView.count(
+                      itemCount: mCategoryModel.length,
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      itemBuilder: (context, index) {
+                        return GestureDetector(
+                          onTap: () {
+                            ViewAllScreen(
+                              mCategoryModel[index].name,
+                              isCategory: true,
+                              categoryId: mCategoryModel[index].id,
+                            ).launch(context);
+                          },
+                          child: Column(
+                            crossAxisAlignment:
+                            CrossAxisAlignment.center,
+                            children: [
+                              Container(
+                                decoration:
+                                boxDecorationWithRoundedCorners(
+                                  borderRadius: radius(8),
+                                  backgroundColor: Theme.of(context)
+                                      .colorScheme
+                                      .background,
+                                  border: Border.all(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .background),
+                                ),
+                                child: mCategoryModel[index].image !=
+                                    null
+                                    ? commonCacheImageWidget(
+                                    mCategoryModel[index]
+                                        .image!
+                                        .src
+                                        .validate(),
+                                    height: 160,
+                                    width: w,
+                                    fit: BoxFit.cover)
+                                    .cornerRadiusWithClipRRect(8)
+                                    : Image.asset(ic_placeholder_logo,
+                                    width: w,
+                                    height: 160,
+                                    fit: BoxFit.fill)
+                                    .cornerRadiusWithClipRRect(8),
                               ),
-                            ).paddingAll(8);
+                              Text(
+                                parseHtmlString(mCategoryModel[index]
+                                    .name
+                                    .validate()),
+                                textAlign: TextAlign.center,
+                                style: primaryTextStyle(),
+                                maxLines: 1,
+                              )
+                            ],
+                          ),
+                        ).paddingAll(8);
+                      },
+                    )
+                    // ✅ List View: نفس الحل shrinkWrap + NeverScrollableScrollPhysics
+                        : AnimatedListView(
+                      itemCount: mCategoryModel.length,
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      padding: EdgeInsets.all(16),
+                      itemBuilder: (context, index) {
+                        return GestureDetector(
+                          onTap: () {
+                            ViewAllScreen(
+                              mCategoryModel[index].name,
+                              isCategory: true,
+                              categoryId: mCategoryModel[index].id,
+                            ).launch(context);
                           },
-                        ).expand()
-                      : AnimatedListView(
-                          itemCount: mCategoryModel.length,
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          padding: EdgeInsets.all(16),
-                          itemBuilder: (context, index) {
-                            return GestureDetector(
-                              onTap: () {
-                                ViewAllScreen(mCategoryModel[index].name, isCategory: true, categoryId: mCategoryModel[index].id).launch(context);
-                              },
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  Container(
-                                    decoration: boxDecorationWithRoundedCorners(
-                                        borderRadius: radius(8), backgroundColor: Theme.of(context).colorScheme.background, border: Border.all(color: Theme.of(context).colorScheme.background)),
-                                    child: mCategoryModel[index].image != null
-                                        ? commonCacheImageWidget(mCategoryModel[index].image!.src, height: 80, width: 80, fit: BoxFit.cover).cornerRadiusWithClipRRect(8)
-                                        : Image.asset(ic_placeholder_logo, height: 80, width: 80, fit: BoxFit.cover).cornerRadiusWithClipRRect(8),
-                                  ),
-                                  8.width,
-                                  Text(parseHtmlString(mCategoryModel[index].name), textAlign: TextAlign.start, style: boldTextStyle(size: 18), maxLines: 2).expand()
-                                ],
-                              ).paddingSymmetric(vertical: 8),
-                            );
-                          },
-                        ).expand(),
-                  mProgress().center().visible(appStore.isLoading && page > 1),
-                  16.height,
-                ],   
+                          child: Row(
+                            crossAxisAlignment:
+                            CrossAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Container(
+                                decoration:
+                                boxDecorationWithRoundedCorners(
+                                  borderRadius: radius(8),
+                                  backgroundColor: Theme.of(context)
+                                      .colorScheme
+                                      .background,
+                                  border: Border.all(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .background),
+                                ),
+                                child: mCategoryModel[index].image !=
+                                    null
+                                    ? commonCacheImageWidget(
+                                    mCategoryModel[index]
+                                        .image!
+                                        .src,
+                                    height: 80,
+                                    width: 80,
+                                    fit: BoxFit.cover)
+                                    .cornerRadiusWithClipRRect(8)
+                                    : Image.asset(ic_placeholder_logo,
+                                    height: 80,
+                                    width: 80,
+                                    fit: BoxFit.cover)
+                                    .cornerRadiusWithClipRRect(8),
+                              ),
+                              8.width,
+                              Text(
+                                parseHtmlString(
+                                    mCategoryModel[index].name),
+                                textAlign: TextAlign.start,
+                                style: boldTextStyle(size: 18),
+                                maxLines: 2,
+                              ).expand()
+                            ],
+                          ).paddingSymmetric(vertical: 8),
+                        );
+                      },
+                    ),
+                    // ✅ Loading indicator للـ pagination
+                    mProgress()
+                        .center()
+                        .visible(appStore.isLoading && page > 1),
+                    16.height,
+                  ],
+                ),
               ),
 
-      
-            EmptyScreen().center().visible(!appStore.isLoading && mCategoryModel.validate().isEmpty),
+            EmptyScreen()
+                .center()
+                .visible(!appStore.isLoading &&
+                mCategoryModel.validate().isEmpty),
             if (mCategoryModel.isEmpty)
-            Center(child: mProgress().visible(appStore.isLoading && page == 1)),
+              Center(
+                  child:
+                  mProgress().visible(appStore.isLoading && page == 1)),
           ],
         ),
       ),

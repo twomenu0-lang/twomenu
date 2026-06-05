@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:country_code_picker/country_code_picker.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:Twomenu/store/AppStore.dart';
@@ -10,7 +12,6 @@ import 'package:Twomenu/store/CartStore/CartStore.dart';
 import 'package:Twomenu/store/WishListStore/WishListStore.dart';
 import 'package:Twomenu/utils/firebase_options.dart';
 import '/../AppTheme.dart';
-
 import '/../AppLocalizations.dart';
 import '/../models/BuilderResponse.dart';
 import '/../models/CartModel.dart';
@@ -54,11 +55,20 @@ Future<BuilderResponse> loadContent() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   ).then((value) {
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
   });
+
+  // ← App Check: يمنع فتح المتصفح ويحل مشكلة reCAPTCHA
+  await FirebaseAppCheck.instance.activate(
+    androidProvider: kDebugMode
+        ? AndroidProvider.debug
+        : AndroidProvider.playIntegrity,
+    appleProvider: AppleProvider.deviceCheck,
+  );
 
   await initialize();
 
@@ -67,11 +77,11 @@ void main() async {
     OneSignal.Notifications.requestPermission(true);
     final playerId = OneSignal.User.pushSubscription.id;
     await setValue(PLAYER_ID, playerId);
-    // تم حذف سطر إعدادات MobileAds من هنا
   }
 
   appStore.setCount(getIntAsync(CARTCOUNT, defaultValue: 0));
-  appStore.setNotification(getBoolAsync(IS_NOTIFICATION_ON, defaultValue: true));
+  appStore.setNotification(
+      getBoolAsync(IS_NOTIFICATION_ON, defaultValue: true));
 
   await setValue(DASHBOARD_PAGE_VARIANT, Default_DASHBOARD_PAGE_VARIANT);
   await setValue(PRODUCT_DETAIL_VARIANT, Default_PRODUCT_DETAIL_VARIANT);
@@ -96,25 +106,37 @@ void main() async {
     await setValue(CONSUMER_SECRET, builderResponse.appsetup!.consumerSecret);
   }
 
-  await setValue(BACKGROUND_COLOR, builderResponse.appsetup!.backgroundColor);
+  await setValue(
+      BACKGROUND_COLOR, builderResponse.appsetup!.backgroundColor);
   await setValue(SECONDARY_COLOR, builderResponse.appsetup!.secondaryColor);
-  await setValue(TEXT_PRIMARY_COLOR, builderResponse.appsetup!.textPrimaryColor);
-  await setValue(TEXT_SECONDARY_COLOR, builderResponse.appsetup!.textSecondaryColor);
+  await setValue(
+      TEXT_PRIMARY_COLOR, builderResponse.appsetup!.textPrimaryColor);
+  await setValue(
+      TEXT_SECONDARY_COLOR, builderResponse.appsetup!.textSecondaryColor);
 
-  primaryColor = getColorFromHex(getStringAsync(PRIMARY_COLOR), defaultColor: appColorPrimary);
-  colorAccent = getColorFromHex(getStringAsync(SECONDARY_COLOR), defaultColor: appColorAccent);
-  textPrimaryColour = getColorFromHex(getStringAsync(TEXT_PRIMARY_COLOR), defaultColor: textColorPrimary);
-  textSecondaryColour = getColorFromHex(getStringAsync(TEXT_SECONDARY_COLOR), defaultColor: textColorSecondary);
-  backgroundColor = getColorFromHex(getStringAsync(BACKGROUND_COLOR), defaultColor: itemBackgroundColor);
+  primaryColor = getColorFromHex(getStringAsync(PRIMARY_COLOR),
+      defaultColor: appColorPrimary);
+  colorAccent = getColorFromHex(getStringAsync(SECONDARY_COLOR),
+      defaultColor: appColorAccent);
+  textPrimaryColour = getColorFromHex(getStringAsync(TEXT_PRIMARY_COLOR),
+      defaultColor: textColorPrimary);
+  textSecondaryColour = getColorFromHex(getStringAsync(TEXT_SECONDARY_COLOR),
+      defaultColor: textColorSecondary);
+  backgroundColor = getColorFromHex(getStringAsync(BACKGROUND_COLOR),
+      defaultColor: itemBackgroundColor);
 
   String cartString = getStringAsync(CART_ITEM_LIST);
   if (cartString.isNotEmpty) {
-    cartStore.addAllCartItem(jsonDecode(cartString).map<CartModel>((e) => CartModel.fromJson(e)).toList());
+    cartStore.addAllCartItem(jsonDecode(cartString)
+        .map<CartModel>((e) => CartModel.fromJson(e))
+        .toList());
   }
 
   String wishListString = getStringAsync(WISHLIST_ITEM_LIST);
   if (wishListString.isNotEmpty) {
-    wishListStore.addAllWishListItem(jsonDecode(wishListString).map<WishListResponse>((e) => WishListResponse.fromJson(e)).toList());
+    wishListStore.addAllWishListItem(jsonDecode(wishListString)
+        .map<WishListResponse>((e) => WishListResponse.fromJson(e))
+        .toList());
   }
 
   baseUrl = getStringAsync(APP_URL);
@@ -128,7 +150,12 @@ void main() async {
     appStore.setDarkMode(aIsDarkMode: true);
   }
 
-  appStore.setLanguage(getStringAsync(LANGUAGE, defaultValue: defaultLanguage));
+  String savedLanguage = getStringAsync(LANGUAGE);
+  if (savedLanguage.isEmpty) {
+    appStore.setLanguage(defaultLanguage);
+  } else {
+    appStore.setLanguage(savedLanguage);
+  }
 
   runApp(MyApp());
 }
@@ -149,13 +176,14 @@ class MyAppState extends State<MyApp> {
       if (!await isNetworkAvailable()) {
         push(NoInternetScreen());
       }
-      _connectivitySubscription = Connectivity().onConnectivityChanged.listen((e) {
-        if (e == ConnectivityResult.none) {
-          push(NoInternetScreen());
-        } else {
-          pop();
-        }
-      });
+      _connectivitySubscription =
+          Connectivity().onConnectivityChanged.listen((e) {
+            if (e == ConnectivityResult.none) {
+              push(NoInternetScreen());
+            } else {
+              pop();
+            }
+          });
     });
   }
 
@@ -174,13 +202,15 @@ class MyAppState extends State<MyApp> {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           navigatorKey: navigatorKey,
-          themeMode: appStore.isDarkMode! ? ThemeMode.dark : ThemeMode.light,
+          themeMode:
+          appStore.isDarkMode! ? ThemeMode.dark : ThemeMode.light,
           supportedLocales: Language.languagesLocale(),
           localizationsDelegates: [
             CountryLocalizations.delegate,
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
           ],
           localeResolutionCallback: (locale, supportedLocales) => locale,
           locale: Locale(appStore.selectedLanguageCode),

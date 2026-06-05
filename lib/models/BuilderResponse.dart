@@ -1,4 +1,4 @@
-class BuilderResponse {
+﻿class BuilderResponse {
   Dashboard? dashboard;
   Appsetup? appsetup;
 
@@ -11,12 +11,8 @@ class BuilderResponse {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.dashboard != null) {
-      data['dashboard'] = this.dashboard!.toJson();
-    }
-    if (this.appsetup != null) {
-      data['appsetup'] = this.appsetup!.toJson();
-    }
+    if (this.dashboard != null) { data['dashboard'] = this.dashboard!.toJson(); }
+    if (this.appsetup != null) { data['appsetup'] = this.appsetup!.toJson(); }
     return data;
   }
 }
@@ -39,23 +35,7 @@ class Dashboard {
   NewProduct? blog;
   SliderView? saleBanner;
 
-  Dashboard(
-      {this.sorting,
-      this.layout,
-      this.appBar,
-      this.sliderView,
-      this.category,
-      this.newProduct,
-      this.featureProduct,
-      this.saleProduct,
-      this.dealOfTheDay,
-      this.bestSaleProduct,
-      this.offerProduct,
-      this.suggestionProduct,
-      this.vendor,
-      this.youMayLikeProduct,
-      this.blog,
-      this.saleBanner});
+  Dashboard({this.sorting, this.layout, this.appBar, this.sliderView, this.category, this.newProduct, this.featureProduct, this.saleProduct, this.dealOfTheDay, this.bestSaleProduct, this.offerProduct, this.suggestionProduct, this.vendor, this.youMayLikeProduct, this.blog, this.saleBanner});
 
   Dashboard.fromJson(Map<String, dynamic> json) {
     sorting = json['sorting'].cast<String>();
@@ -80,45 +60,19 @@ class Dashboard {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['sorting'] = this.sorting;
     data['layout'] = this.layout;
-    if (this.appBar != null) {
-      data['appBar'] = this.appBar!.toJson();
-    }
-    if (this.sliderView != null) {
-      data['sliderView'] = this.sliderView!.toJson();
-    }
-    if (this.category != null) {
-      data['category'] = this.category!.toJson();
-    }
-    if (this.newProduct != null) {
-      data['newProduct'] = this.newProduct!.toJson();
-    }
-    if (this.featureProduct != null) {
-      data['feature'] = this.featureProduct!.toJson();
-    }
-    if (this.saleProduct != null) {
-      data['saleProduct'] = this.saleProduct!.toJson();
-    }
-    if (this.dealOfTheDay != null) {
-      data['dealOfTheDay'] = this.dealOfTheDay!.toJson();
-    }
-    if (this.bestSaleProduct != null) {
-      data['bestSaleProduct'] = this.bestSaleProduct!.toJson();
-    }
-    if (this.offerProduct != null) {
-      data['offerProduct'] = this.offerProduct!.toJson();
-    }
-    if (this.suggestionProduct != null) {
-      data['suggestionProduct'] = this.suggestionProduct!.toJson();
-    }
-    if (this.vendor != null) {
-      data['vendor'] = this.vendor!.toJson();
-    }
-    if (this.youMayLikeProduct != null) {
-      data['youMayLikeProduct'] = this.youMayLikeProduct!.toJson();
-    }
-    if (this.blog != null) {
-      data['blog'] = this.blog!.toJson();
-    }
+    if (this.appBar != null) { data['appBar'] = this.appBar!.toJson(); }
+    if (this.sliderView != null) { data['sliderView'] = this.sliderView!.toJson(); }
+    if (this.category != null) { data['category'] = this.category!.toJson(); }
+    if (this.newProduct != null) { data['newProduct'] = this.newProduct!.toJson(); }
+    if (this.featureProduct != null) { data['feature'] = this.featureProduct!.toJson(); }
+    if (this.saleProduct != null) { data['saleProduct'] = this.saleProduct!.toJson(); }
+    if (this.dealOfTheDay != null) { data['dealOfTheDay'] = this.dealOfTheDay!.toJson(); }
+    if (this.bestSaleProduct != null) { data['bestSaleProduct'] = this.bestSaleProduct!.toJson(); }
+    if (this.offerProduct != null) { data['offerProduct'] = this.offerProduct!.toJson(); }
+    if (this.suggestionProduct != null) { data['suggestionProduct'] = this.suggestionProduct!.toJson(); }
+    if (this.vendor != null) { data['vendor'] = this.vendor!.toJson(); }
+    if (this.youMayLikeProduct != null) { data['youMayLikeProduct'] = this.youMayLikeProduct!.toJson(); }
+    if (this.blog != null) { data['blog'] = this.blog!.toJson(); }
     return data;
   }
 }

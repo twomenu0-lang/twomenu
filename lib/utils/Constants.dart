@@ -133,7 +133,7 @@ const ThemeModeLight = 0;
 const ThemeModeDark = 1;
 const ThemeModeSystem = 2;
 
-const defaultLanguage = 'en';
+const defaultLanguage = 'ar';
 
 const VideoTypeCustom = 'custom_url';
 const VideoTypeYouTube = 'youtube';
