@@ -1,19 +1,15 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart'; // ✅ أضف هذا في pubspec.yaml: share_plus: ^7.0.0
 import '/../main.dart';
-import '/../models/Coupon_lines.dart';
 import '/../models/OrderModel.dart';
 import '/../models/OrderTracking.dart';
 import '/../models/TrackingResponse.dart';
 import '/../network/rest_apis.dart';
-import '/../utils/AppBarWidget.dart';
-import '/../screen/WebViewExternalProductScreen.dart';
 import '/../utils/AppWidget.dart';
 import '/../utils/Common.dart';
 import '/../utils/Constants.dart';
-import '/../utils/DashedRectangle.dart';
 import 'package:nb_utils/nb_utils.dart';
-
 import '../AppLocalizations.dart';
 import 'ProductDetail/ProductDetailScreen1.dart';
 import 'ProductDetail/ProductDetailScreen2.dart';
@@ -22,7 +18,6 @@ import 'ProductDetail/ProductDetailScreen3.dart';
 class OrderDetailScreen extends StatefulWidget {
   static String tag = '/OrderDetailScreen';
   final OrderResponse? mOrderModel;
-
   OrderDetailScreen({this.mOrderModel});
 
   @override
@@ -30,49 +25,78 @@ class OrderDetailScreen extends StatefulWidget {
 }
 
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
-  List<OrderResponse> mOrderModel = [];
   List<OrderTracking> mOrderTrackingModel = [];
   List<TrackingResponse> mGetTrackingModel = [];
+
+  // ✅ بيانات الطلب المحدثة من API
+  OrderResponse? _currentOrder;
+
+  // ✅ حالة تحديث يدوي مستقلة عن appStore.isLoading
+  bool _isRefreshing = false;
+
+  // ── بيانات المتجر ─────────────────────────────────────────────────────────
+  static const String _storePhone = '01036464686';
+  static const String _storeEmail = 'info@twomenu.shop';
+  static const String _waNumber   = '201036363282';
+
+  // ── أسباب الإلغاء بالعربي ────────────────────────────────────────────────
   final List<String> mCancelList = [
-    'Product is being delivered to a wrong address',
-    'Product is not required anymore',
-    'Cheaper alternative available for lesser price',
-    'The price of the product has fallen due to sales/discounts and customer wants to get it at a lesser price.',
-    'Bad review from friends/relatives after ordering the product.',
-    'Order placed by mistake',
-  ].toList();
+    'العنوان المدخل غير صحيح',
+    'لم أعد بحاجة للمنتج',
+    'وجدت بديلاً بسعر أفضل',
+    'انخفض سعر المنتج بعد الطلب',
+    'تقييمات سلبية من الأصدقاء',
+    'تم الطلب بشكل خاطئ',
+  ];
 
   String? mValue;
-  String? value = "";
+  String? deliveryDate = "";
 
   @override
   void initState() {
     super.initState();
-    afterBuildCreated(() {
-      init();
-    });
+    _currentOrder = widget.mOrderModel;
+    afterBuildCreated(() => init());
   }
 
   init() async {
     mValue = mCancelList.first;
+    await _refreshOrder();
     fetchTrackingData();
     getTracking();
-    if (widget.mOrderModel!.metaData != null) {
-      widget.mOrderModel!.metaData!.forEach((element) {
-        if (element.key == "delivery_date") {
-          value = element.value;
-          log("element:- $value");
-        }
-      });
-    } else {
-      value = "";
+    if (_currentOrder?.metaData != null) {
+      for (var element in _currentOrder!.metaData!) {
+        if (element.key == "delivery_date") deliveryDate = element.value;
+      }
     }
-    log('Order Detail' + widget.mOrderModel!.toJson().toString());
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  // ✅ جلب أحدث بيانات الطلب — مع feedback واضح للمستخدم
+  Future _refreshOrder({bool showFeedback = false}) async {
+    final orderId = widget.mOrderModel?.id;
+    if (orderId == null) return;
+
+    if (showFeedback) {
+      setState(() => _isRefreshing = true);
+    }
+
+    try {
+      final res = await getOrderById(orderId);
+      if (!mounted) return;
+      setState(() {
+        _currentOrder = OrderResponse.fromJson(res);
+        _isRefreshing = false;
+      });
+      if (showFeedback) {
+        toast('تم تحديث حالة الطلب بنجاح ✓');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isRefreshing = false);
+      if (showFeedback) {
+        toast('تعذّر تحديث الطلب، تحقق من الاتصال');
+      }
+    }
   }
 
   Future fetchTrackingData() async {
@@ -81,12 +105,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       if (!mounted) return;
       appStore.setLoading(false);
       setState(() {
-        Iterable mCategory = res;
-        mOrderTrackingModel = mCategory.map((model) => OrderTracking.fromJson(model)).toList();
+        mOrderTrackingModel =
+            (res as Iterable).map((m) => OrderTracking.fromJson(m)).toList();
       });
-    }).catchError((error) {
+    }).catchError((e) {
       appStore.setLoading(false);
-      toast(error.toString());
+      toast(e.toString());
     });
   }
 
@@ -96,531 +120,962 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       if (!mounted) return;
       appStore.setLoading(false);
       setState(() {
-        Iterable mTracking = res;
-        mGetTrackingModel = mTracking.map((model) => TrackingResponse.fromJson(model)).toList();
+        mGetTrackingModel =
+            (res as Iterable).map((m) => TrackingResponse.fromJson(m)).toList();
       });
-    }).catchError((error) {
+    }).catchError((e) {
       if (!mounted) return;
       appStore.setLoading(false);
-      toast(error.toString());
     });
   }
 
-  void cancelOrderData(String? mValue) async {
+  void cancelOrderData(String? reason) async {
     appStore.setLoading(true);
-    var request = {
-      "status": "cancelled",
-      "customer_note": mValue,
-    };
-    await cancelOrder(widget.mOrderModel!.id, request).then((res) {
+    await cancelOrder(
+      widget.mOrderModel!.id,
+      {"status": "cancelled", "customer_note": reason},
+    ).then((_) {
       if (!mounted) return;
-      setState(() {
-        var request = {
-          'customer_note': true,
-          'note': "{\n" + "\"status\":\"Cancelled\",\n" + "\"message\":\"Order Canceled by you due to " + mValue! + ".\"\n" + "} ",
-        };
-        createOrderNotes(widget.mOrderModel!.id, request).then((res) {
-          if (!mounted) return;
-          appStore.setLoading(false);
-          finish(context, true);
-        }).catchError((error) {
-          appStore.setLoading(false);
-          finish(context, true);
-          toast(error.toString());
-        });
+      final note = {
+        'customer_note': true,
+        'note': '{"status":"Cancelled","message":"Order Canceled due to $reason."}',
+      };
+      createOrderNotes(widget.mOrderModel!.id, note).then((_) {
+        appStore.setLoading(false);
+        finish(context, true);
+      }).catchError((e) {
+        appStore.setLoading(false);
+        finish(context, true);
       });
-    }).catchError((error) {
-      if (!mounted) return;
+    }).catchError((e) {
       appStore.setLoading(false);
-      toast(error.toString());
+      toast(e.toString());
       finish(context, true);
     });
   }
 
-  // ✅ helper آمن لجلب صورة المنتج من line item
+  // ── ✅ مشاركة تفاصيل الطلب ────────────────────────────────────────────────
+  Future<void> _shareOrder() async {
+    final order   = _currentOrder;
+    final orderId = order?.id?.toString() ?? '';
+    final status  = _statusLabel(order?.status);
+    final total   = order?.total ?? '0';
+    final date    = order?.dateCreated != null
+        ? createDateFormat(order!.dateCreated)
+        : '';
+    final itemNames = (order?.lineItems ?? [])
+        .map((i) => '• ${i.name ?? ''} (الكمية: ${i.quantity ?? 0})')
+        .join('\n');
+
+    final text = '''
+تفاصيل الطلب #$orderId
+────────────────────
+📅 التاريخ: $date
+📦 الحالة: $status
+🛒 المنتجات:
+$itemNames
+💰 الإجمالي: EGP $total
+────────────────────
+للاستفسار تواصل معنا على واتساب:
+https://wa.me/$_waNumber
+'''.trim();
+
+    await Share.share(text, subject: 'تفاصيل الطلب #$orderId');
+  }
+
+  // ── URL launchers ─────────────────────────────────────────────────────────
+  Future<void> _openWhatsApp() async {
+    final orderId = _currentOrder?.id?.toString() ?? '';
+    final msg = Uri.encodeComponent('مرحباً، أريد الاستفسار عن طلبي رقم #$orderId');
+    final uri = Uri.parse('https://wa.me/$_waNumber?text=$msg');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      toast('تعذّر فتح واتساب');
+    }
+  }
+
+  Future<void> _launchPhone() async {
+    final uri = Uri.parse('tel:$_storePhone');
+    if (await canLaunchUrl(uri)) await launchUrl(uri);
+  }
+
+  Future<void> _launchEmail() async {
+    final uri = Uri.parse('mailto:$_storeEmail');
+    if (await canLaunchUrl(uri)) await launchUrl(uri);
+  }
+
+  // ── helpers ──────────────────────────────────────────────────────────────
   String? _getItemImage(LineItem item) {
-    if (item.productImages != null && item.productImages!.isNotEmpty) {
+    if (item.productImages?.isNotEmpty == true) {
       return item.productImages![0].src;
+    }
+    if (item.imageUrl != null && item.imageUrl!.isNotEmpty) {
+      return item.imageUrl;
     }
     return null;
   }
 
-  // ✅ placeholder موحد للمنتجات بدون صورة
-  Widget _productPlaceholder({double size = 85}) {
+  Color _statusColor(String? status) {
+    switch (status) {
+      case 'completed':  return Colors.green;
+      case 'processing': return Color(0xFF3D5AF1);
+      case 'shipped':    return Colors.orange;
+      case 'on-hold':    return Colors.orange;
+      case 'cancelled':  return Colors.red;
+      case 'refunded':   return Colors.purple;
+      default:           return Colors.grey;
+    }
+  }
+
+  String _statusLabel(String? status) {
+    switch (status) {
+      case 'processing': return 'تم استلام الطلب وجاري التجهيز';
+      case 'shipped':    return 'تم الشحن — الطلب في الطريق إليك';
+      case 'completed':  return 'تم التسليم بنجاح';
+      case 'on-hold':    return 'قيد الانتظار';
+      case 'cancelled':  return 'ملغي';
+      case 'pending':    return 'في انتظار الدفع';
+      case 'refunded':   return 'تم الاسترداد';
+      case 'failed':     return 'فشل الطلب';
+      default:           return (status ?? '').toUpperCase();
+    }
+  }
+
+  int _currentStep(String? status) {
+    switch (status) {
+      case 'pending':    return 0;
+      case 'processing': return 1;
+      case 'shipped':    return 2;
+      case 'completed':  return 3;
+      default:           return 0;
+    }
+  }
+
+  Widget _buildProgressTracker() {
+    final steps = [
+      {'icon': Icons.receipt_long_outlined,   'label': 'تم الطلب'},
+      {'icon': Icons.inventory_2_outlined,    'label': 'جاري التجهيز'},
+      {'icon': Icons.local_shipping_outlined, 'label': 'تم الشحن'},
+      {'icon': Icons.home_outlined,           'label': 'تم التسليم'},
+    ];
+    final current = _currentStep(_currentOrder?.status);
+
     return Container(
-      height: size,
-      width: size,
+      margin: EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(8),
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
       ),
-      child: Icon(Icons.shopping_bag_outlined, color: Colors.grey, size: size * 0.45),
+      child: Row(
+        children: List.generate(steps.length, (i) {
+          final isActive = i <= current;
+          final isLast   = i == steps.length - 1;
+          final textColor = isActive ? primaryColor! : Colors.grey;
+
+          return Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? primaryColor!.withValues(alpha: 0.12)
+                              : Colors.grey.shade100,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isActive ? primaryColor! : Colors.grey.shade300,
+                            width: 2,
+                          ),
+                        ),
+                        child: Icon(
+                          steps[i]['icon'] as IconData,
+                          color: isActive ? primaryColor : Colors.grey.shade400,
+                          size: 20,
+                        ),
+                      ),
+                      4.height,
+                      Text(
+                        steps[i]['label'] as String,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: textColor,
+                          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      if (i == current) ...[
+                        4.height,
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: primaryColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                      height: 2,
+                      margin: EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: i < current ? primaryColor : Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  void _showCancelDialog(AppLocalizations loc) {
+    showDialog(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, ss) => AlertDialog(
+          backgroundColor: Theme.of(context).cardTheme.color,
+          title: Text('إلغاء الطلب', style: boldTextStyle()),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              16.height,
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(6),
+                decoration: boxDecorationWithRoundedCorners(
+                  borderRadius: radius(8),
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                ),
+                child: DropdownButton<String>(
+                  value: mValue,
+                  isExpanded: true,
+                  underline: SizedBox(),
+                  dropdownColor: Theme.of(context).cardTheme.color,
+                  onChanged: (v) => ss(() => mValue = v),
+                  items: mCancelList
+                      .map((e) => DropdownMenuItem(
+                    value: e,
+                    child: Text(e, style: primaryTextStyle()),
+                  ))
+                      .toList(),
+                ),
+              ),
+              20.height,
+              AppButton(
+                width: context.width(),
+                textStyle: primaryTextStyle(color: white),
+                text: 'تأكيد الإلغاء',
+                color: primaryColor,
+                onTap: () {
+                  finish(context);
+                  cancelOrderData(mValue);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    var appLocalization = AppLocalizations.of(context)!;
+    final loc        = AppLocalizations.of(context)!;
+    final order      = _currentOrder;
+    final lineItems  = order?.lineItems ?? [];
+    final firstItem  = lineItems.isNotEmpty ? lineItems[0] : null;
+    final firstImg   = firstItem != null ? _getItemImage(firstItem) : null;
+    final totalItems = lineItems.fold<int>(0, (sum, i) => sum + (i.quantity ?? 0));
 
-    final lineItems = widget.mOrderModel?.lineItems ?? [];
-    final firstItem = lineItems.isNotEmpty ? lineItems[0] : null;
-    final firstImageSrc = firstItem != null ? _getItemImage(firstItem) : null;
+    final canCancel = order?.status != COMPLETED &&
+        order?.status != REFUNDED &&
+        order?.status != CANCELED &&
+        order?.status != TRASH &&
+        order?.status != FAILED;
 
-    Widget mData(OrderTracking orderTracking) {
-      Tracking tracking;
-      try {
-        var x = jsonDecode(orderTracking.note!) as Map<String, dynamic>;
-        tracking = Tracking.fromJson(x);
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(tracking.status.validate(), style: boldTextStyle()),
-            Text(tracking.message.validate(), style: secondaryTextStyle())
-          ],
-        );
-      } on FormatException catch (e) {
-        log(e);
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(appLocalization.translate('lbl_by_admin')!, style: boldTextStyle()),
-            Text(orderTracking.note.validate(), style: secondaryTextStyle(size: 16)),
-          ],
-        );
-      }
-    }
-
-    Widget mTracking() {
-      return AnimatedListView(
-        physics: NeverScrollableScrollPhysics(),
-        scrollDirection: Axis.vertical,
-        shrinkWrap: true,
-        itemCount: mOrderTrackingModel.length,
-        itemBuilder: (context, i) {
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Container(
-                    margin: EdgeInsets.fromLTRB(0, 4, 0, 0),
-                    height: 10,
-                    width: 10,
-                    decoration: BoxDecoration(color: primaryColor, borderRadius: radius(16)),
-                  ),
-                  SizedBox(height: 100, child: DashedRectangle(gap: 2, color: primaryColor)),
-                ],
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: primaryColor,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_forward, color: Colors.white),
+          onPressed: () => finish(context),
+        ),
+        title: Text(
+          'تفاصيل الطلب',
+          style: boldTextStyle(color: Colors.white, size: 18),
+        ),
+        centerTitle: true,
+        actions: [
+          // ✅ زر تحديث — مع مؤشر دوران أثناء التحديث
+          _isRefreshing
+              ? Padding(
+            padding: EdgeInsets.all(14),
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
               ),
-              8.width,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    mData(mOrderTrackingModel[i]),
-                    8.height,
-                    Text(convertDate(mOrderTrackingModel[i].dateCreated.validate()), style: secondaryTextStyle()),
-                  ],
-                ),
-              )
-            ],
-          );
-        },
-      );
-    }
+            ),
+          )
+              : IconButton(
+            icon: Icon(Icons.refresh, color: Colors.white),
+            onPressed: () => _refreshOrder(showFeedback: true), // ✅ showFeedback: true
+            tooltip: 'تحديث',
+          ),
 
-    Widget mCancelOrder() {
-      if (widget.mOrderModel!.status == COMPLETED ||
-          widget.mOrderModel!.status == REFUNDED ||
-          widget.mOrderModel!.status == CANCELED ||
-          widget.mOrderModel!.status == TRASH ||
-          widget.mOrderModel!.status == FAILED) {
-        return SizedBox();
-      } else {
-        return GestureDetector(
-          onTap: () {
-            showDialog(
-              context: context,
-              builder: (context) {
-                return StatefulBuilder(
-                  builder: (context, setState) {
-                    return AlertDialog(
-                      backgroundColor: Theme.of(context).cardTheme.color,
-                      title: Text(appLocalization.translate('title_cancel_order')!, style: boldTextStyle()),
-                      content: Column(
-                        mainAxisSize: MainAxisSize.min,
+          // ✅ زر المشاركة — يستدعي _shareOrder() الذي يعمل فعلاً
+          IconButton(
+            icon: Icon(Icons.share, color: Colors.white),
+            onPressed: _shareOrder, // ✅ كان () {} — الآن يستدعي دالة المشاركة
+            tooltip: 'مشاركة',
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                16.height,
+
+                // ══════════════════════════════════════════════════════════
+                // بطاقة رقم الطلب + معلوماته
+                // ══════════════════════════════════════════════════════════
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: context.cardColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
+                    ],
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Stack(
+                        clipBehavior: Clip.none,
                         children: [
-                          16.height,
                           Container(
-                            width: MediaQuery.of(context).size.width,
-                            padding: EdgeInsets.all(6),
-                            decoration: boxDecorationWithRoundedCorners(
-                                borderRadius: radius(8),
-                                backgroundColor: Theme.of(context).colorScheme.background),
-                            child: SingleChildScrollView(
-                              child: Theme(
-                                data: Theme.of(context)
-                                    .copyWith(canvasColor: Theme.of(context).cardTheme.color),
-                                child: DropdownButton<String>(
-                                  value: mValue,
-                                  isExpanded: true,
-                                  underline: SizedBox(),
-                                  onChanged: (String? newValue) {
-                                    setState(() {
-                                      mValue = newValue;
-                                    });
-                                  },
-                                  items: mCancelList.map<DropdownMenuItem<String>>((String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(value, style: primaryTextStyle()),
-                                    );
-                                  }).toList(),
+                            width: 90,
+                            height: 90,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: firstImg != null && firstImg.isNotEmpty
+                                ? ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: commonCacheImageWidget(
+                                firstImg,
+                                height: 90,
+                                width: 90,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                                : Icon(Icons.shopping_bag_outlined,
+                                color: Colors.grey.shade400, size: 40),
+                          ),
+                          if (totalItems > 1)
+                            Positioned(
+                              top: -6,
+                              left: -6,
+                              child: Container(
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
+                                  color: primaryColor,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '$totalItems',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      16.width,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _infoRow('رقم الطلب', '#${order?.id ?? ''}'),
+                            6.height,
+                            _infoRow(
+                              'تاريخ الطلب',
+                              order?.dateCreated != null
+                                  ? createDateFormat(order!.dateCreated)
+                                  : '',
+                            ),
+                            6.height,
+                            _infoRow(
+                              'إجمالي الطلب',
+                              '${getStringAsync(DEFAULT_CURRENCY)} ${order?.total ?? ''}',
+                            ),
+                            6.height,
+                            _infoRow(
+                              'طريقة الدفع',
+                              _translatePayment(
+                                order?.paymentMethodTitle ?? order?.paymentMethod,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                16.height,
+
+                // ══════════════════════════════════════════════════════════
+                // حالة الطلب الحالية
+                // ══════════════════════════════════════════════════════════
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: context.cardColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'حالة الطلب الحالية',
+                              style: secondaryTextStyle(size: 12, color: Colors.grey),
+                            ),
+                            6.height,
+                            Text(
+                              _statusLabel(order?.status),
+                              style: boldTextStyle(
+                                  color: _statusColor(order?.status), size: 15),
+                            ),
+                            4.height,
+                            Text(
+                              order?.status == 'shipped'
+                                  ? 'سيصلك طلبك قريباً'
+                                  : order?.status == 'completed'
+                                  ? 'شكراً لتسوقك معنا!'
+                                  : order?.status == 'cancelled'
+                                  ? 'تم إلغاء الطلب'
+                                  : 'سنقوم بإشعارك عند شحن طلبك',
+                              style: secondaryTextStyle(size: 12, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: primaryColor!.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          order?.status == 'shipped'
+                              ? Icons.local_shipping_outlined
+                              : order?.status == 'completed'
+                              ? Icons.check_circle_outline
+                              : order?.status == 'cancelled'
+                              ? Icons.cancel_outlined
+                              : Icons.inventory_2_outlined,
+                          color: _statusColor(order?.status),
+                          size: 28,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                16.height,
+
+                // ══════════════════════════════════════════════════════════
+                // Progress Tracker
+                // ══════════════════════════════════════════════════════════
+                _buildProgressTracker(),
+
+                16.height,
+
+                // ══════════════════════════════════════════════════════════
+                // عنوان التوصيل
+                // ══════════════════════════════════════════════════════════
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: context.cardColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.location_on_outlined,
+                                  color: primaryColor, size: 18),
+                              8.width,
+                              Text('عنوان التوصيل', style: boldTextStyle(size: 15)),
+                            ],
+                          ),
+                          if (canCancel)
+                            GestureDetector(
+                              onTap: () {},
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text('تغيير العنوان',
+                                    style: secondaryTextStyle(size: 12)),
+                              ),
+                            ),
+                        ],
+                      ),
+                      10.height,
+                      Text(
+                        '${order?.shipping?.firstName ?? ''} ${order?.shipping?.lastName ?? ''}'
+                            .trim(),
+                        style: boldTextStyle(size: 13),
+                      ),
+                      4.height,
+                      Text(
+                        [
+                          order?.shipping?.address1 ?? '',
+                          order?.shipping?.city ?? '',
+                          order?.shipping?.state ?? '',
+                          order?.shipping?.country ?? '',
+                        ].where((s) => s.isNotEmpty).join('، '),
+                        style: secondaryTextStyle(size: 13),
+                      ),
+                    ],
+                  ),
+                ),
+
+                16.height,
+
+                // ══════════════════════════════════════════════════════════
+                // الأصناف في هذا الطلب
+                // ══════════════════════════════════════════════════════════
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: context.cardColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(16, 14, 16, 0),
+                        child: Text(
+                          'الأصناف في هذا الطلب (${lineItems.length})',
+                          style: boldTextStyle(size: 15, color: primaryColor),
+                        ),
+                      ),
+                      Divider(height: 16),
+                      ...lineItems.map((item) {
+                        final imgSrc = _getItemImage(item);
+                        return GestureDetector(
+                          onTap: () {
+                            final variant =
+                            getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1);
+                            if (variant == 2) {
+                              ProductDetailScreen2(mProId: item.productId).launch(context);
+                            } else if (variant == 3) {
+                              ProductDetailScreen3(mProId: item.productId).launch(context);
+                            } else {
+                              ProductDetailScreen1(mProId: item.productId).launch(context);
+                            }
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade100,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: imgSrc != null && imgSrc.isNotEmpty
+                                      ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: commonCacheImageWidget(
+                                      imgSrc,
+                                      height: 60,
+                                      width: 60,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                      : Icon(Icons.shopping_bag_outlined,
+                                      color: Colors.grey.shade400, size: 28),
+                                ),
+                                12.width,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.name ?? '',
+                                        style: primaryTextStyle(size: 13),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      4.height,
+                                      Text(
+                                        'الكمية: ${item.quantity ?? 0}',
+                                        style: secondaryTextStyle(size: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  'EGP ${item.total ?? '0'}',
+                                  style: boldTextStyle(size: 13),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      Divider(height: 1),
+                      Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('إجمالي الطلب',
+                                style: boldTextStyle(color: primaryColor, size: 15)),
+                            Text('EGP ${order?.total ?? '0'}',
+                                style: boldTextStyle(color: primaryColor, size: 15)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                16.height,
+
+                // ══════════════════════════════════════════════════════════
+                // تفاصيل الطلب (دفع + شحن + إجمالي)
+                // ══════════════════════════════════════════════════════════
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: context.cardColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(16, 14, 16, 0),
+                        child: Row(
+                          children: [
+                            Icon(Icons.receipt_long_outlined,
+                                color: primaryColor, size: 18),
+                            8.width,
+                            Text('تفاصيل الطلب', style: boldTextStyle(size: 15)),
+                          ],
+                        ),
+                      ),
+                      Divider(height: 16),
+                      _detailRow(
+                        'طريقة الدفع',
+                        _translatePayment(
+                          order?.paymentMethodTitle ?? order?.paymentMethod,
+                        ),
+                      ),
+                      _detailRow(
+                        'رسوم التوصيل',
+                        (double.tryParse(order?.shippingTotal?.toString() ?? '0') ?? 0) > 0
+                            ? 'EGP ${order?.shippingTotal}'
+                            : 'مجاني',
+                      ),
+                      Divider(height: 16),
+                      _detailRow(
+                        'إجمالي الطلب',
+                        'EGP ${order?.total ?? '0'}',
+                        isBold: true,
+                      ),
+                      12.height,
+                    ],
+                  ),
+                ),
+
+                16.height,
+
+                // ══════════════════════════════════════════════════════════
+                // زر تتبع الطلب (واتساب)
+                // ══════════════════════════════════════════════════════════
+                GestureDetector(
+                  onTap: _openWhatsApp,
+                  child: Container(
+                    margin: EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: primaryColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.location_on_outlined, color: Colors.white, size: 20),
+                        8.width,
+                        Text('تتبع الطلب عبر واتساب',
+                            style: boldTextStyle(color: Colors.white, size: 16)),
+                      ],
+                    ),
+                  ),
+                ),
+
+                16.height,
+
+                // ══════════════════════════════════════════════════════════
+                // طلب مساعدة
+                // ══════════════════════════════════════════════════════════
+                GestureDetector(
+                  onTap: _openWhatsApp,
+                  child: Container(
+                    margin: EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: context.cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.headset_mic_outlined, color: primaryColor, size: 20),
+                        8.width,
+                        Text('طلب مساعدة', style: boldTextStyle(size: 15)),
+                      ],
+                    ),
+                  ),
+                ),
+
+                16.height,
+
+                // ══════════════════════════════════════════════════════════
+                // تحتاج مساعدة؟
+                // ══════════════════════════════════════════════════════════
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: context.cardColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('تحتاج مساعدة؟', style: boldTextStyle(size: 16)),
+                      4.height,
+                      Text('فريق الدعم متاح لخدمتك',
+                          style: secondaryTextStyle(size: 13, color: Colors.grey)),
+                      14.height,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: _launchPhone,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade200),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(Icons.phone_outlined,
+                                        color: primaryColor, size: 22),
+                                    6.height,
+                                    Text('اتصل بنا', style: boldTextStyle(size: 13)),
+                                    4.height,
+                                    Text(_storePhone,
+                                        style: secondaryTextStyle(
+                                            size: 11, color: Colors.grey)),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
-                          20.height,
-                          AppButton(
-                              width: context.width(),
-                              textStyle: primaryTextStyle(color: white),
-                              text: appLocalization.translate('lbl_cancel_order'),
-                              color: primaryColor,
-                              onTap: () {
-                                finish(context);
-                                appStore.setLoading(true);
-                                cancelOrderData(mValue);
-                              }),
+                          12.width,
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: _launchEmail,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade200),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(Icons.email_outlined,
+                                        color: primaryColor, size: 22),
+                                    6.height,
+                                    Text('راسلنا', style: boldTextStyle(size: 13)),
+                                    4.height,
+                                    Text(
+                                      _storeEmail,
+                                      style: secondaryTextStyle(
+                                          size: 11, color: Colors.grey),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                    );
-                  },
-                );
-              },
-            );
-          },
-          child: Container(
-            padding: EdgeInsets.only(top: 10, bottom: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(appLocalization.translate('lbl_cancel_order')!,
-                    style: primaryTextStyle(color: primaryColor)),
-                Icon(Icons.chevron_right),
+                    ],
+                  ),
+                ),
+
+                // ══════════════════════════════════════════════════════════
+                // إلغاء الطلب
+                // ══════════════════════════════════════════════════════════
+                if (canCancel) ...[
+                  16.height,
+                  GestureDetector(
+                    onTap: () => _showCancelDialog(loc),
+                    child: Container(
+                      margin: EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.cancel_outlined, color: Colors.red, size: 20),
+                          8.width,
+                          Text(
+                            'إلغاء الطلب',
+                            style: boldTextStyle(color: Colors.red, size: 15),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+
+                24.height,
               ],
             ),
           ),
-        );
-      }
-    }
-
-    Widget mBody(BuildContext context) {
-      return SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            16.height,
-
-            // ✅ الصورة الرئيسية - آمنة من null
-            (firstImageSrc != null && firstImageSrc.isNotEmpty
-                ? commonCacheImageWidget(firstImageSrc,
-                height: 160, width: 160, fit: BoxFit.cover)
-                .cornerRadiusWithClipRRect(16)
-                : _productPlaceholder(size: 160))
-                .center(),
-
-            // ✅ اسم المنتج - آمن من null
-            Text(
-              firstItem?.name ?? '#${widget.mOrderModel?.id ?? ''}',
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
-              textAlign: TextAlign.center,
-              style: boldTextStyle(),
-            ).center().paddingOnly(left: 20, right: 20, top: 10, bottom: 10),
-
-            Container(
-              width: context.width(),
-              decoration: boxDecorationWithRoundedCorners(
-                  borderRadius: radius(8),
-                  backgroundColor: Theme.of(context).colorScheme.background),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text((widget.mOrderModel?.status ?? '').toUpperCase(),
-                      style: boldTextStyle(color: primaryColor)),
-                  4.height,
-                  Text(appLocalization.translate('lbl_deliver_on')! + " " + createDateFormat(value),
-                      style: secondaryTextStyle())
-                      .visible(value!.isNotEmpty)
-                ],
-              ).paddingAll(16),
-            ).paddingOnly(left: 16, bottom: 16, right: 16),
-
-            GestureDetector(
-              onTap: () {
-                WebViewExternalProductScreen(
-                    mExternal_URL: mGetTrackingModel[0].trackingLink,
-                    title: "Track your order")
-                    .launch(context);
-              },
-              child: Container(
-                width: context.width(),
-                decoration: boxDecorationWithRoundedCorners(
-                    borderRadius: radius(8),
-                    backgroundColor: Theme.of(context).colorScheme.background),
-                child: Text(appLocalization.translate('lbl_tracking')!,
-                    style: boldTextStyle(color: primaryColor))
-                    .paddingAll(16)
-                    .center(),
-              )
-                  .paddingOnly(left: 16, bottom: 16, right: 16)
-                  .visible(mGetTrackingModel.isNotEmpty &&
-                  (widget.mOrderModel!.status == "pending" ||
-                      widget.mOrderModel!.status == "processing" ||
-                      widget.mOrderModel!.status == "on-hold")),
-            ),
-
-            Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color),
-
-            Container(
-              width: context.width(),
-              margin: EdgeInsets.only(bottom: 8),
-              padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  8.height,
-                  Text(appLocalization.translate('lbl_delivery_address')!,
-                      style: boldTextStyle(size: 16)),
-                  10.height,
-                  // ✅ عنوان الشحن - آمن من null
-                  Text(
-                    '${widget.mOrderModel?.shipping?.firstName ?? ''} ${widget.mOrderModel?.shipping?.lastName ?? ''}'.trim(),
-                    style: boldTextStyle(size: 14),
-                  ),
-                  2.height,
-                  Text(
-                    [
-                      widget.mOrderModel?.shipping?.address1 ?? '',
-                      widget.mOrderModel?.shipping?.city ?? '',
-                      widget.mOrderModel?.shipping?.country ?? '',
-                      widget.mOrderModel?.shipping?.state ?? '',
-                    ].where((s) => s.isNotEmpty).join(' '),
-                    style: secondaryTextStyle(size: 14),
-                  ),
-                  4.height,
-                ],
-              ),
-            ),
-
-            Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color)
-                .visible(mOrderTrackingModel.isNotEmpty),
-            Container(
-              margin: EdgeInsets.only(bottom: 8),
-              padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: Column(
-                children: [
-                  mTracking(),
-                  mCancelOrder(),
-                ],
-              ),
-            ).visible(mOrderTrackingModel.isNotEmpty),
-
-            Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color)
-                .visible(lineItems.length > 1),
-
-            // ✅ قائمة المنتجات الأخرى - آمنة من null
-            Container(
-              width: context.width(),
-              margin: EdgeInsets.only(bottom: 8),
-              padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  8.height,
-                  Text(appLocalization.translate('lbl_other_item_in_cart')!,
-                      style: boldTextStyle(size: 18)),
-                  Text(appLocalization.translate('lbl_order_id')! +
-                      (widget.mOrderModel?.id?.toString() ?? ''),
-                      style: secondaryTextStyle()),
-                  16.height,
-                  AnimatedListView(
-                    scrollDirection: Axis.vertical,
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: lineItems.length,
-                    itemBuilder: (context, i) {
-                      final item = lineItems[i];
-                      final itemImageSrc = _getItemImage(item);
-                      return GestureDetector(
-                        onTap: () {
-                          final productId = lineItems[i].productId;
-                          final variant = getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1);
-                          if (variant == 2) {
-                            ProductDetailScreen2(mProId: productId).launch(context);
-                          } else if (variant == 3) {
-                            ProductDetailScreen3(mProId: productId).launch(context);
-                          } else {
-                            ProductDetailScreen1(mProId: productId).launch(context);
-                          }
-                        },
-                        child: Container(
-                          margin: EdgeInsets.only(bottom: 10),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // ✅ صورة المنتج في القائمة - آمنة من null
-                              (itemImageSrc != null && itemImageSrc.isNotEmpty
-                                  ? commonCacheImageWidget(itemImageSrc,
-                                  height: 85, width: 85, fit: BoxFit.cover)
-                                  .cornerRadiusWithClipRRect(8)
-                                  : _productPlaceholder(size: 85)),
-                              Expanded(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(item.name ?? '', style: primaryTextStyle(), maxLines: 2),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        PriceWidget(
-                                            price: item.total?.toString() ?? '0',
-                                            size: 18.toDouble()),
-                                        4.width,
-                                        Text(
-                                            appLocalization.translate('lbl_qty')! +
-                                                " " +
-                                                (item.quantity?.toString() ?? '0'),
-                                            style: primaryTextStyle()),
-                                      ],
-                                    )
-                                  ],
-                                ).paddingOnly(left: 16, right: 16, top: 4),
-                              )
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ).visible(lineItems.length > 1),
-
-            Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color),
-            8.height,
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(appLocalization.translate('lbl_Shipping')!, style: secondaryTextStyle(size: 16)),
-                Text(
-                    (widget.mOrderModel?.shippingTotal?.toString().toInt() ?? 0) != 0
-                        ? getStringAsync(DEFAULT_CURRENCY) +
-                        (widget.mOrderModel?.shippingTotal?.toString() ?? '')
-                        : "Free",
-                    style: primaryTextStyle()),
-              ],
-            ).paddingSymmetric(horizontal: 16),
-            Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(appLocalization.translate("lbl_payment_methods")!, style: boldTextStyle()),
-                Text((widget.mOrderModel?.paymentMethod?.toString() ?? '').capitalizeFirstLetter(),
-                    style: primaryTextStyle()),
-              ],
-            ).paddingSymmetric(horizontal: 16, vertical: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(appLocalization.translate("lbl_total_order_price")!, style: boldTextStyle()),
-                PriceWidget(price: widget.mOrderModel?.total, size: 16),
-              ],
-            ).paddingSymmetric(horizontal: 16, vertical: 8),
-
-            // ✅ الخصم - آمن من null
-            RichTextWidget(
-              list: [
-                TextSpan(
-                    text: appLocalization.translate('lbl_you_saved')! + " ",
-                    style: secondaryTextStyle()),
-                TextSpan(
-                    text: widget.mOrderModel?.discountTotal?.toString() ?? '0',
-                    style: boldTextStyle(color: context.accentColor)),
-                TextSpan(
-                    text: " " + appLocalization.translate('lbl_on_this_order')!,
-                    style: secondaryTextStyle()),
-              ],
-            ).paddingSymmetric(horizontal: 8).visible(
-                int.tryParse(widget.mOrderModel?.discountTotal?.toString() ?? '0') != null &&
-                    int.parse(widget.mOrderModel?.discountTotal?.toString() ?? '0') > 0),
-
-            Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color),
-            Container(
-              width: context.width(),
-              margin: EdgeInsets.only(bottom: 8),
-              padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  8.height,
-                  Text(appLocalization.translate('lbl_update_sent_to')!,
-                      style: boldTextStyle(size: 18)),
-                  10.height,
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        WidgetSpan(
-                          child: Icon(Icons.call,
-                              size: 16,
-                              color: Theme.of(context).textTheme.titleMedium!.color)
-                              .paddingRight(10),
-                        ),
-                        TextSpan(
-                            text: widget.mOrderModel?.billing?.phone ?? '',
-                            style: secondaryTextStyle()),
-                      ],
-                    ),
-                  ),
-                  8.height,
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        WidgetSpan(
-                            child: Icon(Icons.email,
-                                size: 16,
-                                color: Theme.of(context).textTheme.titleMedium!.color)
-                                .paddingRight(10)),
-                        TextSpan(
-                            text: widget.mOrderModel?.billing?.email ?? '',
-                            style: secondaryTextStyle()),
-                      ],
-                    ),
-                  ),
-                  16.height
-                ],
-              ),
-            )
-          ],
-        ),
-      );
-    }
-
-    return Scaffold(
-      appBar: mTop(context, appLocalization.translate('lbl_order_details'), showBack: true)
-      as PreferredSizeWidget?,
-      body: BodyCornerWidget(
-        child: Stack(
-          children: [
-            mBody(context),
-            mProgress().center().visible(appStore.isLoading),
-          ],
-        ),
+          mProgress().center().visible(appStore.isLoading),
+        ],
       ),
     );
+  }
+
+  // ── Helper Widgets ────────────────────────────────────────────────────────
+  Widget _infoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: secondaryTextStyle(size: 12, color: Colors.grey)),
+        Flexible(
+          child: Text(
+            value,
+            style: primaryTextStyle(size: 13),
+            textAlign: TextAlign.end,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _detailRow(String label, String value, {bool isBold = false}) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: isBold ? boldTextStyle(size: 14) : secondaryTextStyle(size: 13),
+          ),
+          Text(
+            value,
+            style: isBold
+                ? boldTextStyle(size: 14, color: primaryColor)
+                : primaryTextStyle(size: 13),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _translatePayment(String? method) {
+    switch (method?.toLowerCase()) {
+      case 'cash on delivery':
+      case 'cod':              return 'الدفع عند الاستلام';
+      case 'credit card':      return 'بطاقة ائتمان';
+      case 'paypal':           return 'باي بال';
+      case 'stripe':           return 'ستريب';
+      default:                 return method ?? '';
+    }
   }
 }

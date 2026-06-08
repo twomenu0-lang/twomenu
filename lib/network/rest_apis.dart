@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import '/../models/CartModel.dart';
 import '/../models/ProductResponse.dart';
 import '/../models/WalletResponse.dart';
@@ -129,6 +130,25 @@ Future updateReview(id1, request) async {
 }
 
 Future createOrderApi(request) async {
+  // جلب الـ player_id من الـ SharedPref أولاً
+  String playerId = getStringAsync(PLAYER_ID);
+
+  // لو مش موجود، اجيبه من OneSignal مباشرة
+  if (playerId.isEmpty) {
+    playerId = OneSignal.User.pushSubscription.id ?? '';
+    if (playerId.isNotEmpty) {
+      await setValue(PLAYER_ID, playerId);
+    }
+  }
+
+  print('DEBUG PLAYER_ID IN ORDER = $playerId');
+
+  if (playerId.isNotEmpty) {
+    final meta = request['meta_data'] as List? ?? [];
+    meta.add({'key': '_onesignal_player_id', 'value': playerId});
+    request['meta_data'] = meta;
+  }
+
   return handleResponse(await MightyAPI().postAsync('wc/v3/orders', request));
 }
 
@@ -136,13 +156,17 @@ Future deleteReview(id1) async {
   return handleResponse(await MightyAPI().deleteAsync('wc/v3/products/reviews/$id1'));
 }
 
-// ✅ الإصلاح النهائي:
-// store API يرجع [] فارغة رغم وجود طلبات (مشكلة السيرفر في ربط الطلبات بالـ customer_id).
-// wc/v3/orders مع requireToken: false يستخدم Consumer Key/Secret مباشرة وهو ما يعمل في المتصفح.
 Future getOrders() async {
   final userId = getIntAsync(USER_ID);
   return handleResponse(await MightyAPI().getAsync(
     'wc/v3/orders?customer=$userId&per_page=50&orderby=date&order=desc',
+    requireToken: false,
+  ));
+}
+
+Future getOrderById(int? orderId) async {
+  return handleResponse(await MightyAPI().getAsync(
+    'wc/v3/orders/$orderId',
     requireToken: false,
   ));
 }

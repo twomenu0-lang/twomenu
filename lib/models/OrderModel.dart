@@ -11,8 +11,8 @@ class OrderResponse {
   var customerNote;
   var customerUserAgent;
   var dateCompleted;
-  var dateCreated; // ← String مش Object
-  var dateModified; // ← String مش Object
+  var dateCreated;
+  var dateModified;
   var datePaid;
   var discountTax;
   var discountTotal;
@@ -80,7 +80,6 @@ class OrderResponse {
       customerNote: json['customer_note'],
       customerUserAgent: json['customer_user_agent'],
       dateCompleted: json['date_completed'],
-      // ← التعديل الأساسي: نقرأ الـ date كـ String مباشرة
       dateCreated: json['date_created'] is String
           ? json['date_created']
           : (json['date_created'] is Map ? json['date_created']['date'] : null),
@@ -191,6 +190,7 @@ class LineItem {
   int? orderId;
   int? pId;
   List<ProductImage>? productImages;
+  String? imageUrl; // ✅ جديد — صورة المنتج من WooCommerce API مباشرة
   int? quantity;
   String? subtotal;
   String? subtotalTax;
@@ -206,6 +206,7 @@ class LineItem {
         this.orderId,
         this.pId,
         this.productImages,
+        this.imageUrl, // ✅ جديد
         this.quantity,
         this.subtotal,
         this.subtotalTax,
@@ -226,6 +227,8 @@ class LineItem {
       productImages: json['product_images'] != null
           ? (json['product_images'] as List).map((i) => ProductImage.fromJson(i)).toList()
           : null,
+      // ✅ جديد — يقرأ صورة المنتج من حقل image في WooCommerce API
+      imageUrl: json['image'] != null ? json['image']['src'] : null,
       quantity: json['quantity'],
       subtotal: json['subtotal'],
       subtotalTax: json['subtotal_tax'],

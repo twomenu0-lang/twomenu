@@ -62,7 +62,6 @@ void main() async {
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
   });
 
-  // ← App Check: يمنع فتح المتصفح ويحل مشكلة reCAPTCHA
   await FirebaseAppCheck.instance.activate(
     androidProvider: kDebugMode
         ? AndroidProvider.debug
@@ -74,9 +73,21 @@ void main() async {
 
   if (isMobile) {
     OneSignal.initialize(mOneSignalAPPKey);
-    OneSignal.Notifications.requestPermission(true);
+    await OneSignal.Notifications.requestPermission(true);
+
+    // ✅ استنى لحد ما الـ ID يكون جاهز واحفظه
+    OneSignal.User.pushSubscription.addObserver((state) async {
+      final playerId = state.current.id;
+      if (playerId != null && playerId.isNotEmpty) {
+        await setValue(PLAYER_ID, playerId);
+      }
+    });
+
+    // ✅ لو موجود فعلاً من جلسة سابقة خذه فوراً
     final playerId = OneSignal.User.pushSubscription.id;
-    await setValue(PLAYER_ID, playerId);
+    if (playerId != null && playerId.isNotEmpty) {
+      await setValue(PLAYER_ID, playerId);
+    }
   }
 
   appStore.setCount(getIntAsync(CARTCOUNT, defaultValue: 0));
@@ -106,13 +117,10 @@ void main() async {
     await setValue(CONSUMER_SECRET, builderResponse.appsetup!.consumerSecret);
   }
 
-  await setValue(
-      BACKGROUND_COLOR, builderResponse.appsetup!.backgroundColor);
+  await setValue(BACKGROUND_COLOR, builderResponse.appsetup!.backgroundColor);
   await setValue(SECONDARY_COLOR, builderResponse.appsetup!.secondaryColor);
-  await setValue(
-      TEXT_PRIMARY_COLOR, builderResponse.appsetup!.textPrimaryColor);
-  await setValue(
-      TEXT_SECONDARY_COLOR, builderResponse.appsetup!.textSecondaryColor);
+  await setValue(TEXT_PRIMARY_COLOR, builderResponse.appsetup!.textPrimaryColor);
+  await setValue(TEXT_SECONDARY_COLOR, builderResponse.appsetup!.textSecondaryColor);
 
   primaryColor = getColorFromHex(getStringAsync(PRIMARY_COLOR),
       defaultColor: appColorPrimary);
@@ -202,8 +210,7 @@ class MyAppState extends State<MyApp> {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           navigatorKey: navigatorKey,
-          themeMode:
-          appStore.isDarkMode! ? ThemeMode.dark : ThemeMode.light,
+          themeMode: appStore.isDarkMode! ? ThemeMode.dark : ThemeMode.light,
           supportedLocales: Language.languagesLocale(),
           localizationsDelegates: [
             CountryLocalizations.delegate,

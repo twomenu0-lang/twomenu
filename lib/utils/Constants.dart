@@ -172,7 +172,7 @@ bool get isHalloween => getBoolAsync(HALLOWEEN_ENABLE);
 const HALLOWEEN_ENABLE = 'halloween_enable';
 
 // Halloween Theme - تم استعادة القيم الأصلية بناءً على طلبك
-const base_URL = "https://meetmighty.com/mobile/halloween/wp-json/";
+const base_URL = "https://twomenu.shop/wp-json";
 const consumerKey = "ADD CONSUMER KEY";
 const consumerSecret = "ADD CONSUMER SECRET";
 

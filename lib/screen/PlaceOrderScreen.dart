@@ -67,6 +67,9 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
   }
 
   init() async {
+    // ← أضف السطر ده مؤقتاً للاختبار
+    print('DEBUG PLAYER_ID = ${getStringAsync(PLAYER_ID)}');
+
     createOrderTracking();
     try {
       date = DateTime.parse(widget.dateCreated);
@@ -79,8 +82,7 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
     appStore.setLoading(true);
     var request = {
       'customer_note': true,
-      'note':
-      "{\n" + "\"status\":\"Ordered\",\n" + "\"message\":\"Your order has been placed.\"\n" + "} ",
+      'note': "{\n\"status\":\"Ordered\",\n\"message\":\"Your order has been placed.\"\n} ",
     };
     await createOrderNotes(widget.mOrderID, request).then((res) {
       if (!mounted) return;
@@ -116,7 +118,6 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
     }
   }
 
-  // مشاركة تفاصيل الطلب عبر وسائل التواصل المتاحة على الهاتف
   void _shareOrder(AppLocalizations appLocalization) {
     final text =
         '🛍️ ${appLocalization.translate('lbl_oder_placed_successfully')}\n\n'
@@ -124,6 +125,114 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
         '🔖 ${appLocalization.translate('order_id')}: ${widget.orderKey}\n'
         '📅 ${appLocalization.translate('lbl_transaction_date')}: ${date.toString()}';
     Share.share(text);
+  }
+
+  // ── Progress Tracker — نفس تصميم OrderDetailScreen ──────────────────────
+  Widget _buildProgressTracker() {
+    // processing = step 1 (تم الطلب + جاري التجهيز)
+    // الشاشة دي بتظهر مباشرة بعد الطلب يعني دايماً step = 1
+    const int currentStep = 1;
+
+    final steps = [
+      {'icon': Icons.receipt_long_outlined,   'label': 'تم الطلب'},
+      {'icon': Icons.inventory_2_outlined,    'label': 'جاري التجهيز'},
+      {'icon': Icons.local_shipping_outlined, 'label': 'تم الشحن'},
+      {'icon': Icons.home_outlined,           'label': 'تم التسليم'},
+    ];
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
+        ],
+      ),
+      child: Directionality(
+        textDirection: TextDirection.rtl, // ✅ RTL من اليمين لليسار
+        child: Row(
+          children: List.generate(steps.length, (i) {
+            final isActive  = i <= currentStep;
+            final isLast    = i == steps.length - 1;
+            final textColor = isActive ? primaryColor! : Colors.grey;
+
+            return Expanded(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? primaryColor!.withValues(alpha: 0.12)
+                                : Colors.grey.shade100,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isActive
+                                  ? primaryColor!
+                                  : Colors.grey.shade300,
+                              width: 2,
+                            ),
+                          ),
+                          child: Icon(
+                            steps[i]['icon'] as IconData,
+                            color: isActive
+                                ? primaryColor
+                                : Colors.grey.shade400,
+                            size: 20,
+                          ),
+                        ),
+                        4.height,
+                        Text(
+                          steps[i]['label'] as String,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: textColor,
+                            fontWeight: isActive
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        // نقطة المؤشر على الخطوة الحالية فقط
+                        if (i == currentStep) ...[
+                          4.height,
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: primaryColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (!isLast)
+                    Expanded(
+                      child: Container(
+                        height: 2,
+                        margin: EdgeInsets.only(bottom: 20),
+                        decoration: BoxDecoration(
+                          color: i < currentStep
+                              ? primaryColor
+                              : Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          }),
+        ),
+      ),
+    );
   }
 
   @override
@@ -153,58 +262,49 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
             child: Column(
               children: [
-                // ── أيقونة النجاح مع التصميم الدائري ──────────────────────
+
+                // ── أيقونة النجاح ────────────────────────────────────────
                 ScaleTransition(
                   scale: _scaleAnim,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // دوائر خلفية متداخلة
                       Container(
-                        width: 110,
-                        height: 110,
+                        width: 110, height: 110,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Color(0xFF66953A).withOpacity(0.08),
                         ),
                       ),
                       Container(
-                        width: 85,
-                        height: 85,
+                        width: 85, height: 85,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Color(0xFF66953A).withOpacity(0.15),
                         ),
                       ),
-                      // الأيقونة الرئيسية
                       Container(
-                        width: 64,
-                        height: 64,
+                        width: 64, height: 64,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Color(0xFF66953A),
                         ),
                         child: Icon(Icons.check, color: white, size: 34),
                       ),
-                      // نجوم زخرفية
                       Positioned(
-                        top: 2,
-                        right: 10,
+                        top: 2, right: 10,
                         child: Icon(Icons.star,
                             color: primaryColor!.withOpacity(0.5), size: 10),
                       ),
                       Positioned(
-                        bottom: 4,
-                        left: 8,
+                        bottom: 4, left: 8,
                         child: Icon(Icons.star,
                             color: primaryColor!.withOpacity(0.4), size: 8),
                       ),
                       Positioned(
-                        top: 10,
-                        left: 14,
+                        top: 10, left: 14,
                         child: Container(
-                          width: 5,
-                          height: 5,
+                          width: 5, height: 5,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: primaryColor!.withOpacity(0.3),
@@ -216,7 +316,7 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
                 ),
                 20.height,
 
-                // ── العنوان ────────────────────────────────────────────────
+                // ── العنوان ──────────────────────────────────────────────
                 Text(
                   'تم الطلب بنجاح!',
                   style: boldTextStyle(size: 22),
@@ -230,7 +330,7 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
                 ),
                 24.height,
 
-                // ── بطاقة تفاصيل الطلب ────────────────────────────────────
+                // ── بطاقة تفاصيل الطلب ──────────────────────────────────
                 Container(
                   decoration: BoxDecoration(
                     color: cardBg,
@@ -266,49 +366,11 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
                 ),
                 20.height,
 
-                // ── بطاقة تتبع الطلب ───────────────────────────────────────
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                  decoration: BoxDecoration(
-                    color: cardBg,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _TrackStep(
-                        icon: Icons.home_outlined,
-                        label: 'تم التسليم',
-                        sub: 'سيصلك قريباً',
-                        active: false,
-                      ),
-                      _TrackDivider(active: false),
-                      _TrackStep(
-                        icon: Icons.local_shipping_outlined,
-                        label: 'تم الشحن',
-                        sub: 'في الطريق',
-                        active: false,
-                      ),
-                      _TrackDivider(active: false),
-                      _TrackStep(
-                        icon: Icons.inventory_2_outlined,
-                        label: 'جاري التجهيز',
-                        sub: 'قيد المعالجة',
-                        active: false,
-                      ),
-                      _TrackDivider(active: true),
-                      _TrackStep(
-                        icon: Icons.shopping_bag_outlined,
-                        label: 'تم الطلب',
-                        sub: 'تم بنجاح',
-                        active: true,
-                      ),
-                    ],
-                  ),
-                ),
+                // ── Progress Tracker — موحد مع OrderDetailScreen ─────────
+                _buildProgressTracker(),
                 28.height,
 
-                // ── زر مشاركة تفاصيل الطلب ────────────────────────────────
+                // ── زر مشاركة تفاصيل الطلب ──────────────────────────────
                 SizedBox(
                   width: context.width(),
                   height: 50,
@@ -326,7 +388,7 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
                 ),
                 12.height,
 
-                // ── زر العودة للرئيسية ─────────────────────────────────────
+                // ── زر العودة للرئيسية ───────────────────────────────────
                 SizedBox(
                   width: context.width(),
                   height: 50,
@@ -377,10 +439,8 @@ class _DetailRow extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            // أيقونة
             Container(
-              width: 36,
-              height: 36,
+              width: 36, height: 36,
               decoration: BoxDecoration(
                 color: primaryColor!.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
@@ -388,9 +448,7 @@ class _DetailRow extends StatelessWidget {
               child: Icon(icon, color: primaryColor, size: 18),
             ),
             12.width,
-            // التسمية
             Text(label, style: secondaryTextStyle(size: 13)).expand(),
-            // القيمة
             isPrice
                 ? PriceWidget(price: value, size: 14)
                 : Text(
@@ -404,78 +462,6 @@ class _DetailRow extends StatelessWidget {
               Icon(Icons.copy, size: 14, color: primaryColor),
             ],
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Widget: خطوة تتبع ────────────────────────────────────────────────────────
-class _TrackStep extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String sub;
-  final bool active;
-
-  const _TrackStep({
-    required this.icon,
-    required this.label,
-    required this.sub,
-    required this.active,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(label,
-            style: secondaryTextStyle(size: 10),
-            textAlign: TextAlign.center),
-        6.height,
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: active ? primaryColor : primaryColor!.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon,
-              color: active ? white : primaryColor!.withOpacity(0.5),
-              size: 22),
-        ),
-        6.height,
-        Text(sub,
-            style: secondaryTextStyle(
-                size: 10,
-                color: active ? primaryColor : null),
-            textAlign: TextAlign.center),
-      ],
-    );
-  }
-}
-
-// ── Widget: خط التتبع ────────────────────────────────────────────────────────
-class _TrackDivider extends StatelessWidget {
-  final bool active;
-  const _TrackDivider({required this.active});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        height: 1.5,
-        margin: EdgeInsets.only(bottom: 20),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: active
-                  ? primaryColor!.withOpacity(0.5)
-                  : primaryColor!.withOpacity(0.15),
-              width: 1.5,
-              style: BorderStyle.solid,
-            ),
-          ),
         ),
       ),
     );
