@@ -83,11 +83,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
         _currentPage = 0;
       }
       if (_pageController.hasClients) {
-        _pageController.animateToPage(
-          _currentPage,
-          duration: Duration(milliseconds: 350),
-          curve: Curves.easeIn,
-        );
+        _pageController.animateToPage(_currentPage, duration: Duration(milliseconds: 350), curve: Curves.easeIn);
       }
     });
   }
@@ -122,7 +118,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
         if (mProducts.isNotEmpty) {
           productDetailNew = mProducts[0];
 
-          rating = double.parse(productDetailNew!.averageRating!);
+          rating = double.tryParse(productDetailNew!.averageRating ?? '0') ?? 0.0;
+
           productDetailNew!.variations!.forEach((element) {
             mProductVariationsIds.add(element);
           });
@@ -139,7 +136,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
             mProductOptions.clear();
             mProductsList.forEach((product) {
               var option = '';
-
               product.attributes!.forEach((attribute) {
                 if (option.isNotEmpty) {
                   option = '$option - ${attribute.option.validate()}';
@@ -147,17 +143,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
                   option = attribute.option.validate();
                 }
               });
-
               if (product.onSale!) {
                 option = '$option [Sale]';
               }
-
               mProductOptions.add(option);
             });
-            if (mProductOptions.isNotEmpty) mSelectedVariation = mProductOptions.first;
-
+            if (mProductOptions.isNotEmpty && (mSelectedVariation == null || mSelectedVariation!.isEmpty)) {
+              mSelectedVariation = mProductOptions.first;
+            }
             if (productDetailNew!.type == "variable" || productDetailNew!.type == "variation" && mProductsList.isNotEmpty) {
-              productDetailNew = mProductsList[0];
+              int currentIndex = mSelectedVariation!.isNotEmpty ? mProductOptions.indexOf(mSelectedVariation) : 0;
+              if (currentIndex < 0) currentIndex = 0;
+              selectedOptionAvailableIn = currentIndex;
+              productDetailNew = mProductsList.isNotEmpty ? mProductsList[currentIndex] : mProductsList[0];
               mProducts = mProducts;
             }
             log('mProductOptions');
@@ -207,21 +205,27 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
   }
 
   Future fetchReviewData() async {
-    setState(() {
-      appStore.setLoading(true);
-    });
+    setState(() => appStore.setLoading(true));
     await getProductReviews(widget.mProId).then((res) {
       if (!mounted) return;
       setState(() {
         appStore.setLoading(false);
         Iterable list = res;
         mReviewModel = list.map((model) => ProductReviewModel.fromJson(model)).toList();
+        // ✅ FIX: احسب الـ rating محلياً من الـ reviews مباشرة
+        _recalcRatingFromReviews();
       });
     }).catchError((error) {
-      setState(() {
-        appStore.setLoading(false);
-      });
+      setState(() => appStore.setLoading(false));
     });
+  }
+
+  /// ✅ يحسب متوسط التقييم من الـ reviews المحلية
+  /// هذا يضمن ظهور الرقم الصحيح فوراً بدون انتظار WooCommerce cache
+  void _recalcRatingFromReviews() {
+    if (mReviewModel.isEmpty) return;
+    final double sum = mReviewModel.fold(0.0, (prev, r) => prev + (r.rating ?? 0));
+    rating = sum / mReviewModel.length;
   }
 
   Widget setPriceDetail() {
@@ -248,12 +252,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
     if (productDetailNew!.onSale!)
       return Text(
         '${discount.toInt()} % ${AppLocalizations.of(context)!.translate('lbl_off1')!}',
-        style: primaryTextStyle(
-          color: Colors.red,
-          size: 14,
-          decoration: TextDecoration.underline,
-          textDecorationStyle: TextDecorationStyle.solid,
-        ),
+        style: primaryTextStyle(color: Colors.red, size: 14, decoration: TextDecoration.underline, textDecorationStyle: TextDecorationStyle.solid),
       );
     else
       return SizedBox();
@@ -267,12 +266,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
         var currentDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(DateTime.now().toString());
         var format = endDate.subtract(Duration(days: currentDate.day, hours: currentDate.hour, minutes: currentDate.minute, seconds: currentDate.second));
         log(format);
-
         return Countdown(
           duration: Duration(days: format.day, hours: format.hour, minutes: format.minute, seconds: format.second),
-          onFinish: () {
-            log('finished!');
-          },
+          onFinish: () { log('finished!'); },
           builder: (BuildContext ctx, Duration? remaining) {
             var seconds = ((remaining!.inMilliseconds / 1000) % 60).toInt();
             var minutes = (((remaining.inMilliseconds / (1000 * 60)) % 60)).toInt();
@@ -280,10 +276,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
             log(hours);
             return Container(
               decoration: boxDecorationWithRoundedCorners(borderRadius: radius(4), backgroundColor: colorAccent!.withOpacity(0.3)),
-              child: Text(
-                value! + " " + '${remaining.inDays}d ${hours}h ${minutes}m ${seconds}s',
-                style: primaryTextStyle(size: 12),
-              ).paddingAll(8),
+              child: Text(value! + " " + '${remaining.inDays}d ${hours}h ${minutes}m ${seconds}s', style: primaryTextStyle(size: 12)).paddingAll(8),
             ).paddingOnly(left: 16, right: 16, top: 16, bottom: 16);
           },
         );
@@ -348,10 +341,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Divider(thickness: 6, color: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).textTheme.headlineMedium!.color),
-              Text(
-                appLocalization!.translate('lbl_upcoming_sale_on_this_item')!,
-                style: boldTextStyle(),
-              ).paddingAll(16),
+              Text(appLocalization!.translate('lbl_upcoming_sale_on_this_item')!, style: boldTextStyle()).paddingAll(16),
               Container(
                 margin: EdgeInsets.only(left: 16, right: 16, bottom: 10),
                 decoration: boxDecorationWithRoundedCorners(borderRadius: radius(8), backgroundColor: primaryColor!.withOpacity(0.2)),
@@ -360,14 +350,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
                 child: Marquee(
                   directionMarguee: DirectionMarguee.oneDirection,
                   child: Text(
-                    appLocalization.translate('lbl_sale_start_from')! +
-                        " " +
-                        productDetailNew!.dateOnSaleFrom! +
-                        " " +
-                        appLocalization.translate('lbl_to')! +
-                        " " +
-                        productDetailNew!.dateOnSaleTo! +
-                        ". " +
+                    appLocalization.translate('lbl_sale_start_from')! + " " + productDetailNew!.dateOnSaleFrom! + " " +
+                        appLocalization.translate('lbl_to')! + " " + productDetailNew!.dateOnSaleTo! + ". " +
                         appLocalization.translate('lbl_ge_amazing_discounts_on_the_products')!,
                     style: secondaryTextStyle(color: Theme.of(context).textTheme.titleSmall!.color, size: 16),
                   ).paddingLeft(16),
@@ -388,14 +372,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            appLocalization!.translate("lbl_reviews")!,
-            style: boldTextStyle(),
-          ).paddingOnly(left: 16, right: 16, bottom: 4).visible(mReviewModel.isNotEmpty),
+          Text(appLocalization!.translate("lbl_reviews")!, style: boldTextStyle()).paddingOnly(left: 16, right: 16, bottom: 4).visible(mReviewModel.isNotEmpty),
           ListView.separated(
-              separatorBuilder: (context, index) {
-                return Divider();
-              },
+              separatorBuilder: (context, index) => Divider(),
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
               itemCount: mReviewModel.length >= 5 ? 5 : mReviewModel.length,
@@ -411,10 +390,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
                         children: [
                           mProfileImage.isNotEmpty
                               ? CircleAvatar(backgroundImage: NetworkImage(mProfileImage.validate()), radius: 24)
-                              : CircleAvatar(
-                            backgroundImage: Image.asset(User_Profile).image,
-                            radius: 24,
-                          ),
+                              : CircleAvatar(backgroundImage: Image.asset(User_Profile).image, radius: 24),
                           16.width,
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -435,12 +411,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
                                     itemCount: 5,
                                     itemSize: 18,
                                     itemBuilder: (context, _) => Icon(Icons.star,
-                                        color: mReviewModel[index].rating == 1
-                                            ? redColor
-                                            : mReviewModel[index].rating == 2
-                                            ? yellowColor
-                                            : mReviewModel[index].rating == 3
-                                            ? yellowColor
+                                        color: mReviewModel[index].rating == 1 ? redColor
+                                            : mReviewModel[index].rating == 2 ? yellowColor
+                                            : mReviewModel[index].rating == 3 ? yellowColor
                                             : Color(0xFF66953A),
                                         size: 14),
                                     onRatingUpdate: (rating) {},
@@ -465,12 +438,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
               Text(appLocalization.translate("lbl_view_all_review")!, style: boldTextStyle(color: context.accentColor)),
               Icon(Icons.chevron_right),
             ],
-          )
-              .onTap(() {
-            ReviewScreen(mProductId: widget.mProId).launch(context);
-          })
-              .paddingAll(16)
-              .visible(mReviewModel.length >= 3 && productDetailNew!.reviewsAllowed == true),
+          ).onTap(() {
+            ReviewScreen(
+              mProductId: widget.mProId,
+              productName: productDetailNew?.name,
+              productImage: productDetailNew?.images?.isNotEmpty == true ? productDetailNew!.images![0].src : null,
+            ).launch(context);
+          }).paddingAll(16).visible(mReviewModel.length >= 3 && productDetailNew!.reviewsAllowed == true),
         ],
       );
     }
@@ -513,11 +487,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
                           margin: EdgeInsets.only(left: 16, right: 16, bottom: 4, top: 16),
                           padding: EdgeInsets.all(1.2),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Color(0xFF37D5D6), Color(0xFF63A4FF)],
-                              begin: FractionalOffset(0.0, 0.0),
-                              end: FractionalOffset(1.0, 0.0),
-                            ),
+                            gradient: LinearGradient(colors: [Color(0xFF37D5D6), Color(0xFF63A4FF)], begin: FractionalOffset(0.0, 0.0), end: FractionalOffset(1.0, 0.0)),
                           ),
                           child: commonCacheImageWidget(product[i].images!.first.src, height: 200, width: productWidth, fit: BoxFit.cover),
                         ),
@@ -530,7 +500,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
                               children: [
                                 PriceWidget(price: product[i].salePrice.toString().isNotEmpty ? product[i].salePrice.toString() : product[i].price.toString(), size: 14),
                                 4.width,
-                                PriceWidget(price: product[i].regularPrice.toString(), size: 12, isLineThroughEnabled: true, color: Theme.of(context).textTheme.titleSmall!.color).visible(product[i].salePrice.toString().isNotEmpty),
+                                PriceWidget(price: product[i].regularPrice.toString(), size: 12, isLineThroughEnabled: true, color: Theme.of(context).textTheme.titleSmall!.color)
+                                    .visible(product[i].salePrice.toString().isNotEmpty),
                               ],
                             ),
                           ],
@@ -582,26 +553,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
                           children: [
                             Text(product[i].name!, style: primaryTextStyle()),
                             4.height,
-                            Row(
-                              children: [
-                                PriceWidget(
-                                    price: product[i].salePrice.toString().validate().isNotEmpty ? product[i].salePrice.toString() : product[i].price.toString().validate(),
-                                    size: 14,
-                                    color: Theme.of(context).textTheme.titleSmall!.color),
-                                2.width,
-                                PriceWidget(price: product[i].regularPrice.toString(), size: 12, isLineThroughEnabled: true, color: Theme.of(context).textTheme.titleSmall!.color).visible(product[i].salePrice.toString().isNotEmpty),
-                              ],
-                            ),
+                            Row(children: [
+                              PriceWidget(price: product[i].salePrice.toString().validate().isNotEmpty ? product[i].salePrice.toString() : product[i].price.toString().validate(), size: 14, color: Theme.of(context).textTheme.titleSmall!.color),
+                              2.width,
+                              PriceWidget(price: product[i].regularPrice.toString(), size: 12, isLineThroughEnabled: true, color: Theme.of(context).textTheme.titleSmall!.color).visible(product[i].salePrice.toString().isNotEmpty),
+                            ]),
                             8.height,
                             Container(
                               padding: EdgeInsets.all(10),
                               decoration: boxDecorationWithRoundedCorners(borderRadius: radius(8), backgroundColor: product[i].inStock == true ? primaryColor! : white, border: Border.all(color: primaryColor!)),
                               child: Text(
                                 product[i].inStock == true
-                                    ? product[i].type == 'external'
-                                    ? product[i].buttonText!
-                                    : cartStore.isItemInCart(product[i].id.validate())
-                                    ? appLocalization.translate('lbl_remove_cart')!.toUpperCase()
+                                    ? product[i].type == 'external' ? product[i].buttonText!
+                                    : cartStore.isItemInCart(product[i].id.validate()) ? appLocalization.translate('lbl_remove_cart')!.toUpperCase()
                                     : appLocalization.translate('lbl_add_to_cart')!.toUpperCase()
                                     : appLocalization.translate('lbl_sold_out')!.toUpperCase(),
                                 textAlign: TextAlign.center,
@@ -632,76 +596,36 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
     }
 
     final videoSlider = productDetailNew != null
-        ? Column(
-      children: [
-        Container(
-          height: 400,
-          width: MediaQuery.of(context).size.width,
-          decoration: boxDecorationWithRoundedCorners(borderRadius: BorderRadius.only(topRight: Radius.circular(20), topLeft: Radius.circular(20)), backgroundColor: Theme.of(context).scaffoldBackgroundColor),
-          margin: EdgeInsets.only(bottom: 8),
-          child: PageView(
-            children: productImg,
-            controller: _pageController,
-            onPageChanged: (index) {
-              selectIndex = index;
-              setState(() {});
-            },
-          ),
-        ),
-        DotIndicator(
-          pageController: _pageController,
-          pages: productImg,
-          indicatorColor: primaryColor,
-          unselectedIndicatorColor: grey.withOpacity(0.2),
-          currentBoxShape: BoxShape.rectangle,
-          boxShape: BoxShape.rectangle,
-          borderRadius: radius(2),
-          currentBorderRadius: radius(3),
-          currentDotSize: 18,
-          currentDotWidth: 6,
-          dotSize: 6,
-        ),
-      ],
-    )
-        : SizedBox();
+        ? Column(children: [
+      Container(
+        height: 400,
+        width: MediaQuery.of(context).size.width,
+        decoration: boxDecorationWithRoundedCorners(borderRadius: BorderRadius.only(topRight: Radius.circular(20), topLeft: Radius.circular(20)), backgroundColor: Theme.of(context).scaffoldBackgroundColor),
+        margin: EdgeInsets.only(bottom: 8),
+        child: PageView(children: productImg, controller: _pageController, onPageChanged: (index) { selectIndex = index; setState(() {}); }),
+      ),
+      DotIndicator(pageController: _pageController, pages: productImg, indicatorColor: primaryColor, unselectedIndicatorColor: grey.withOpacity(0.2), currentBoxShape: BoxShape.rectangle, boxShape: BoxShape.rectangle, borderRadius: radius(2), currentBorderRadius: radius(3), currentDotSize: 18, currentDotWidth: 6, dotSize: 6),
+    ]) : SizedBox();
 
     final imgSlider = productDetailNew != null
-        ? Column(
-      children: [
-        Container(
-          height: 400,
-          width: MediaQuery.of(context).size.width,
-          decoration: boxDecorationWithRoundedCorners(borderRadius: BorderRadius.only(topRight: Radius.circular(20), topLeft: Radius.circular(20)), backgroundColor: Theme.of(context).scaffoldBackgroundColor),
-          margin: EdgeInsets.only(bottom: 8),
-          child: PageView(
-            children: productImg1.map((i) {
-              return commonCacheImageWidget(i.validate(), fit: BoxFit.cover, width: double.infinity).cornerRadiusWithClipRRectOnly(topLeft: 20, topRight: 20).onTap(() {
-                ZoomImageScreen(mImgList: productDetailNew!.images!).launch(context);
-              });
-            }).toList(),
-            controller: _pageController,
-            onPageChanged: (index) {
-              selectIndex = index;
-              setState(() {});
-            },
-          ),
+        ? Column(children: [
+      Container(
+        height: 400,
+        width: MediaQuery.of(context).size.width,
+        decoration: boxDecorationWithRoundedCorners(borderRadius: BorderRadius.only(topRight: Radius.circular(20), topLeft: Radius.circular(20)), backgroundColor: Theme.of(context).scaffoldBackgroundColor),
+        margin: EdgeInsets.only(bottom: 8),
+        child: PageView(
+          children: productImg1.map((i) {
+            return commonCacheImageWidget(i.validate(), fit: BoxFit.cover, width: double.infinity)
+                .cornerRadiusWithClipRRectOnly(topLeft: 20, topRight: 20)
+                .onTap(() { ZoomImageScreen(mImgList: productDetailNew!.images!).launch(context); });
+          }).toList(),
+          controller: _pageController,
+          onPageChanged: (index) { selectIndex = index; setState(() {}); },
         ),
-        DotIndicator(
-          pageController: _pageController,
-          pages: productImg1,
-          indicatorColor: primaryColor,
-          unselectedIndicatorColor: grey.withOpacity(0.2),
-          currentBoxShape: BoxShape.rectangle,
-          boxShape: BoxShape.rectangle,
-          borderRadius: radius(2),
-          currentBorderRadius: radius(3),
-          currentDotSize: 18,
-          currentDotWidth: 6,
-          dotSize: 6,
-        ),
-      ],
-    )
-        : SizedBox();
+      ),
+      DotIndicator(pageController: _pageController, pages: productImg1, indicatorColor: primaryColor, unselectedIndicatorColor: grey.withOpacity(0.2), currentBoxShape: BoxShape.rectangle, boxShape: BoxShape.rectangle, borderRadius: radius(2), currentBorderRadius: radius(3), currentDotSize: 18, currentDotWidth: 6, dotSize: 6),
+    ]) : SizedBox();
 
     final mFavourite = productDetailNew != null
         ? Observer(builder: (context) {
@@ -725,8 +649,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
           ),
         ),
       ).visible(productDetailNew!.isAddedWishList != null);
-    })
-        : SizedBox();
+    }) : SizedBox();
 
     final mCartData = productDetailNew != null
         ? Observer(builder: (context) {
@@ -754,10 +677,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
               4.width,
               Text(
                 productDetailNew!.inStock! == true
-                    ? productDetailNew!.type! == 'external'
-                    ? productDetailNew!.buttonText!
-                    : cartStore.isItemInCart(productDetailNew!.id.validate())
-                    ? appLocalization!.translate('lbl_remove_cart')!.toUpperCase()
+                    ? productDetailNew!.type! == 'external' ? productDetailNew!.buttonText!
+                    : cartStore.isItemInCart(productDetailNew!.id.validate()) ? appLocalization!.translate('lbl_remove_cart')!.toUpperCase()
                     : appLocalization!.translate('lbl_add_to_basket')!.toUpperCase()
                     : appLocalization!.translate('lbl_sold_out')!.toUpperCase(),
                 textAlign: TextAlign.center,
@@ -767,59 +688,42 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
           ),
         ),
       );
-    })
-        : SizedBox();
+    }) : SizedBox();
 
     Widget mGetPrice() {
       final mPrice = productDetailNew != null
           ? productDetailNew!.onSale == true
-          ? Row(
-        children: [
-          Text(appLocalization!.translate('lbl_mrp')! + " : ", style: primaryTextStyle(color: context.iconColor)),
-          4.width,
-          PriceWidget(
-              price: productDetailNew!.salePrice.toString().isNotEmpty ? double.parse(productDetailNew!.salePrice.toString()).toStringAsFixed(2) : double.parse(productDetailNew!.price.toString()).toStringAsFixed(2),
-              size: 18),
-          PriceWidget(
-            price: double.parse(productDetailNew!.regularPrice.toString()).toStringAsFixed(2),
-            size: 12,
-            color: Theme.of(context).textTheme.titleMedium!.color,
-            isLineThroughEnabled: true,
-          ).paddingOnly(left: 4).visible(productDetailNew!.salePrice.toString().isNotEmpty && productDetailNew!.onSale == true),
-          8.width,
-          Container(width: 1, height: 12, color: gray),
-          8.width,
-          mDiscount().visible(productDetailNew!.salePrice.toString().isNotEmpty && productDetailNew!.onSale == true)
-        ],
-      )
-          : Row(
-        children: [
-          Text(appLocalization!.translate('lbl_mrp')! + " : ", style: primaryTextStyle(color: context.iconColor)),
-          4.width,
-          PriceWidget(price: double.parse(productDetailNew!.price.toString()).toStringAsFixed(2), size: 18),
-        ],
-      )
+          ? Row(children: [
+        Text(appLocalization!.translate('lbl_mrp')! + " : ", style: primaryTextStyle(color: context.iconColor)),
+        4.width,
+        PriceWidget(price: productDetailNew!.salePrice.toString().isNotEmpty ? double.parse(productDetailNew!.salePrice.toString()).toStringAsFixed(2) : double.parse(productDetailNew!.price.toString()).toStringAsFixed(2), size: 18),
+        PriceWidget(price: double.parse(productDetailNew!.regularPrice.toString()).toStringAsFixed(2), size: 12, color: Theme.of(context).textTheme.titleMedium!.color, isLineThroughEnabled: true)
+            .paddingOnly(left: 4).visible(productDetailNew!.salePrice.toString().isNotEmpty && productDetailNew!.onSale == true),
+        8.width,
+        Container(width: 1, height: 12, color: gray),
+        8.width,
+        mDiscount().visible(productDetailNew!.salePrice.toString().isNotEmpty && productDetailNew!.onSale == true)
+      ])
+          : Row(children: [
+        Text(appLocalization!.translate('lbl_mrp')! + " : ", style: primaryTextStyle(color: context.iconColor)),
+        4.width,
+        PriceWidget(price: double.parse(productDetailNew!.price.toString()).toStringAsFixed(2), size: 18),
+      ])
           : SizedBox();
       return mPrice;
     }
 
     Widget mSavePrice() {
-      if (productDetailNew != null) {
-        if (productDetailNew!.onSale!) {
-          var value = double.parse(productDetailNew!.regularPrice.toString()) - double.parse(productDetailNew!.price.toString());
-          if (value > 0) {
-            return Row(
-              children: [Text(appLocalization!.translate('lbl_save')! + " : ", style: secondaryTextStyle()), PriceWidget(price: value.toStringAsFixed(2), size: 16, color: greenColor)],
-            ).paddingOnly(top: 4, left: 12, right: 8);
-          } else {
-            return SizedBox();
-          }
-        } else {
-          return SizedBox();
+      if (productDetailNew != null && productDetailNew!.onSale!) {
+        var value = double.parse(productDetailNew!.regularPrice.toString()) - double.parse(productDetailNew!.price.toString());
+        if (value > 0) {
+          return Row(children: [
+            Text(appLocalization!.translate('lbl_save')! + " : ", style: secondaryTextStyle()),
+            PriceWidget(price: value.toStringAsFixed(2), size: 16, color: greenColor)
+          ]).paddingOnly(top: 4, left: 12, right: 8);
         }
-      } else {
-        return SizedBox();
       }
+      return SizedBox();
     }
 
     Widget mExternalAttribute() {
@@ -837,9 +741,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               productDetailNew!.images!.isNotEmpty
-                  ? productDetailNew!.woofVideoEmbed != null && productDetailNew!.woofVideoEmbed!.url != ''
-                  ? videoSlider
-                  : imgSlider
+                  ? productDetailNew!.woofVideoEmbed != null && productDetailNew!.woofVideoEmbed!.url != '' ? videoSlider : imgSlider
                   : SizedBox(),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -871,21 +773,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
                           child: RichText(
                             text: TextSpan(
                               children: [
-                                TextSpan(text: rating.toString() + " ", style: secondaryTextStyle(size: 12)),
+                                // ✅ FIX: عرض رقم واحد بعد الفاصلة
+                                TextSpan(text: rating.toStringAsFixed(1) + " ", style: secondaryTextStyle(size: 12)),
                                 WidgetSpan(child: Icon(Icons.star, size: 14, color: bgCardColor)),
                               ],
                             ),
                           ),
                         ),
                       ).onTap(() async {
-                        final double? result = await ReviewScreen(mProductId: widget.mProId).launch(context);
-                        if (result == null) {
-                          rating = rating;
-                          setState(() {});
-                        } else {
-                          rating = result;
-                          setState(() {});
-                        }
+                        await ReviewScreen(
+                          mProductId: widget.mProId,
+                          productName: productDetailNew?.name,
+                          productImage: productDetailNew?.images?.isNotEmpty == true ? productDetailNew!.images![0].src : null,
+                        ).launch(context);
+                        // ✅ FIX: نجيب الـ reviews الجديدة وتحسب الـ rating محلياً تلقائياً
+                        await fetchReviewData();
+                        setState(() {});
                       }).visible(productDetailNew!.reviewsAllowed == true)
                     ],
                   ).paddingOnly(top: 4, left: 12).visible(!productDetailNew!.type!.contains("grouped")),
@@ -894,13 +797,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            Text(appLocalization!.translate('lbl_vendor')!, style: primaryTextStyle(color: Theme.of(context).textTheme.titleMedium!.color)).visible(productDetailNew!.store!.shopName.validate().isNotEmpty),
-                            8.width,
-                            Text(productDetailNew!.store!.shopName != null ? productDetailNew!.store!.shopName! : '', style: boldTextStyle(color: primaryColor)),
-                          ],
-                        ),
+                        Row(children: [
+                          Text(appLocalization!.translate('lbl_vendor')!, style: primaryTextStyle(color: Theme.of(context).textTheme.titleMedium!.color)).visible(productDetailNew!.store!.shopName.validate().isNotEmpty),
+                          8.width,
+                          Text(productDetailNew!.store!.shopName != null ? productDetailNew!.store!.shopName! : '', style: boldTextStyle(color: primaryColor)),
+                        ]),
                         8.width,
                         Icon(Icons.arrow_forward_ios_outlined, color: context.iconColor, size: 16),
                       ],
@@ -912,31 +813,91 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text(appLocalization!.translate('lbl_possible')!, style: boldTextStyle()).paddingOnly(left: 12, right: 12, top: 8),
+                        // ── عنوان القسم ──
+                        Row(
+                          children: [
+                            Icon(Icons.scale_outlined, size: 16, color: primaryColor),
+                            6.width,
+                            Text(
+                              appLocalization!.translate('lbl_possible')!,
+                              style: boldTextStyle(size: 14),
+                            ),
+                            6.width,
+                            if (mSelectedVariation != null && mSelectedVariation!.isNotEmpty)
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: boxDecorationWithRoundedCorners(
+                                  backgroundColor: primaryColor!.withOpacity(0.1),
+                                  borderRadius: radius(12),
+                                ),
+                                child: Text(
+                                  mSelectedVariation!,
+                                  style: boldTextStyle(color: primaryColor, size: 12),
+                                ),
+                              ),
+                          ],
+                        ).paddingOnly(left: 12, right: 12, top: 12, bottom: 4),
+
+                        // ── الخيارات كـ Chips ──
                         Wrap(
                           spacing: 8,
+                          runSpacing: 8,
                           children: mProductOptions.map((e) {
                             int index = mProductOptions.indexOf(e);
-                            return Container(
-                              margin: EdgeInsets.only(top: 8, bottom: 8, left: 8),
-                              padding: EdgeInsets.all(8),
-                              decoration: boxDecorationWithRoundedCorners(backgroundColor: selectedOptionAvailableIn == index ? bgCardColor : context.cardColor, border: Border.all(width: 0.1)),
-                              child: Text(e!, style: secondaryTextStyle(color: selectedOptionAvailableIn == index ? black : textSecondaryColour)),
-                            ).onTap(() {
-                              setState(() {
-                                mSelectedVariation = e;
-                                selectedOptionAvailableIn = index;
-                                mProducts.forEach((product) {
-                                  if (mProductVariationsIds[index] == product.id) {
-                                    this.productDetailNew = product;
-                                  }
+                            bool isSelected = selectedOptionAvailableIn == index;
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  mSelectedVariation = e;
+                                  selectedOptionAvailableIn = index;
+                                  mProducts.forEach((product) {
+                                    if (mProductVariationsIds[index] == product.id) {
+                                      this.productDetailNew = product;
+                                    }
+                                  });
+                                  setPriceDetail();
+                                  mImage();
                                 });
-                                setPriceDetail();
-                                mImage();
-                              });
-                            });
+                              },
+                              child: AnimatedContainer(
+                                duration: Duration(milliseconds: 200),
+                                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? primaryColor : context.cardColor,
+                                  borderRadius: BorderRadius.circular(25),
+                                  border: Border.all(
+                                    color: isSelected ? primaryColor! : grey.withOpacity(0.4),
+                                    width: isSelected ? 2 : 1,
+                                  ),
+                                  boxShadow: isSelected
+                                      ? [BoxShadow(color: primaryColor!.withOpacity(0.3), blurRadius: 8, offset: Offset(0, 3))]
+                                      : [],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (isSelected)
+                                      Padding(
+                                        padding: EdgeInsets.only(left: 4),
+                                        child: Icon(Icons.check_circle, size: 14, color: white),
+                                      ),
+                                    if (isSelected) 4.width,
+                                    Text(
+                                      e!,
+                                      style: boldTextStyle(
+                                        color: isSelected ? white : textSecondaryColour,
+                                        size: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
                           }).toList(),
-                        ).paddingLeft(4)
+                        ).paddingOnly(left: 12, right: 12, top: 4, bottom: 8),
+
+                        // ── خط فاصل ──
+                        Divider(thickness: 1, color: grey.withOpacity(0.2)).paddingOnly(top: 4),
                       ],
                     ).visible(mProductOptions.length != 0)
                   else if (productDetailNew!.type == "grouped")
@@ -962,9 +923,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
                         padding: EdgeInsets.all(8),
                         decoration: boxDecorationWithRoundedCorners(backgroundColor: context.cardColor, border: Border.all(width: 0.1)),
                         child: Text(e.name!, style: secondaryTextStyle()),
-                      ).onTap(() {
-                        ViewAllScreen(e.name, isCategory: true, categoryId: e.id).launch(context);
-                      });
+                      ).onTap(() { ViewAllScreen(e.name, isCategory: true, categoryId: e.id).launch(context); });
                     }).toList(),
                   ).paddingOnly(left: 8, right: 8).visible(productDetailNew!.categories!.isNotEmpty),
                   if (productDetailNew!.upSellIds != null) upSaleProductList(productDetailNew!.upSellId!).visible(productDetailNew!.upSellId!.isNotEmpty),
@@ -987,10 +946,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
           backgroundColor: primaryColor,
           leading: IconButton(
             icon: Icon(Icons.arrow_back, color: white),
-            onPressed: () {
-              finish(context);
-              appStore.setLoading(false);
-            },
+            onPressed: () { finish(context); appStore.setLoading(false); },
           ),
           actions: [mCart(context, mIsLoggedIn, color: white)],
           title: Text(productDetailNew != null ? productDetailNew!.name! : ' ', style: boldTextStyle(color: Colors.white, size: 18)),
@@ -1012,9 +968,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen3> {
         width: context.width(),
         decoration: BoxDecoration(
           color: Theme.of(context).scaffoldBackgroundColor,
-          boxShadow: <BoxShadow>[
-            BoxShadow(color: Theme.of(context).hoverColor.withOpacity(0.8), blurRadius: 15.0, offset: Offset(0.0, 0.75)),
-          ],
+          boxShadow: <BoxShadow>[BoxShadow(color: Theme.of(context).hoverColor.withOpacity(0.8), blurRadius: 15.0, offset: Offset(0.0, 0.75))],
         ),
         child: Row(
           children: [mFavourite, 16.width, Expanded(child: mCartData, flex: 1)],

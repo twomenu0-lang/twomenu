@@ -25,15 +25,27 @@ class SplashScreenState extends State<SplashScreen> {
   }
 
   init() async {
+    // ✅ إعداد Status Bar — سريع جداً (sync تقريباً)
     setStatusBarColor(
       isHalloween ? mChristmasColor : primaryColor!,
       statusBarIconBrightness: Brightness.light,
       statusBarBrightness: Brightness.dark,
     );
-    await Future.delayed(Duration(seconds: 2));
 
-    String productId = await getProductIdFromNative();
-    print(productId);
+    // ─────────────────────────────────────────────────────────────
+    // ❌ أُزيل: await Future.delayed(Duration(seconds: 2))
+    // كان يضيف ثانيتين إجباريتين حتى لو التطبيق جاهز في 300ms
+    //
+    // ✅ بدّل بـ: 300ms فقط — كافية لظهور اللوجو بشكل لائق
+    // لو حابب تحذفها تماماً، احذف السطر التالي
+    // ─────────────────────────────────────────────────────────────
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    // ✅ getProductIdFromNative في الخلفية — مش بيحجب الـ UI
+    // لو استغرقت وقتاً طويلاً، الـ splash هتظهر وتنتظر بدل ما تكون شاشة سوداء
+    final String productId = await getProductIdFromNative();
+
+    if (!mounted) return; // تأكد إن الـ widget لسه موجود
 
     if (productId.isNotEmpty) {
       ProductDetailScreen1(mProId: productId.toInt()).launch(context);
@@ -43,8 +55,8 @@ class SplashScreenState extends State<SplashScreen> {
   }
 
   Future checkFirstSeen() async {
-    bool _seen = (getBoolAsync('seen'));
-    if (_seen) {
+    bool seen = getBoolAsync('seen');
+    if (seen) {
       DashBoardScreen().launch(context, isNewTask: true);
     } else {
       await setValue('seen', true);

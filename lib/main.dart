@@ -53,104 +53,142 @@ Future<BuilderResponse> loadContent() async {
   return BuilderResponse.fromJson(jsonResponse);
 }
 
+/// قراءة آمنة من SharedPreferences — تتعامل مع القيم المحفوظة بنوع خاطئ
+String _safeGetString(String key, {String defaultValue = ''}) {
+  try {
+    return getStringAsync(key, defaultValue: defaultValue);
+  } catch (e) {
+    removeKey(key); // ✅ الاسم الصحيح في nb_utils
+    return defaultValue;
+  }
+}
+
+void _initOneSignal() {
+  if (!isMobile) return;
+
+  OneSignal.initialize(mOneSignalAPPKey);
+  OneSignal.Notifications.requestPermission(false);
+
+  OneSignal.User.pushSubscription.addObserver((state) async {
+    final playerId = state.current.id;
+    if (playerId != null && playerId.isNotEmpty) {
+      await setValue(PLAYER_ID, playerId);
+    }
+  });
+
+  final playerId = OneSignal.User.pushSubscription.id;
+  if (playerId != null && playerId.isNotEmpty) {
+    setValue(PLAYER_ID, playerId);
+  }
+}
+
+void _initFirebaseBackground() {
+  FirebaseAppCheck.instance.activate(
+    androidProvider: kDebugMode
+        ? AndroidProvider.debug
+        : AndroidProvider.playIntegrity,
+    appleProvider: AppleProvider.deviceCheck,
+  );
+  _initOneSignal();
+}
+
+void _initColors() {
+  primaryColor = getColorFromHex(_safeGetString(PRIMARY_COLOR),
+      defaultColor: appColorPrimary);
+  colorAccent = getColorFromHex(_safeGetString(SECONDARY_COLOR),
+      defaultColor: appColorAccent);
+  textPrimaryColour = getColorFromHex(_safeGetString(TEXT_PRIMARY_COLOR),
+      defaultColor: textColorPrimary);
+  textSecondaryColour = getColorFromHex(_safeGetString(TEXT_SECONDARY_COLOR),
+      defaultColor: textColorSecondary);
+  backgroundColor = getColorFromHex(_safeGetString(BACKGROUND_COLOR),
+      defaultColor: itemBackgroundColor);
+}
+
+void _initLocalData() {
+  String cartString = _safeGetString(CART_ITEM_LIST);
+  if (cartString.isNotEmpty) {
+    try {
+      cartStore.addAllCartItem(jsonDecode(cartString)
+          .map<CartModel>((e) => CartModel.fromJson(e))
+          .toList());
+    } catch (e) {
+      removeKey(CART_ITEM_LIST); // ✅
+    }
+  }
+
+  String wishListString = _safeGetString(WISHLIST_ITEM_LIST);
+  if (wishListString.isNotEmpty) {
+    try {
+      wishListStore.addAllWishListItem(jsonDecode(wishListString)
+          .map<WishListResponse>((e) => WishListResponse.fromJson(e))
+          .toList());
+    } catch (e) {
+      removeKey(WISHLIST_ITEM_LIST); // ✅
+    }
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // STEP 1: Firebase Core
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   ).then((value) {
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
   });
 
-  await FirebaseAppCheck.instance.activate(
-    androidProvider: kDebugMode
-        ? AndroidProvider.debug
-        : AndroidProvider.playIntegrity,
-    appleProvider: AppleProvider.deviceCheck,
-  );
-
+  // STEP 2: nb_utils initialize
   await initialize();
 
-  if (isMobile) {
-    OneSignal.initialize(mOneSignalAPPKey);
-    await OneSignal.Notifications.requestPermission(true);
-
-    // ✅ استنى لحد ما الـ ID يكون جاهز واحفظه
-    OneSignal.User.pushSubscription.addObserver((state) async {
-      final playerId = state.current.id;
-      if (playerId != null && playerId.isNotEmpty) {
-        await setValue(PLAYER_ID, playerId);
-      }
-    });
-
-    // ✅ لو موجود فعلاً من جلسة سابقة خذه فوراً
-    final playerId = OneSignal.User.pushSubscription.id;
-    if (playerId != null && playerId.isNotEmpty) {
-      await setValue(PLAYER_ID, playerId);
-    }
-  }
-
-  appStore.setCount(getIntAsync(CARTCOUNT, defaultValue: 0));
-  appStore.setNotification(
-      getBoolAsync(IS_NOTIFICATION_ON, defaultValue: true));
-
-  await setValue(DASHBOARD_PAGE_VARIANT, Default_DASHBOARD_PAGE_VARIANT);
-  await setValue(PRODUCT_DETAIL_VARIANT, Default_PRODUCT_DETAIL_VARIANT);
-
+  // STEP 3: تحميل builder.json
   builderResponse = await loadContent();
 
-  if (isHalloween) {
-    await setValue(PRIMARY_COLOR, mChristmasBg);
-    if (base_URL.isEmpty) {
+  // STEP 4: حفظ إعدادات المتجر (أول تشغيل فقط)
+  final bool isFirstRun = _safeGetString(APP_URL).isEmpty;
+
+  if (isFirstRun) {
+    if (isHalloween) {
+      await setValue(PRIMARY_COLOR, mChristmasBg);
+      if (base_URL.isEmpty) {
+        await setValue(APP_URL, builderResponse.appsetup!.appUrl);
+        await setValue(CONSUMER_KEY, builderResponse.appsetup!.consumerKey);
+        await setValue(CONSUMER_SECRET, builderResponse.appsetup!.consumerSecret);
+      } else {
+        await setValue(APP_URL, base_URL);
+        await setValue(CONSUMER_KEY, consumerKey);
+        await setValue(CONSUMER_SECRET, consumerSecret);
+      }
+    } else {
+      await setValue(PRIMARY_COLOR, builderResponse.appsetup!.primaryColor);
       await setValue(APP_URL, builderResponse.appsetup!.appUrl);
       await setValue(CONSUMER_KEY, builderResponse.appsetup!.consumerKey);
       await setValue(CONSUMER_SECRET, builderResponse.appsetup!.consumerSecret);
-    } else {
-      await setValue(APP_URL, base_URL);
-      await setValue(CONSUMER_KEY, consumerKey);
-      await setValue(CONSUMER_SECRET, consumerSecret);
     }
-  } else {
-    await setValue(PRIMARY_COLOR, builderResponse.appsetup!.primaryColor);
-    await setValue(APP_URL, builderResponse.appsetup!.appUrl);
-    await setValue(CONSUMER_KEY, builderResponse.appsetup!.consumerKey);
-    await setValue(CONSUMER_SECRET, builderResponse.appsetup!.consumerSecret);
+
+    await setValue(BACKGROUND_COLOR, builderResponse.appsetup!.backgroundColor);
+    await setValue(SECONDARY_COLOR, builderResponse.appsetup!.secondaryColor);
+    await setValue(TEXT_PRIMARY_COLOR, builderResponse.appsetup!.textPrimaryColor);
+    await setValue(TEXT_SECONDARY_COLOR, builderResponse.appsetup!.textSecondaryColor);
   }
 
-  await setValue(BACKGROUND_COLOR, builderResponse.appsetup!.backgroundColor);
-  await setValue(SECONDARY_COLOR, builderResponse.appsetup!.secondaryColor);
-  await setValue(TEXT_PRIMARY_COLOR, builderResponse.appsetup!.textPrimaryColor);
-  await setValue(TEXT_SECONDARY_COLOR, builderResponse.appsetup!.textSecondaryColor);
+  // STEP 5: قراءة الإعدادات
+  appStore.setCount(getIntAsync(CARTCOUNT, defaultValue: 0));
+  appStore.setNotification(getBoolAsync(IS_NOTIFICATION_ON, defaultValue: true));
 
-  primaryColor = getColorFromHex(getStringAsync(PRIMARY_COLOR),
-      defaultColor: appColorPrimary);
-  colorAccent = getColorFromHex(getStringAsync(SECONDARY_COLOR),
-      defaultColor: appColorAccent);
-  textPrimaryColour = getColorFromHex(getStringAsync(TEXT_PRIMARY_COLOR),
-      defaultColor: textColorPrimary);
-  textSecondaryColour = getColorFromHex(getStringAsync(TEXT_SECONDARY_COLOR),
-      defaultColor: textColorSecondary);
-  backgroundColor = getColorFromHex(getStringAsync(BACKGROUND_COLOR),
-      defaultColor: itemBackgroundColor);
-
-  String cartString = getStringAsync(CART_ITEM_LIST);
-  if (cartString.isNotEmpty) {
-    cartStore.addAllCartItem(jsonDecode(cartString)
-        .map<CartModel>((e) => CartModel.fromJson(e))
-        .toList());
+  if (_safeGetString(DASHBOARD_PAGE_VARIANT).isEmpty) {
+    await setValue(DASHBOARD_PAGE_VARIANT, Default_DASHBOARD_PAGE_VARIANT);
+  }
+  if (_safeGetString(PRODUCT_DETAIL_VARIANT).isEmpty) {
+    await setValue(PRODUCT_DETAIL_VARIANT, Default_PRODUCT_DETAIL_VARIANT);
   }
 
-  String wishListString = getStringAsync(WISHLIST_ITEM_LIST);
-  if (wishListString.isNotEmpty) {
-    wishListStore.addAllWishListItem(jsonDecode(wishListString)
-        .map<WishListResponse>((e) => WishListResponse.fromJson(e))
-        .toList());
-  }
+  baseUrl = _safeGetString(APP_URL);
+  ConsumerKey = _safeGetString(CONSUMER_KEY);
+  ConsumerSecret = _safeGetString(CONSUMER_SECRET);
 
-  baseUrl = getStringAsync(APP_URL);
-  ConsumerKey = getStringAsync(CONSUMER_KEY);
-  ConsumerSecret = getStringAsync(CONSUMER_SECRET);
-
+  // STEP 6: إعداد الثيم
   int themeModeIndex = getIntAsync(THEME_MODE_INDEX);
   if (themeModeIndex == ThemeModeLight) {
     appStore.setDarkMode(aIsDarkMode: false);
@@ -158,14 +196,23 @@ void main() async {
     appStore.setDarkMode(aIsDarkMode: true);
   }
 
-  String savedLanguage = getStringAsync(LANGUAGE);
+  // STEP 7: إعداد اللغة
+  String savedLanguage = _safeGetString(LANGUAGE);
   if (savedLanguage.isEmpty) {
     appStore.setLanguage(defaultLanguage);
   } else {
     appStore.setLanguage(savedLanguage);
   }
 
+  // STEP 8: الألوان والبيانات المحلية
+  _initColors();
+  _initLocalData();
+
+  // STEP 9: runApp
   runApp(MyApp());
+
+  // STEP 10: Firebase و OneSignal في الخلفية
+  _initFirebaseBackground();
 }
 
 class MyApp extends StatefulWidget {

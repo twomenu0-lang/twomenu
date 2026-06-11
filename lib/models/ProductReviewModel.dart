@@ -1,5 +1,3 @@
-import 'CategoryData.dart';
-
 class ProductReviewModel {
   int? id;
   String? dateCreated;
@@ -11,22 +9,29 @@ class ProductReviewModel {
   String? review;
   int? rating;
   bool? verified;
- // ReviewerAvatarUrls reviewerAvatarUrls;
-  Links? lLinks;
+  ReviewerAvatarUrls? reviewerAvatarUrls;
+  ReviewLinks? lLinks;
 
-  ProductReviewModel(
-      {this.id,
-        this.dateCreated,
-        this.dateCreatedGmt,
-        this.productId,
-        this.status,
-        this.reviewer,
-        this.reviewerEmail,
-        this.review,
-        this.rating,
-        this.verified,
-        //this.reviewerAvatarUrls,
-        this.lLinks});
+  ProductReviewModel({
+    this.id,
+    this.dateCreated,
+    this.dateCreatedGmt,
+    this.productId,
+    this.status,
+    this.reviewer,
+    this.reviewerEmail,
+    this.review,
+    this.rating,
+    this.verified,
+    this.reviewerAvatarUrls,
+    this.lLinks,
+  });
+
+  /// اسم المراجع
+  String? get reviewerName => reviewer;
+
+  /// رابط الصورة الرمزية 96px
+  String? get avatarUrl => reviewerAvatarUrls?.s96;
 
   ProductReviewModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -39,34 +44,38 @@ class ProductReviewModel {
     review = json['review'];
     rating = json['rating'];
     verified = json['verified'];
-//    reviewerAvatarUrls = json['reviewer_avatar_urls'] != null
-//        ? new ReviewerAvatarUrls.fromJson(json['reviewer_avatar_urls'])
-//        : null;
-    lLinks = json['_links'] != null ? new Links.fromJson(json['_links']) : null;
+    reviewerAvatarUrls = json['reviewer_avatar_urls'] != null
+        ? ReviewerAvatarUrls.fromJson(json['reviewer_avatar_urls'])
+        : null;
+    lLinks =
+    json['_links'] != null ? ReviewLinks.fromJson(json['_links']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['date_created'] = this.dateCreated;
-    data['date_created_gmt'] = this.dateCreatedGmt;
-    data['product_id'] = this.productId;
-    data['status'] = this.status;
-    data['reviewer'] = this.reviewer;
-    data['reviewer_email'] = this.reviewerEmail;
-    data['review'] = this.review;
-    data['rating'] = this.rating;
-    data['verified'] = this.verified;
-//    if (this.reviewerAvatarUrls != null) {
-//      data['reviewer_avatar_urls'] = this.reviewerAvatarUrls.toJson();
-//    }
-    if (this.lLinks != null) {
-      data['_links'] = this.lLinks!.toJson();
+    final Map<String, dynamic> data = {};
+    data['id'] = id;
+    data['date_created'] = dateCreated;
+    data['date_created_gmt'] = dateCreatedGmt;
+    data['product_id'] = productId;
+    data['status'] = status;
+    data['reviewer'] = reviewer;
+    data['reviewer_email'] = reviewerEmail;
+    data['review'] = review;
+    data['rating'] = rating;
+    data['verified'] = verified;
+    if (reviewerAvatarUrls != null) {
+      data['reviewer_avatar_urls'] = reviewerAvatarUrls!.toJson();
+    }
+    if (lLinks != null) {
+      data['_links'] = lLinks!.toJson();
     }
     return data;
   }
 }
 
+// ─────────────────────────────────────────
+// Reviewer Avatar URLs
+// ─────────────────────────────────────────
 class ReviewerAvatarUrls {
   String? s24;
   String? s48;
@@ -75,75 +84,78 @@ class ReviewerAvatarUrls {
   ReviewerAvatarUrls({this.s24, this.s48, this.s96});
 
   ReviewerAvatarUrls.fromJson(Map<String, dynamic> json) {
-    s24 = json['24'];
-    s48 = json['48'];
-    s96 = json['96'];
+    s24 = json['24']?.toString();
+    s48 = json['48']?.toString();
+    s96 = json['96']?.toString();
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['24'] = this.s24;
-    data['48'] = this.s48;
-    data['96'] = this.s96;
-    return data;
-  }
+  Map<String, dynamic> toJson() => {
+    '24': s24,
+    '48': s48,
+    '96': s96,
+  };
 }
 
-class Links {
-  List<Self>? self;
-  List<Collection>? collection;
-  List<Up>? up;
+// ─────────────────────────────────────────
+// Links  (اسم مختلف لتفادي التعارض مع Links في CategoryData)
+// ─────────────────────────────────────────
+class ReviewLinks {
+  List<ReviewSelf>? self;
+  List<ReviewCollection>? collection;
+  List<ReviewUp>? up;
 
-  Links({this.self, this.collection, this.up});
+  ReviewLinks({this.self, this.collection, this.up});
 
-  Links.fromJson(Map<String, dynamic> json) {
+  ReviewLinks.fromJson(Map<String, dynamic> json) {
     if (json['self'] != null) {
-      self = <Self>[];
-      json['self'].forEach((v) {
-        self!.add(new Self.fromJson(v));
-      });
+      self = <ReviewSelf>[];
+      json['self'].forEach((v) => self!.add(ReviewSelf.fromJson(v)));
     }
     if (json['collection'] != null) {
-      collection = <Collection>[];
-      json['collection'].forEach((v) {
-        collection!.add(new Collection.fromJson(v));
-      });
+      collection = <ReviewCollection>[];
+      json['collection']
+          .forEach((v) => collection!.add(ReviewCollection.fromJson(v)));
     }
     if (json['up'] != null) {
-      up = <Up>[];
-      json['up'].forEach((v) {
-        up!.add(new Up.fromJson(v));
-      });
+      up = <ReviewUp>[];
+      json['up'].forEach((v) => up!.add(ReviewUp.fromJson(v)));
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.self != null) {
-      data['self'] = this.self!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = {};
+    if (self != null) data['self'] = self!.map((v) => v.toJson()).toList();
+    if (collection != null) {
+      data['collection'] = collection!.map((v) => v.toJson()).toList();
     }
-    if (this.collection != null) {
-      data['collection'] = this.collection!.map((v) => v.toJson()).toList();
-    }
-    if (this.up != null) {
-      data['up'] = this.up!.map((v) => v.toJson()).toList();
-    }
+    if (up != null) data['up'] = up!.map((v) => v.toJson()).toList();
     return data;
   }
 }
 
-class Self {
+class ReviewSelf {
   String? href;
-
-  Self({this.href});
-
-  Self.fromJson(Map<String, dynamic> json) {
+  ReviewSelf({this.href});
+  ReviewSelf.fromJson(Map<String, dynamic> json) {
     href = json['href'];
   }
+  Map<String, dynamic> toJson() => {'href': href};
+}
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['href'] = this.href;
-    return data;
+class ReviewCollection {
+  String? href;
+  ReviewCollection({this.href});
+  ReviewCollection.fromJson(Map<String, dynamic> json) {
+    href = json['href'];
   }
+  Map<String, dynamic> toJson() => {'href': href};
+}
+
+class ReviewUp {
+  String? href;
+  ReviewUp({this.href});
+  ReviewUp.fromJson(Map<String, dynamic> json) {
+    href = json['href'];
+  }
+  Map<String, dynamic> toJson() => {'href': href};
 }

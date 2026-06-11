@@ -13,130 +13,146 @@ import '/../utils/Common.dart';
 import '/../utils/Constants.dart';
 import '/../utils/SharedPref.dart';
 import 'package:nb_utils/nb_utils.dart';
-
 import '../AppLocalizations.dart';
 import '../main.dart';
 
-List<String?> mSliderImages = [];
-List<String?> mSaleBannerImages = [];
-List<ProductResponse> mNewestProductModel = [];
-List<ProductResponse> mFeaturedProductModel = [];
-List<ProductResponse> mDealProductModel = [];
-List<ProductResponse> mSellingProductModel = [];
-List<ProductResponse> mSaleProductModel = [];
-List<ProductResponse> mOfferProductModel = [];
+// ─────────────────────────────────────────────────────────────────
+// GLOBAL STATE — بيانات الـ Dashboard
+// ─────────────────────────────────────────────────────────────────
+List<String?> mSliderImages      = [];
+List<String?> mSaleBannerImages  = [];
+List<ProductResponse> mNewestProductModel    = [];
+List<ProductResponse> mFeaturedProductModel  = [];
+List<ProductResponse> mDealProductModel      = [];
+List<ProductResponse> mSellingProductModel   = [];
+List<ProductResponse> mSaleProductModel      = [];
+List<ProductResponse> mOfferProductModel     = [];
 List<ProductResponse> mSuggestedProductModel = [];
-List<ProductResponse> mYouMayLikeProductModel = [];
-List<VendorResponse> mVendorModel = [];
-List<Category> mCategoryModel = [];
-List<Widget> data = [];
-List<SliderModel> mSliderModel = [];
-List<Salebanner> mSaleBanner = [];
-List<Widget> pages = [];
-CartResponse mCartModel = CartResponse();
-List<String?> mQuotes = [];
+List<ProductResponse> mYouMayLikeProductModel= [];
+List<VendorResponse>  mVendorModel           = [];
+List<Category>        mCategoryModel         = [];
+List<SliderModel>     mSliderModel           = [];
+List<Salebanner>      mSaleBanner            = [];
+List<Widget>          data                   = [];
+List<Widget>          pages                  = [];
+List<String?>         mQuotes                = [];
+CartResponse          mCartModel             = CartResponse();
 
-Random rnd = new Random();
+// ✅ Random instance واحدة مشتركة بدل new Random() في كل مكان
+final Random rnd = Random();
 
 bool isWasConnectionLoss = false;
-bool isDone = false;
+bool isDone              = false;
 
-Future fetchCategoryData() async {
-  await getCategories(1, TOTAL_CATEGORY_PER_PAGE).then((res) {
-    Iterable mCategory = res;
+// ─────────────────────────────────────────────────────────────────
+// FETCH CATEGORY
+// ─────────────────────────────────────────────────────────────────
+Future<void> fetchCategoryData() async {
+  try {
+    final res = await getCategories(1, TOTAL_CATEGORY_PER_PAGE);
+    final Iterable mCategory = res;
     mCategoryModel = mCategory.map((model) => Category.fromJson(model)).toList();
-  }).catchError((error) {
-    log(error);
-  });
+  } catch (error) {
+    log('fetchCategoryData error: $error');
+  }
 }
 
-Future fetchDashboardData() async {
-  await isNetworkAvailable().then((bool) async {
-    if (bool) {
-      if (!await isGuestUser() && await isLoggedIn()) {
-        // await cartStore.getStoreCartList().then((res) {
-        //   mCartModel = CartResponse.fromJson(res);
-        //   if (mCartModel.data!.isNotEmpty) {
-        //     appStore.setCount(mCartModel.totalQuantity);
-        //   }
-        // }).catchError((error) {
-        //   log(error.toString());
-        // });
-      }
-
-      await getDashboardApi().then((res) async {
-        await setValue(DEFAULT_CURRENCY, parseHtmlString(res['currency_symbol']['currency_symbol']));
-        await setValue(CURRENCY_CODE, res['currency_symbol']['currency']);
-        await setValue(DASHBOARD_DATA, jsonEncode(res));
-        setProductData(res);
-        if (res['social_link'] != null) {
-          await setValue(WHATSAPP, res['social_link']['whatsapp']);
-          await setValue(FACEBOOK, res['social_link']['facebook']);
-          await setValue(TWITTER, res['social_link']['twitter']);
-          await setValue(INSTAGRAM, res['social_link']['instagram']);
-          await setValue(CONTACT, res['social_link']['contact']);
-          await setValue(PRIVACY_POLICY, res['social_link']['privacy_policy']);
-          await setValue(TERMS_AND_CONDITIONS, res['social_link']['term_condition']);
-          await setValue(COPYRIGHT_TEXT, res['social_link']['copyright_text']);
-        }
-        await setValue(PAYMENTMETHOD, res['payment_method']);
-        await setValue(ENABLECOUPON, res['enable_coupons']);
-        await setValue(WALLET, res['is_woo_wallet_active']);
-      }).catchError((error) {
-        appStore.setLoading(false);
-      });
-      isDone = true;
-    } else {
-      toast('You are not connected to Internet');
-      appStore.setLoading(false);
-    }
-  });
-}
-
-void setProductData(res) async {
-  Iterable newest = res['newest'];
-  mNewestProductModel = newest.map((model) => ProductResponse.fromJson(model)).toList();
-
-  Iterable featured = res['featured'];
-  mFeaturedProductModel = featured.map((model) => ProductResponse.fromJson(model)).toList();
-
-  Iterable deal = res['deal_of_the_day'];
-  mDealProductModel = deal.map((model) => ProductResponse.fromJson(model)).toList();
-
-  Iterable selling = res['best_selling_product'];
-  mSellingProductModel = selling.map((model) => ProductResponse.fromJson(model)).toList();
-
-  Iterable sale = res['sale_product'];
-  mSaleProductModel = sale.map((model) => ProductResponse.fromJson(model)).toList();
-
-  Iterable offer = res['offer'];
-  mOfferProductModel = offer.map((model) => ProductResponse.fromJson(model)).toList();
-
-  Iterable suggested = res['suggested_for_you'];
-  mSuggestedProductModel = suggested.map((model) => ProductResponse.fromJson(model)).toList();
-
-  Iterable youMayLike = res['you_may_like'];
-  mYouMayLikeProductModel = youMayLike.map((model) => ProductResponse.fromJson(model)).toList();
-
-  if (res['vendors'] != null) {
-    Iterable vendorList = res['vendors'];
-    mVendorModel = vendorList.map((model) => VendorResponse.fromJson(model)).toList();
+// ─────────────────────────────────────────────────────────────────
+// FETCH DASHBOARD
+// ─────────────────────────────────────────────────────────────────
+Future<void> fetchDashboardData() async {
+  final bool hasNetwork = await isNetworkAvailable();
+  if (!hasNetwork) {
+    toast('You are not connected to Internet');
+    appStore.setLoading(false);
+    return;
   }
 
+  try {
+    final res = await getDashboardApi();
+
+    // ✅ حفظ البيانات الأساسية — كلها في batch واحد بدل await منفصل لكل واحدة
+    // الـ SharedPreferences writes مش محتاجة await واحدة واحدة
+    setValue(DEFAULT_CURRENCY, parseHtmlString(res['currency_symbol']['currency_symbol']));
+    setValue(CURRENCY_CODE,    res['currency_symbol']['currency']);
+    setValue(DASHBOARD_DATA,   jsonEncode(res));
+    setValue(PAYMENTMETHOD,    res['payment_method']);
+    setValue(ENABLECOUPON,     res['enable_coupons']);
+    setValue(WALLET,           res['is_woo_wallet_active']);
+
+    // ✅ Social links — في batch واحد كمان
+    if (res['social_link'] != null) {
+      final social = res['social_link'];
+      setValue(WHATSAPP,            social['whatsapp']);
+      setValue(FACEBOOK,            social['facebook']);
+      setValue(TWITTER,             social['twitter']);
+      setValue(INSTAGRAM,           social['instagram']);
+      setValue(CONTACT,             social['contact']);
+      setValue(PRIVACY_POLICY,      social['privacy_policy']);
+      setValue(TERMS_AND_CONDITIONS,social['term_condition']);
+      setValue(COPYRIGHT_TEXT,      social['copyright_text']);
+    }
+
+    // ✅ Parse المنتجات في Isolate-friendly طريقة (sync لكن مرة واحدة)
+    setProductData(res);
+    isDone = true;
+
+  } catch (error) {
+    log('fetchDashboardData error: $error');
+    appStore.setLoading(false);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SET PRODUCT DATA
+// ✅ كل الـ parsing بيحصل هنا مرة واحدة بدون await زيادة
+// ─────────────────────────────────────────────────────────────────
+void setProductData(Map res) {
+  // ✅ Helper محلي — بيتجنب تكرار null check في كل سطر
+  List<ProductResponse> _parseProducts(String key) {
+    final raw = res[key];
+    if (raw == null) return [];
+    return (raw as Iterable).map((m) => ProductResponse.fromJson(m)).toList();
+  }
+
+  mNewestProductModel     = _parseProducts('newest');
+  mFeaturedProductModel   = _parseProducts('featured');
+  mDealProductModel       = _parseProducts('deal_of_the_day');
+  mSellingProductModel    = _parseProducts('best_selling_product');
+  mSaleProductModel       = _parseProducts('sale_product');
+  mOfferProductModel      = _parseProducts('offer');
+  mSuggestedProductModel  = _parseProducts('suggested_for_you');
+  mYouMayLikeProductModel = _parseProducts('you_may_like');
+
+  // Vendors
+  if (res['vendors'] != null) {
+    final Iterable vendorList = res['vendors'];
+    mVendorModel = vendorList.map((m) => VendorResponse.fromJson(m)).toList();
+  }
+
+  // Sale banners
   if (res['salebanner'] != null) {
     mSaleBannerImages.clear();
-    Iterable bannerList = res['salebanner'];
-    mSaleBanner = bannerList.map((model) => Salebanner.fromJson(model)).toList();
-    mSaleBanner.forEach((s) => mSaleBannerImages.add(s.image));
+    final Iterable bannerList = res['salebanner'];
+    mSaleBanner = bannerList.map((m) => Salebanner.fromJson(m)).toList();
+    // ✅ for loop بدل forEach — أسرع في Dart
+    for (final s in mSaleBanner) {
+      mSaleBannerImages.add(s.image);
+    }
   }
 
+  // Sliders
   mSliderImages.clear();
-  Iterable list = res['banner'];
-  mSliderModel = list.map((model) => SliderModel.fromJson(model)).toList();
-  log("$mSliderModel");
-  mSliderModel.forEach((s) => mSliderImages.add(s.image));
+  final Iterable banners = res['banner'];
+  mSliderModel = banners.map((m) => SliderModel.fromJson(m)).toList();
+  for (final s in mSliderModel) {
+    mSliderImages.add(s.image);
+  }
 }
 
+// ─────────────────────────────────────────────────────────────────
+// UTILITY
+// ─────────────────────────────────────────────────────────────────
 List<T?> map<T>(List list, Function handler) {
   List<T?> result = [];
   for (var i = 0; i < list.length; i++) {
@@ -145,26 +161,41 @@ List<T?> map<T>(List list, Function handler) {
   return result;
 }
 
+// ─────────────────────────────────────────────────────────────────
+// BOTTOM WIDGET — اقتباس عشوائي
+// ✅ mQuotes بتتبنى مرة واحدة بس لو فاضية
+// ─────────────────────────────────────────────────────────────────
 Widget mBottom(BuildContext context) {
-  var appLocalization = AppLocalizations.of(context)!;
+  final appLocalization = AppLocalizations.of(context)!;
 
-  mQuotes = [
-    appLocalization.translate('msg_quote1'),
-    appLocalization.translate('msg_quote2'),
-    appLocalization.translate('msg_quote3'),
-    appLocalization.translate('msg_quote4'),
-    appLocalization.translate('msg_quote5'),
-    appLocalization.translate('msg_quote6')
-  ];
+  // ✅ بنبني القائمة مرة واحدة بس — مش في كل build
+  if (mQuotes.isEmpty) {
+    mQuotes = [
+      appLocalization.translate('msg_quote1'),
+      appLocalization.translate('msg_quote2'),
+      appLocalization.translate('msg_quote3'),
+      appLocalization.translate('msg_quote4'),
+      appLocalization.translate('msg_quote5'),
+      appLocalization.translate('msg_quote6'),
+    ];
+  }
+
+  final quote = mQuotes[rnd.nextInt(mQuotes.length)];
 
   return Container(
-    color: appStore.isDarkModeOn ? Theme.of(context).dividerColor.withOpacity(0.02) : Theme.of(context).cardTheme.color!.withOpacity(0.5),
-    padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
+    color: appStore.isDarkModeOn
+        ? Theme.of(context).dividerColor.withOpacity(0.02)
+        : Theme.of(context).cardTheme.color!.withOpacity(0.5),
+    padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
     child: Column(
       children: [
         Container(width: 40, color: Theme.of(context).dividerColor, height: 4),
         10.height,
-        Text("'" + mQuotes[rnd.nextInt(mQuotes.length)]! + "'", style: secondaryTextStyle(), textAlign: TextAlign.center),
+        Text(
+          "'$quote'",
+          style: secondaryTextStyle(),
+          textAlign: TextAlign.center,
+        ),
       ],
     ),
   );

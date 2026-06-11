@@ -11,7 +11,33 @@ import '/../utils/Constants.dart';
 import '/../utils/QueryString.dart';
 import 'package:nb_utils/nb_utils.dart';
 
+// ─────────────────────────────────────────────────────────────────
+// HTTP CLIENT — shared client مع keep-alive لتقليل TCP handshake
+// ─────────────────────────────────────────────────────────────────
 final _sharedClient = http.Client();
+
+// ─────────────────────────────────────────────────────────────────
+// TIMEOUTS
+// 15s للـ request الأول — كافي على موبايل وبيمنع تجميد الـ UI
+// 10s للـ retry — لو الـ request الأول فشل، مش هنستنى أكتر
+// ─────────────────────────────────────────────────────────────────
+const Duration _kRequestTimeout = Duration(seconds: 15);
+const Duration _kRetryTimeout   = Duration(seconds: 10);
+
+// ─────────────────────────────────────────────────────────────────
+// HEADERS — base headers مع cache control للـ GET requests
+// ─────────────────────────────────────────────────────────────────
+Map<String, String> _baseHeaders({bool withCache = false}) {
+  final headers = <String, String>{
+    HttpHeaders.contentTypeHeader: 'application/json; charset=utf-8',
+    HttpHeaders.connectionHeader:  'keep-alive',
+  };
+  if (withCache) {
+    // يسمح للـ HTTP layer بـ cache الـ response لمدة دقيقتين
+    headers['Cache-Control'] = 'max-age=120';
+  }
+  return headers;
+}
 
 class MightyAPI {
   late String url;
@@ -20,206 +46,200 @@ class MightyAPI {
   bool? isHttps;
 
   MightyAPI() {
-    this.url = getStringAsync(APP_URL);
-    this.consumerKey = getStringAsync(CONSUMER_KEY);
+    this.url           = getStringAsync(APP_URL);
+    this.consumerKey   = getStringAsync(CONSUMER_KEY);
     this.consumerSecret = getStringAsync(CONSUMER_SECRET);
-
-    if (this.url.startsWith("https")) {
-      this.isHttps = true;
-    } else {
-      this.isHttps = false;
-    }
+    this.isHttps       = this.url.startsWith("https");
   }
 
+  // ───────────────────────────────────────────────────────────────
+  // OAUTH URL BUILDER
+  // ───────────────────────────────────────────────────────────────
   String _getOAuthURL(String requestMethod, String endpoint) {
-    var consumerKey = this.consumerKey;
-    var consumerSecret = this.consumerSecret;
-    var token = "";
-    var tokenSecret = "";
-    var url = this.url + endpoint;
-    var containsQueryParams = url.contains("?");
+    final consumerKey    = this.consumerKey;
+    final consumerSecret = this.consumerSecret;
+    const token          = "";
+    const tokenSecret    = "";
+    final url            = this.url + endpoint;
+    final containsQueryParams = url.contains("?");
 
     if (this.isHttps == true) {
-      return url +
-          (containsQueryParams == true
-              ? "&consumer_key=" + this.consumerKey! + "&consumer_secret=" + this.consumerSecret!
-              : "?consumer_key=" + this.consumerKey! + "&consumer_secret=" + this.consumerSecret!);
+      final separator = containsQueryParams ? "&" : "?";
+      return "$url${separator}consumer_key=${this.consumerKey!}&consumer_secret=${this.consumerSecret!}";
+    }
+
+    // HTTP — OAuth 1.0 signing
+    final rand      = Random();
+    final codeUnits = List.generate(10, (_) => rand.nextInt(26) + 97);
+    final nonce     = String.fromCharCodes(codeUnits);
+    final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+    var parameters = "oauth_consumer_key=$consumerKey"
+        "&oauth_nonce=$nonce"
+        "&oauth_signature_method=HMAC-SHA1"
+        "&oauth_timestamp=$timestamp"
+        "&oauth_token=$token"
+        "&oauth_version=1.0&";
+
+    if (containsQueryParams) {
+      parameters = parameters + url.split("?")[1];
     } else {
-      var rand = new Random();
-      var codeUnits = new List.generate(10, (index) {
-        return rand.nextInt(26) + 97;
-      });
-      var nonce = new String.fromCharCodes(codeUnits);
-      int timestamp = new DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      var method = requestMethod;
-      var parameters = "oauth_consumer_key=" +
-          consumerKey! +
-          "&oauth_nonce=" +
-          nonce +
-          "&oauth_signature_method=HMAC-SHA1&oauth_timestamp=" +
-          timestamp.toString() +
-          "&oauth_token=" +
-          token +
-          "&oauth_version=1.0&";
+      parameters = parameters.substring(0, parameters.length - 1);
+    }
 
-      if (containsQueryParams == true) {
-        parameters = parameters + url.split("?")[1];
-      } else {
-        parameters = parameters.substring(0, parameters.length - 1);
-      }
+    final params  = QueryString.parse(parameters);
+    final treeMap = SplayTreeMap<dynamic, dynamic>()..addAll(params);
 
-      Map<dynamic, dynamic> params = QueryString.parse(parameters);
-      Map<dynamic, dynamic> treeMap = new SplayTreeMap<dynamic, dynamic>();
-      treeMap.addAll(params);
-      String parameterString = "";
-      for (var key in treeMap.keys) {
-        parameterString = parameterString + Uri.encodeQueryComponent(key) + "=" + treeMap[key] + "&";
-      }
-      parameterString = parameterString.substring(0, parameterString.length - 1);
-      var baseString = method + "&" + Uri.encodeQueryComponent(containsQueryParams == true ? url.split("?")[0] : url) + "&" + Uri.encodeQueryComponent(parameterString);
-      var signingKey = consumerSecret! + "&" + tokenSecret;
-      var hmacSha1 = new crypto.Hmac(crypto.sha1, utf8.encode(signingKey));
-      var signature = hmacSha1.convert(utf8.encode(baseString));
-      var finalSignature = base64Encode(signature.bytes);
-      var requestUrl = "";
-      if (containsQueryParams == true) {
-        requestUrl = url.split("?")[0] + "?" + parameterString + "&oauth_signature=" + Uri.encodeQueryComponent(finalSignature);
-      } else {
-        requestUrl = url + "?" + parameterString + "&oauth_signature=" + Uri.encodeQueryComponent(finalSignature);
-      }
-      return requestUrl;
+    String parameterString = "";
+    for (var key in treeMap.keys) {
+      parameterString += "${Uri.encodeQueryComponent(key)}=${treeMap[key]}&";
+    }
+    parameterString = parameterString.substring(0, parameterString.length - 1);
+
+    final baseUrl   = containsQueryParams ? url.split("?")[0] : url;
+    final baseString = "$requestMethod&${Uri.encodeQueryComponent(baseUrl)}&${Uri.encodeQueryComponent(parameterString)}";
+    final signingKey = "$consumerSecret&$tokenSecret";
+    final hmacSha1   = crypto.Hmac(crypto.sha1, utf8.encode(signingKey));
+    final signature  = hmacSha1.convert(utf8.encode(baseString));
+    final finalSignature = base64Encode(signature.bytes);
+
+    if (containsQueryParams) {
+      return "${url.split("?")[0]}?$parameterString&oauth_signature=${Uri.encodeQueryComponent(finalSignature)}";
+    } else {
+      return "$url?$parameterString&oauth_signature=${Uri.encodeQueryComponent(finalSignature)}";
     }
   }
 
+  // ───────────────────────────────────────────────────────────────
+  // JWT POST — للـ auth endpoints
+  // ───────────────────────────────────────────────────────────────
   Future<http.Response> postJwtAsync(String endPoint, Map data) async {
-    var fullUrl = this.url + endPoint;
+    final fullUrl = this.url + endPoint;
     log('JWT POST: $fullUrl');
-    var headers = {
-      HttpHeaders.contentTypeHeader: 'application/json; charset=utf-8',
-    };
-    try {
-      var response = await _sharedClient
-          .post(Uri.parse(fullUrl), body: jsonEncode(data), headers: headers)
-          .timeout(Duration(seconds: 30));
-      print('JWT Status: ${response.statusCode}');
-      print('JWT Response: ${response.body}');
-      return response;
-    } catch (e) {
-      log('JWT connection error, retrying: $e');
-      final freshClient = http.Client();
-      return await freshClient
-          .post(Uri.parse(fullUrl), body: jsonEncode(data), headers: headers)
-          .timeout(Duration(seconds: 30));
-    }
-  }
-
-  Future<http.Response> getAsync(String endPoint, {requireToken = false}) async {
-    var url = this._getOAuthURL("GET", endPoint);
-    var headers = {
-      HttpHeaders.contentTypeHeader: 'application/json; charset=utf-8',
-    };
-
-    if (requireToken) {
-      String tok = getStringAsync(TOKEN);
-      headers["Authorization"] = "Bearer $tok";
-    }
+    final headers = _baseHeaders();
 
     try {
       final response = await _sharedClient
-          .get(Uri.parse(url), headers: headers)
-          .timeout(Duration(seconds: 30));
-      log('${response.statusCode} $url');
-
-      if (response.statusCode == 401 || response.statusCode == 403) {
-        Map<String, dynamic> responseMap = json.decode(response.body);
-        log(responseMap['code']);
-        if (responseMap['code'] == 'jwt_auth_user_not_found' ||
-            responseMap['code'] == 'jwt_auth_invalid_token') {
-          setLogoutData(getContext);
-        }
-      }
+          .post(Uri.parse(fullUrl), body: jsonEncode(data), headers: headers)
+          .timeout(_kRequestTimeout);
+      log('JWT ${response.statusCode}');
       return response;
     } catch (e) {
-      log('GET connection error, retrying: $e');
-      final freshClient = http.Client();
-      final response = await freshClient
-          .get(Uri.parse(url), headers: headers)
-          .timeout(Duration(seconds: 30));
-      log('Retry ${response.statusCode} $url');
-      return response;
+      log('JWT retry: $e');
+      return await http.Client()
+          .post(Uri.parse(fullUrl), body: jsonEncode(data), headers: headers)
+          .timeout(_kRetryTimeout);
     }
   }
 
-  Future<http.Response> postAsync(String endPoint, Map data, {requireToken = false}) async {
-    var url = this._getOAuthURL("POST", endPoint);
-    var headers = {
-      HttpHeaders.contentTypeHeader: 'application/json; charset=utf-8',
-    };
+  // ───────────────────────────────────────────────────────────────
+  // GET — مع cache headers للـ read-only endpoints
+  // ───────────────────────────────────────────────────────────────
+  Future<http.Response> getAsync(String endPoint, {requireToken = false}) async {
+    final url     = _getOAuthURL("GET", endPoint);
+    final headers = _baseHeaders(withCache: !requireToken); // cache فقط للـ public endpoints
+
     if (requireToken) {
       headers["Authorization"] = "Bearer ${getStringAsync(TOKEN)}";
     }
 
     try {
-      var response = await _sharedClient
-          .post(Uri.parse(url), body: jsonEncode(data), headers: headers)
-          .timeout(Duration(seconds: 30));
-      print(response.statusCode);
-      print("Response" + response.body);
+      final response = await _sharedClient
+          .get(Uri.parse(url), headers: headers)
+          .timeout(_kRequestTimeout);
+      log('GET ${response.statusCode} $endPoint');
+
+      // Token expired — logout تلقائي
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        try {
+          final body = json.decode(response.body) as Map<String, dynamic>;
+          final code = body['code'] as String?;
+          if (code == 'jwt_auth_user_not_found' || code == 'jwt_auth_invalid_token') {
+            setLogoutData(getContext);
+          }
+        } catch (_) {}
+      }
+
       return response;
     } catch (e) {
-      log('POST connection error, retrying: $e');
-      final freshClient = http.Client();
-      return await freshClient
-          .post(Uri.parse(url), body: jsonEncode(data), headers: headers)
-          .timeout(Duration(seconds: 30));
+      log('GET retry: $e — $endPoint');
+      final response = await http.Client()
+          .get(Uri.parse(url), headers: headers)
+          .timeout(_kRetryTimeout);
+      log('GET retry ${response.statusCode}');
+      return response;
     }
   }
 
-  Future<http.Response> putAsync(String endPoint, Map data, {requireToken = false}) async {
-    var url = this._getOAuthURL("POST", endPoint);
-    log(url);
-    var headers = {
-      HttpHeaders.contentTypeHeader: 'application/json; charset=utf-8',
-    };
+  // ───────────────────────────────────────────────────────────────
+  // POST
+  // ───────────────────────────────────────────────────────────────
+  Future<http.Response> postAsync(String endPoint, Map data, {requireToken = false}) async {
+    final url     = _getOAuthURL("POST", endPoint);
+    final headers = _baseHeaders();
+
     if (requireToken) {
-      headers["token"] = "${getStringAsync(TOKEN)}";
-      headers["id"] = "${getIntAsync(USER_ID)}";
+      headers["Authorization"] = "Bearer ${getStringAsync(TOKEN)}";
     }
 
     try {
-      var response = await _sharedClient
-          .put(Uri.parse(url), body: jsonEncode(data), headers: headers)
-          .timeout(Duration(seconds: 30));
-      log(response.statusCode);
-      log(jsonDecode(response.body));
+      final response = await _sharedClient
+          .post(Uri.parse(url), body: jsonEncode(data), headers: headers)
+          .timeout(_kRequestTimeout);
+      log('POST ${response.statusCode} $endPoint');
       return response;
     } catch (e) {
-      log('PUT connection error, retrying: $e');
-      final freshClient = http.Client();
-      return await freshClient
-          .put(Uri.parse(url), body: jsonEncode(data), headers: headers)
-          .timeout(Duration(seconds: 30));
+      log('POST retry: $e — $endPoint');
+      return await http.Client()
+          .post(Uri.parse(url), body: jsonEncode(data), headers: headers)
+          .timeout(_kRetryTimeout);
     }
   }
 
+  // ───────────────────────────────────────────────────────────────
+  // PUT
+  // ───────────────────────────────────────────────────────────────
+  Future<http.Response> putAsync(String endPoint, Map data, {requireToken = false}) async {
+    final url     = _getOAuthURL("POST", endPoint);
+    final headers = _baseHeaders();
+
+    if (requireToken) {
+      headers["token"] = getStringAsync(TOKEN);
+      headers["id"]    = "${getIntAsync(USER_ID)}";
+    }
+
+    try {
+      final response = await _sharedClient
+          .put(Uri.parse(url), body: jsonEncode(data), headers: headers)
+          .timeout(_kRequestTimeout);
+      log('PUT ${response.statusCode} $endPoint');
+      return response;
+    } catch (e) {
+      log('PUT retry: $e — $endPoint');
+      return await http.Client()
+          .put(Uri.parse(url), body: jsonEncode(data), headers: headers)
+          .timeout(_kRetryTimeout);
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────────
+  // DELETE
+  // ───────────────────────────────────────────────────────────────
   Future<http.Response> deleteAsync(String endPoint) async {
-    var url = this._getOAuthURL("DELETE", endPoint);
-    log(url);
-    var headers = {
-      HttpHeaders.contentTypeHeader: 'application/json; charset=utf-8',
-    };
+    final url     = _getOAuthURL("DELETE", endPoint);
+    final headers = _baseHeaders();
 
     try {
       final response = await _sharedClient
           .delete(Uri.parse(url), headers: headers)
-          .timeout(Duration(seconds: 30));
+          .timeout(_kRequestTimeout);
+      log('DELETE ${response.statusCode} $endPoint');
       return response;
     } catch (e) {
-      log('DELETE connection error, retrying: $e');
-      final freshClient = http.Client();
-      return await freshClient
+      log('DELETE retry: $e — $endPoint');
+      return await http.Client()
           .delete(Uri.parse(url), headers: headers)
-          .timeout(Duration(seconds: 30));
+          .timeout(_kRetryTimeout);
     }
   }
 }

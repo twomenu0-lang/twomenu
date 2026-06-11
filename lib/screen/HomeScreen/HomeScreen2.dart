@@ -18,12 +18,11 @@ import '/../utils/Common.dart';
 import '/../utils/Constants.dart';
 import '/../utils/AppImages.dart';
 import 'package:nb_utils/nb_utils.dart';
-
 import '../../AppLocalizations.dart';
 import '../../utils/AppBarWidget.dart';
 
 class HomeScreen2 extends StatefulWidget {
-  static String tag = '/HomeScreen1';
+  static String tag = '/HomeScreen2';
 
   @override
   HomeScreenState createState() => HomeScreenState();
@@ -31,10 +30,15 @@ class HomeScreen2 extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen2> {
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey();
-  PageController salePageController = PageController();
-  PageController bannerPageController = PageController(initialPage: 0);
+
+  final PageController salePageController   = PageController(initialPage: 0);
+  final PageController bannerPageController = PageController(initialPage: 0);
+
   int _currentPage = 0;
-  int selectIndex = 0;
+  int selectIndex  = 0;
+
+  // ✅ مرجع للـ Timer عشان نوقفه في dispose — في النسخة القديمة كان بيفضل شغال حتى بعد مغادرة الشاشة
+  Timer? _bannerTimer;
 
   @override
   void initState() {
@@ -47,44 +51,57 @@ class HomeScreenState extends State<HomeScreen2> {
     if (mounted) super.setState(fn);
   }
 
-  init() {
+  void init() {
     afterBuildCreated(() async {
       appStore.setLoading(true);
-      await setValue(CARTCOUNT, appStore.count);
-      await fetchDashboardData();
-      await fetchCategoryData();
-      setTimer();
-      setState(() {});
+      setValue(CARTCOUNT, appStore.count); // ✅ fire & forget — مش محتاج await
+
+      // ✅ التوازي بدل التسلسل — نفس التحسين اللي عملناه في HomeScreen1
+      await Future.wait([
+        fetchDashboardData(),
+        fetchCategoryData(),
+      ]);
+
+      if (mounted) {
+        setState(() {});
+        _startBannerTimer(); // ✅ نبدأ التايمر بس بعد ما البيانات اتحملت
+      }
       appStore.setLoading(false);
     });
   }
 
-  setTimer() {
-    Timer.periodic(Duration(seconds: 10), (Timer timer) {
-      if (_currentPage < 2) {
-        _currentPage++;
-      } else {
-        _currentPage = 0;
-      }
-      if (bannerPageController.hasClients) {
-        bannerPageController.animateToPage(
-          _currentPage,
-          duration: Duration(milliseconds: 350),
-          curve: Curves.easeIn,
-        );
-      }
+  // ✅ Timer منفصل مع cancel في dispose
+  void _startBannerTimer() {
+    _bannerTimer?.cancel(); // ألغي أي timer قديم لو موجود
+    _bannerTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (!mounted || !bannerPageController.hasClients) return;
+      _currentPage = (_currentPage < (mSliderModel.length - 1)) ? _currentPage + 1 : 0;
+      bannerPageController.animateToPage(
+        _currentPage,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeIn,
+      );
     });
   }
 
   @override
   void dispose() {
+    // ✅ إيقاف التايمر عند مغادرة الشاشة — كان memory leak في النسخة القديمة
+    _bannerTimer?.cancel();
     salePageController.dispose();
     bannerPageController.dispose();
     super.dispose();
   }
 
-  // دالة مساعدة لعرض المنتجات في قسم "العروض" و "صفقة اليوم"
-  Widget availableOfferAndDeal(String title, String subtitle, List<ProductResponse> product) {
+  // ─────────────────────────────────────────────────────────────
+  // OFFER & DEAL WIDGET
+  // ─────────────────────────────────────────────────────────────
+  Widget _availableOfferAndDeal(
+      String title,
+      String subtitle,
+      List<ProductResponse> product,
+      BuildContext context,
+      ) {
     return Stack(
       children: [
         Container(color: bgCardColor.withOpacity(0.6), height: 340),
@@ -111,191 +128,272 @@ class HomeScreenState extends State<HomeScreen2> {
               }
             }, subtitle),
             HorizontalList(
-              padding: EdgeInsets.only(left: 12, right: 8),
-              itemCount: product.length > 6 ? 6 : product.length,
+              padding: const EdgeInsets.only(left: 12, right: 8),
+              // ✅ clamp بدل if/else
+              itemCount: product.length.clamp(0, 6),
               itemBuilder: (context, i) {
-                return DashBoard2Product(mProductModel: product[i], width: context.width() * 0.45, isHorizontal: true);
+                return DashBoard2Product(
+                  mProductModel: product[i],
+                  width: context.width() * 0.45,
+                  isHorizontal: true,
+                );
               },
             ),
           ],
-        )
+        ),
       ],
     ).paddingOnly(top: 8, bottom: 8);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    var appLocalization = AppLocalizations.of(context)!;
+  // ─────────────────────────────────────────────────────────────
+  // CATEGORY
+  // ─────────────────────────────────────────────────────────────
+  Widget _category(BuildContext context) {
+    if (mCategoryModel.isEmpty) return const SizedBox.shrink();
+    return HorizontalList(
+      padding: const EdgeInsets.only(left: 16, right: 8, top: 8, bottom: 8),
+      itemCount: mCategoryModel.length,
+      itemBuilder: (BuildContext context, int index) {
+        final cat = mCategoryModel[index];
+        return GestureDetector(
+          onTap: () => ViewAllScreen(cat.name, isCategory: true, categoryId: cat.id).launch(context),
+          child: Container(
+            decoration: boxDecorationWithShadow(
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [BoxShadow(blurRadius: 0.3, spreadRadius: 0.2, color: gray.withOpacity(0.3))],
+              backgroundColor: context.cardColor,
+            ),
+            height: 130,
+            width: context.width() * 0.25,
+            margin: const EdgeInsets.only(right: 8),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // ✅ commonCacheImageWidget بدل NetworkImage مباشرة
+                cat.image != null
+                    ? CircleAvatar(
+                  backgroundColor: context.cardColor,
+                  radius: 40,
+                  child: ClipOval(
+                    child: commonCacheImageWidget(
+                      cat.image!.src.validate(),
+                      height: 80,
+                      width: 80,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                )
+                    : CircleAvatar(
+                  backgroundColor: context.cardColor,
+                  backgroundImage: AssetImage(ic_placeholder_logo),
+                  radius: 40,
+                ),
+                8.height,
+                Text(
+                  parseHtmlString(cat.name),
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  style: primaryTextStyle(size: 14),
+                ).center(),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
-    // أقسام الصفحة الأساسية كـ Widgets منفصلة لتحسين الأداء والقراءة
-    Widget _category() {
-      return mCategoryModel.isNotEmpty
-          ? HorizontalList(
-        padding: EdgeInsets.only(left: 16, right: 8, top: 8, bottom: 8),
-        itemCount: mCategoryModel.length,
-        itemBuilder: (BuildContext context, int index) {
-          return GestureDetector(
-            onTap: () {
-              ViewAllScreen(mCategoryModel[index].name, isCategory: true, categoryId: mCategoryModel[index].id).launch(context);
+  // ─────────────────────────────────────────────────────────────
+  // CAROUSEL
+  // ─────────────────────────────────────────────────────────────
+  Widget _carousel(BuildContext context) {
+    if (mSliderModel.isEmpty) return const SizedBox.shrink();
+    return Column(
+      children: [
+        SizedBox(
+          height: 200,
+          child: PageView(
+            controller: bannerPageController,
+            onPageChanged: (i) {
+              selectIndex = i;
+              _currentPage = i;
+              setState(() {});
             },
-            child: Container(
-              decoration: boxDecorationWithShadow(
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [BoxShadow(blurRadius: 0.3, spreadRadius: 0.2, color: gray.withOpacity(0.3))],
-                backgroundColor: context.cardColor,
+            children: mSliderModel.map((i) {
+              return Container(
+                decoration: boxDecorationWithRoundedCorners(
+                  borderRadius: radius(10),
+                  border: Border.all(color: textSecondaryColorGlobal.withOpacity(0.4)),
+                ),
+                margin: const EdgeInsets.only(left: 16, right: 16, top: 8),
+                child: commonCacheImageWidget(
+                  i.image.validate(),
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ).cornerRadiusWithClipRRect(10),
+              ).onTap(() {
+                if (i.url!.isNotEmpty) {
+                  WebViewExternalProductScreen(mExternal_URL: i.url, title: i.title).launch(context);
+                } else {
+                  toast('Sorry');
+                }
+              });
+            }).toList(),
+          ),
+        ),
+        8.height,
+        DotIndicator(
+          pageController: bannerPageController,
+          pages: mSliderModel,
+          indicatorColor: primaryColor,
+          unselectedIndicatorColor: grey.withOpacity(0.2),
+          currentBoxShape: BoxShape.rectangle,
+          boxShape: BoxShape.rectangle,
+          borderRadius: radius(2),
+          currentBorderRadius: radius(3),
+          currentDotSize: 18,
+          currentDotWidth: 6,
+          dotSize: 6,
+        ),
+      ],
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // SALE BANNER
+  // ─────────────────────────────────────────────────────────────
+  Widget _saleBannerWidget(BuildContext context, AppLocalizations appLocalization) {
+    if (mSaleBanner.isEmpty) return const SizedBox.shrink();
+    return AnimatedListView(
+      itemCount: mSaleBanner.length,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      scrollDirection: Axis.vertical,
+      itemBuilder: (context, i) {
+        final banner = mSaleBanner[i];
+        return Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            SizedBox(
+              height: 210,
+              child: commonCacheImageWidget(
+                banner.image.validate(),
+                width: double.infinity,
+                fit: BoxFit.cover,
               ),
-              height: 130,
-              width: context.width() * 0.25,
-              margin: EdgeInsets.only(right: 8),
+            ).paddingOnly(bottom: 20).onTap(() {
+              SaleScreen(
+                startDate: banner.startDate,
+                endDate: banner.endDate,
+                title: banner.title,
+              ).launch(context);
+            }),
+            Container(
+              margin: const EdgeInsets.only(left: 30, right: 30),
+              width: context.width(),
+              padding: const EdgeInsets.all(8),
+              decoration: boxDecorationRoundedWithShadow(8, backgroundColor: Theme.of(context).cardTheme.color!),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  mCategoryModel[index].image != null
-                      ? CircleAvatar(backgroundColor: context.cardColor, backgroundImage: NetworkImage(mCategoryModel[index].image!.src.validate()), radius: 40)
-                      : CircleAvatar(backgroundColor: context.cardColor, backgroundImage: AssetImage(ic_placeholder_logo), radius: 40),
-                  8.height,
-                  Text(parseHtmlString(mCategoryModel[index].name), maxLines: 2, textAlign: TextAlign.center, style: primaryTextStyle(size: 14)).center()
+                  Text(banner.title!, style: boldTextStyle(color: primaryColor)),
+                  2.height,
+                  Text(
+                    '${appLocalization.translate('lbl_sale_start_from')!} ${banner.startDate.validate()} to ${banner.endDate.validate()}',
+                    style: secondaryTextStyle(size: 12),
+                  ),
                 ],
               ),
             ),
-          );
-        },
-      )
-          : SizedBox();
+          ],
+        ).paddingOnly(bottom: 16).visible(
+          banner.title!.isNotEmpty && banner.image!.isNotEmpty,
+        );
+      },
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // BUILD
+  // ─────────────────────────────────────────────────────────────
+  @override
+  Widget build(BuildContext context) {
+    final appLocalization = AppLocalizations.of(context)!;
+
+    final dashboard = builderResponse.dashboard;
+    if (dashboard == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    Widget carousel() {
-      return mSliderModel.isNotEmpty
-          ? Column(
-        children: [
-          Container(
-            height: 200,
-            child: PageView(
-              controller: bannerPageController,
-              onPageChanged: (i) {
-                selectIndex = i;
-                setState(() {});
-              },
-              children: mSliderModel.map((i) {
-                return Container(
-                  decoration: boxDecorationWithRoundedCorners(borderRadius: radius(10), border: Border.all(color: textSecondaryColorGlobal.withOpacity(0.4))),
-                  margin: EdgeInsets.only(left: 16, right: 16, top: 8),
-                  child: commonCacheImageWidget(i.image.validate(), height: 180, width: double.infinity, fit: BoxFit.cover).cornerRadiusWithClipRRect(10),
-                ).onTap(() {
-                  if (i.url!.isNotEmpty) {
-                    WebViewExternalProductScreen(mExternal_URL: i.url, title: i.title).launch(context);
-                  } else {
-                    toast('Sorry');
-                  }
-                });
-              }).toList(),
-            ),
-          ),
-          8.height,
-          DotIndicator(
-            pageController: bannerPageController,
-            pages: mSliderModel,
-            indicatorColor: primaryColor,
-            unselectedIndicatorColor: grey.withOpacity(0.2),
-            currentBoxShape: BoxShape.rectangle,
-            boxShape: BoxShape.rectangle,
-            borderRadius: radius(2),
-            currentBorderRadius: radius(3),
-            currentDotSize: 18,
-            currentDotWidth: 6,
-            dotSize: 6,
-          ),
-        ],
-      )
-          : SizedBox();
-    }
+    // ✅ Section widgets — محددة هنا مرة واحدة
+    Widget newProduct()     => DashboardComponent2(title: dashboard.newProduct!.title!,       subTitle: dashboard.newProduct!.viewAll!,       product: mNewestProductModel,    onTap: () => ViewAllScreen(dashboard.newProduct!.title,       isNewest: true).launch(context));
+    Widget featureProduct() => DashboardComponent2(title: dashboard.featureProduct!.title!,   subTitle: dashboard.featureProduct!.viewAll!,   product: mFeaturedProductModel,  onTap: () => ViewAllScreen(dashboard.featureProduct!.title,   isFeatured: true).launch(context));
+    Widget bestSelling()    => DashboardComponent2(title: dashboard.bestSaleProduct!.title!,  subTitle: dashboard.bestSaleProduct!.viewAll!,  product: mSellingProductModel,   onTap: () => ViewAllScreen(dashboard.bestSaleProduct!.title,  isBestSelling: true).launch(context));
+    Widget saleProduct()    => DashboardComponent2(title: dashboard.saleProduct!.title!,      subTitle: dashboard.saleProduct!.viewAll!,      product: mSaleProductModel,      onTap: () => ViewAllScreen(dashboard.saleProduct!.title,      isSale: true).launch(context));
+    Widget suggested()      => DashboardComponent2(title: dashboard.suggestionProduct!.title!,subTitle: dashboard.suggestionProduct!.viewAll!,product: mSuggestedProductModel, onTap: () => ViewAllScreen(dashboard.suggestionProduct!.title, isSpecialProduct: true, specialProduct: "suggested_for_you").launch(context));
+    Widget youMayLike()     => DashboardComponent2(title: dashboard.youMayLikeProduct!.title!,subTitle: dashboard.youMayLikeProduct!.viewAll!,product: mYouMayLikeProductModel,onTap: () => ViewAllScreen(dashboard.youMayLikeProduct!.title, isSpecialProduct: true, specialProduct: "you_may_like").launch(context));
 
-    Widget mSaleBannerWidget() {
-      return mSaleBanner.isNotEmpty
-          ? AnimatedListView(
-        itemCount: mSaleBanner.length,
-        shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
-        scrollDirection: Axis.vertical,
-        itemBuilder: (context, i) {
-          return Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              Container(
-                height: 210,
-                padding: EdgeInsets.only(bottom: 20),
-                child: commonCacheImageWidget(mSaleBanner[i].image.validate(), width: double.infinity, fit: BoxFit.cover),
-              ).onTap(() {
-                SaleScreen(startDate: mSaleBanner[i].startDate, endDate: mSaleBanner[i].endDate, title: mSaleBanner[i].title).launch(context);
-              }),
-              Container(
-                margin: EdgeInsets.only(left: 30, right: 30),
-                width: context.width(),
-                padding: EdgeInsets.all(8),
-                decoration: boxDecorationRoundedWithShadow(8, backgroundColor: Theme.of(context).cardTheme.color!),
-                child: Column(
-                  children: [
-                    Text(mSaleBanner[i].title!, style: boldTextStyle(color: primaryColor)),
-                    2.height,
-                    Text(appLocalization.translate('lbl_sale_start_from')! + " " + mSaleBanner[i].startDate.validate() + " to " + mSaleBanner[i].endDate.validate(),
-                        style: secondaryTextStyle(size: 12)),
-                  ],
-                ),
-              )
-            ],
-          ).paddingOnly(bottom: 16).visible(mSaleBanner[i].title!.isNotEmpty && mSaleBanner[i].image!.isNotEmpty);
-        },
-      )
-          : SizedBox();
-    }
-
-    // إصلاح الدوال المختصرة (Shorthand Widgets) لتعمل بشكل صحيح وبدون أخطاء تسمية
-    Widget _newProduct() => DashboardComponent2(title: builderResponse.dashboard!.newProduct!.title!, subTitle: builderResponse.dashboard!.newProduct!.viewAll!, product: mNewestProductModel, onTap: () { ViewAllScreen(builderResponse.dashboard!.newProduct!.title, isNewest: true).launch(context); });
-    Widget _featureProduct() => DashboardComponent2(title: builderResponse.dashboard!.featureProduct!.title!, subTitle: builderResponse.dashboard!.featureProduct!.viewAll!, product: mFeaturedProductModel, onTap: () { ViewAllScreen(builderResponse.dashboard!.featureProduct!.title, isFeatured: true).launch(context); });
-
-    // تم إصلاح هذا السطر (الذي تسبب في الخطأ سابقاً)
-    Widget _dealOfTheDay() => availableOfferAndDeal(builderResponse.dashboard!.dealOfTheDay!.title!, builderResponse.dashboard!.dealOfTheDay!.viewAll!, mDealProductModel).visible(mDealProductModel.isNotEmpty);
-
-    Widget _bestSelling() => DashboardComponent2(title: builderResponse.dashboard!.bestSaleProduct!.title!, subTitle: builderResponse.dashboard!.bestSaleProduct!.viewAll!, product: mSellingProductModel, onTap: () { ViewAllScreen(builderResponse.dashboard!.bestSaleProduct!.title, isBestSelling: true).launch(context); });
-    Widget _saleProduct() => DashboardComponent2(title: builderResponse.dashboard!.saleProduct!.title!, subTitle: builderResponse.dashboard!.saleProduct!.viewAll!, product: mSaleProductModel, onTap: () { ViewAllScreen(builderResponse.dashboard!.saleProduct!.title, isSale: true).launch(context); });
-    Widget _offer() => availableOfferAndDeal(builderResponse.dashboard!.offerProduct!.title!, builderResponse.dashboard!.offerProduct!.viewAll!, mOfferProductModel).visible(mOfferProductModel.isNotEmpty);
-    Widget _suggested() => DashboardComponent2(title: builderResponse.dashboard!.suggestionProduct!.title!, subTitle: builderResponse.dashboard!.suggestionProduct!.viewAll!, product: mSuggestedProductModel, onTap: () { ViewAllScreen(builderResponse.dashboard!.suggestionProduct!.title, isSpecialProduct: true, specialProduct: "suggested_for_you").launch(context); });
-    Widget _youMayLike() => DashboardComponent2(title: builderResponse.dashboard!.youMayLikeProduct!.title!, subTitle: builderResponse.dashboard!.youMayLikeProduct!.viewAll!, product: mYouMayLikeProductModel, onTap: () { ViewAllScreen(builderResponse.dashboard!.youMayLikeProduct!.title, isSpecialProduct: true, specialProduct: "you_may_like").launch(context); });
-
-    Widget body = ListView(
+    final Widget body = ListView(
       shrinkWrap: true,
       children: [
         AnimatedListView(
           shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          itemCount: builderResponse.dashboard == null ? 0 : builderResponse.dashboard!.sorting!.length,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: dashboard.sorting?.length ?? 0,
           itemBuilder: (_, index) {
-            String sortKey = builderResponse.dashboard!.sorting![index];
-            if (sortKey == 'slider') return carousel().visible(builderResponse.dashboard!.sliderView!.enable!);
-            if (sortKey == 'categories') return _category().paddingTop(8).visible(builderResponse.dashboard!.category!.enable!);
-            if (sortKey == 'Sale_Banner') return mSaleBannerWidget().paddingTop(8).visible(builderResponse.dashboard!.saleBanner!.enable!);
-            if (sortKey == 'newest_product') return _newProduct().paddingTop(16).visible(builderResponse.dashboard!.newProduct!.enable!);
-            if (sortKey == 'vendor') return mVendorDashBoard2Widget(context, mVendorModel, builderResponse.dashboard!.vendor!.title, builderResponse.dashboard!.vendor!.viewAll).paddingTop(8).visible(builderResponse.dashboard!.vendor!.enable!);
-            if (sortKey == 'feature_products') return _featureProduct().paddingTop(8).visible(builderResponse.dashboard!.featureProduct!.enable!);
-            if (sortKey == 'deal_of_the_day') return _dealOfTheDay().paddingTop(8).visible(builderResponse.dashboard!.dealOfTheDay!.enable!);
-            if (sortKey == 'best_selling_product') return _bestSelling().paddingTop(8).visible(builderResponse.dashboard!.bestSaleProduct!.enable!);
-            if (sortKey == 'sale_product') return _saleProduct().paddingTop(8).visible(builderResponse.dashboard!.saleProduct!.enable!);
-            if (sortKey == 'offer') return _offer().paddingTop(8).visible(builderResponse.dashboard!.offerProduct!.enable!);
-            if (sortKey == 'suggested_for_you') return _suggested().paddingTop(8).visible(builderResponse.dashboard!.suggestionProduct!.enable!);
-            if (sortKey == 'you_may_like') return _youMayLike().paddingTop(8).visible(builderResponse.dashboard!.youMayLikeProduct!.enable!);
-            return 0.height;
+            final key = dashboard.sorting![index];
+            switch (key) {
+              case 'slider':
+                return _carousel(context).visible(dashboard.sliderView!.enable!);
+              case 'categories':
+                return _category(context).paddingTop(8).visible(dashboard.category!.enable!);
+              case 'Sale_Banner':
+                return _saleBannerWidget(context, appLocalization).paddingTop(8).visible(dashboard.saleBanner!.enable!);
+              case 'newest_product':
+                return newProduct().paddingTop(16).visible(dashboard.newProduct!.enable!);
+              case 'vendor':
+                return mVendorDashBoard2Widget(context, mVendorModel, dashboard.vendor!.title, dashboard.vendor!.viewAll)
+                    .paddingTop(8).visible(dashboard.vendor!.enable!);
+              case 'feature_products':
+                return featureProduct().paddingTop(8).visible(dashboard.featureProduct!.enable!);
+              case 'deal_of_the_day':
+                return _availableOfferAndDeal(dashboard.dealOfTheDay!.title!, dashboard.dealOfTheDay!.viewAll!, mDealProductModel, context)
+                    .paddingTop(8).visible(dashboard.dealOfTheDay!.enable! && mDealProductModel.isNotEmpty);
+              case 'best_selling_product':
+                return bestSelling().paddingTop(8).visible(dashboard.bestSaleProduct!.enable!);
+              case 'sale_product':
+                return saleProduct().paddingTop(8).visible(dashboard.saleProduct!.enable!);
+              case 'offer':
+                return _availableOfferAndDeal(dashboard.offerProduct!.title!, dashboard.offerProduct!.viewAll!, mOfferProductModel, context)
+                    .paddingTop(8).visible(dashboard.offerProduct!.enable! && mOfferProductModel.isNotEmpty);
+              case 'suggested_for_you':
+                return suggested().paddingTop(8).visible(dashboard.suggestionProduct!.enable!);
+              case 'you_may_like':
+                return youMayLike().paddingTop(8).visible(dashboard.youMayLikeProduct!.enable!);
+              default:
+                return const SizedBox.shrink();
+            }
           },
         ),
-        mBottom(context).visible(!appStore.isLoading && isDone == true)
+        mBottom(context).visible(!appStore.isLoading && isDone == true),
       ],
     );
 
     return Scaffold(
       backgroundColor: context.scaffoldBackgroundColor,
-      appBar: mTop(context, AppName, actions: [IconButton(icon: Icon(Icons.search_sharp, color: white), onPressed: () { SearchScreen().launch(context); })]) as PreferredSizeWidget?,
+      appBar: mTop(
+        context,
+        AppName,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search_sharp, color: white),
+            onPressed: () => SearchScreen().launch(context),
+          ),
+        ],
+      ) as PreferredSizeWidget?,
       key: scaffoldKey,
-      body: Observer(builder: (context) {
-        return RefreshIndicator(
+      body: Observer(
+        builder: (context) => RefreshIndicator(
           backgroundColor: context.cardColor,
           onRefresh: () => fetchDashboardData(),
           child: BodyCornerWidget(
@@ -307,8 +405,8 @@ class HomeScreenState extends State<HomeScreen2> {
               ],
             ),
           ),
-        );
-      }),
+        ),
+      ),
     );
   }
 }
