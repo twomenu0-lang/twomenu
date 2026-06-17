@@ -17,3 +17,4 @@ class YouTubeEmbedWidget extends StatelessWidget {
     );
   }
 }
+

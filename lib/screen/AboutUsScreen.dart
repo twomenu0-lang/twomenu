@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '/../main.dart';
 import '/../utils/AppWidget.dart';
-import '/../utils/Common.dart';
 import '/../utils/Constants.dart';
 import '/../utils/AppImages.dart';
 import 'package:nb_utils/nb_utils.dart';

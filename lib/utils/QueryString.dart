@@ -17,3 +17,4 @@ class QueryString {
     return result;
   }
 }
+

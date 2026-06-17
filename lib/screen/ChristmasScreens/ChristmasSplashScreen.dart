@@ -75,3 +75,4 @@ class ChristmasSplashScreenState extends State<ChristmasSplashScreen> {
     );
   }
 }
+

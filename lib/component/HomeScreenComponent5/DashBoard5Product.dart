@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:nb_utils/nb_utils.dart';
+
 import '/../models/ProductResponse.dart';
-import '/../utils/ProductWishListExtension.dart';
+import '/../utils/AppImages.dart';
 import '/../utils/AppWidget.dart';
 import '/../utils/Colors.dart';
-import '/../utils/AppImages.dart';
-import 'package:nb_utils/nb_utils.dart';
+import '/../utils/ProductWishListExtension.dart';
 
 class DashBoard5Product extends StatefulWidget {
   static String tag = '/Product';
@@ -67,7 +68,8 @@ class ProductState extends State<DashBoard5Product> {
                       ProductWishListExtension(mProductModel: widget.mProductModel!).paddingOnly(left: 4),
                     ],
                   ),
-                  Text(widget.mProductModel!.name, style: primaryTextStyle(), maxLines: 1),
+                  // ✅ تم التعديل هنا باستخدام .validate() لحل مشكلة النوع (String? إلى String)
+                  Text(widget.mProductModel!.name.validate(), style: primaryTextStyle(), maxLines: 1),
                   4.height,
                   Stack(
                     children: [
@@ -76,11 +78,11 @@ class ProductState extends State<DashBoard5Product> {
                           PriceWidget(
                             price: widget.mProductModel!.onSale == true
                                 ? widget.mProductModel!.salePrice.validate().isNotEmpty
-                                    ? double.parse(widget.mProductModel!.salePrice.toString()).toStringAsFixed(2)
-                                    : double.parse(widget.mProductModel!.price.validate()).toStringAsFixed(2)
+                                ? double.parse(widget.mProductModel!.salePrice.toString()).toStringAsFixed(2)
+                                : double.parse(widget.mProductModel!.price.validate()).toStringAsFixed(2)
                                 : widget.mProductModel!.regularPrice!.isNotEmpty
-                                    ? double.parse(widget.mProductModel!.regularPrice.validate().toString()).toStringAsFixed(2)
-                                    : double.parse(widget.mProductModel!.price.validate().toString()).toStringAsFixed(2),
+                                ? double.parse(widget.mProductModel!.regularPrice.validate().toString()).toStringAsFixed(2)
+                                : double.parse(widget.mProductModel!.price.validate().toString()).toStringAsFixed(2),
                             size: 16,
                             color: mChristmasColor,
                           ),

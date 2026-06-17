@@ -30,3 +30,4 @@ class WalletConfigurationResponse {
         this.cod,
         this.razorpay});
 }
+

@@ -39,3 +39,4 @@ class EmptyScreenState extends State<EmptyScreen> {
     ).center();
   }
 }
+

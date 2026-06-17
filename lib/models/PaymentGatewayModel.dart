@@ -21,3 +21,4 @@ class PaymentGatewayModel {
     return data;
   }
 }
+

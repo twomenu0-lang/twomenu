@@ -121,3 +121,4 @@ class WishListScreenState extends State<WishListScreen> {
     );
   }
 }
+

@@ -7,3 +7,4 @@ class LayoutTypesSelection {
 
   LayoutTypesSelection({this.image, this.isSelected, this.color});
 }
+

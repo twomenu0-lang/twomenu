@@ -22,3 +22,4 @@ List<ExampleModel> mExampleList = [
   ExampleModel("Cycle Store", "https://meetmighty.com/mobile/cycle-store/wp-json/", "ck_f42a347680a78fdbb46e7202f0c0b94e400b336f", "cs_c7f08b0308f7708606a0fc6a5cef4e4f626638d5", "#080808", ic_dashBoard_variant_8),
 
 ];
+

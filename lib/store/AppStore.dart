@@ -9,7 +9,6 @@ import '/../screen/WishListScreen.dart';
 import '/../utils/Constants.dart';
 import 'package:mobx/mobx.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 part 'AppStore.g.dart';
 
@@ -43,6 +42,9 @@ abstract class AppStoreBase with Store {
   @observable
   bool? isDarkMode = false;
 
+  // ✅ عداد الإشعارات غير المقروءة — بيتحدث تلقائياً
+  @observable
+  int unreadNotificationCount = 0;
 
   @observable
   String selectedLanguageCode = defaultLanguage;
@@ -124,10 +126,15 @@ abstract class AppStoreBase with Store {
   @action
   void setCount(int? aCount) => count = aCount;
 
+  // ✅ تحديث عداد الإشعارات
+  @action
+  void setUnreadNotificationCount(int val) {
+    unreadNotificationCount = val;
+  }
+
   @action
   Future<void> setLanguage(String aSelectedLanguageCode) async {
     selectedLanguageCode = aSelectedLanguageCode;
-
     language = languages.firstWhere((element) => element.languageCode == aSelectedLanguageCode);
     setValue(LANGUAGE, aSelectedLanguageCode);
   }
@@ -135,11 +142,6 @@ abstract class AppStoreBase with Store {
   @action
   void setNotification(bool val) {
     isNotificationOn = val;
-
     setValue(IS_NOTIFICATION_ON, val);
-
-    // if (isMobile) {
-    //   OneSignal.shared.disablePush(!val);
-    // }
   }
 }

@@ -72,3 +72,4 @@ onClickProduct(BuildContext context, ProductResponse? mProductModel) async {
     await ProductDetailScreen1(mProId: mProductModel!.id).launch(context, pageRouteAnimation: PageRouteAnimation.Slide);
   }
 }
+

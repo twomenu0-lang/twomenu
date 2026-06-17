@@ -37,7 +37,7 @@ class WishListComponentState extends State<WishListComponent> {
     var appLocalization = AppLocalizations.of(context)!;
 
     return Container(
-      decoration: boxDecorationWithRoundedCorners(backgroundColor: Theme.of(context).cardTheme.color!, border: Border.all(color: Theme.of(context).colorScheme.background)),
+      decoration: boxDecorationWithRoundedCorners(backgroundColor: Theme.of(context).cardTheme.color!, border: Border.all(color: Theme.of(context).colorScheme.surface)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -121,3 +121,4 @@ class WishListComponentState extends State<WishListComponent> {
     );
   }
 }
+

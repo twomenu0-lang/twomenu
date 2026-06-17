@@ -12,6 +12,7 @@ import '/../screen/SaleScreen.dart';
 import '/../screen/SearchScreen.dart';
 import '/../screen/ViewAllScreen.dart';
 import '/../screen/WebViewExternalProductScreen.dart';
+import '/../screen/SmartCategoryScreen.dart'; // ✅ إضافة الـ import للشاشة الذكية هنا أيضاً
 import '/../utils/AppWidget.dart';
 import '/../utils/Colors.dart';
 import '/../utils/Common.dart';
@@ -20,6 +21,8 @@ import '/../utils/AppImages.dart';
 import 'package:nb_utils/nb_utils.dart';
 import '../../AppLocalizations.dart';
 import '../../utils/AppBarWidget.dart';
+import '/../utils/AppColors.dart';
+import '/../screen/NotificationScreen.dart';
 
 class HomeScreen2 extends StatefulWidget {
   static String tag = '/HomeScreen2';
@@ -37,7 +40,6 @@ class HomeScreenState extends State<HomeScreen2> {
   int _currentPage = 0;
   int selectIndex  = 0;
 
-  // ✅ مرجع للـ Timer عشان نوقفه في dispose — في النسخة القديمة كان بيفضل شغال حتى بعد مغادرة الشاشة
   Timer? _bannerTimer;
 
   @override
@@ -54,9 +56,8 @@ class HomeScreenState extends State<HomeScreen2> {
   void init() {
     afterBuildCreated(() async {
       appStore.setLoading(true);
-      setValue(CARTCOUNT, appStore.count); // ✅ fire & forget — مش محتاج await
+      setValue(CARTCOUNT, appStore.count);
 
-      // ✅ التوازي بدل التسلسل — نفس التحسين اللي عملناه في HomeScreen1
       await Future.wait([
         fetchDashboardData(),
         fetchCategoryData(),
@@ -64,15 +65,14 @@ class HomeScreenState extends State<HomeScreen2> {
 
       if (mounted) {
         setState(() {});
-        _startBannerTimer(); // ✅ نبدأ التايمر بس بعد ما البيانات اتحملت
+        _startBannerTimer();
       }
       appStore.setLoading(false);
     });
   }
 
-  // ✅ Timer منفصل مع cancel في dispose
   void _startBannerTimer() {
-    _bannerTimer?.cancel(); // ألغي أي timer قديم لو موجود
+    _bannerTimer?.cancel();
     _bannerTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (!mounted || !bannerPageController.hasClients) return;
       _currentPage = (_currentPage < (mSliderModel.length - 1)) ? _currentPage + 1 : 0;
@@ -86,7 +86,6 @@ class HomeScreenState extends State<HomeScreen2> {
 
   @override
   void dispose() {
-    // ✅ إيقاف التايمر عند مغادرة الشاشة — كان memory leak في النسخة القديمة
     _bannerTimer?.cancel();
     salePageController.dispose();
     bannerPageController.dispose();
@@ -129,7 +128,6 @@ class HomeScreenState extends State<HomeScreen2> {
             }, subtitle),
             HorizontalList(
               padding: const EdgeInsets.only(left: 12, right: 8),
-              // ✅ clamp بدل if/else
               itemCount: product.length.clamp(0, 6),
               itemBuilder: (context, i) {
                 return DashBoard2Product(
@@ -156,37 +154,34 @@ class HomeScreenState extends State<HomeScreen2> {
       itemBuilder: (BuildContext context, int index) {
         final cat = mCategoryModel[index];
         return GestureDetector(
-          onTap: () => ViewAllScreen(cat.name, isCategory: true, categoryId: cat.id).launch(context),
+          // ✅ تعديل الـ onTap ليمر عبر الـ SmartCategoryScreen
+          onTap: () => SmartCategoryScreen(
+            categoryName: cat.name,
+            categoryId: cat.id,
+          ).launch(context),
           child: Container(
-            decoration: boxDecorationWithShadow(
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [BoxShadow(blurRadius: 0.3, spreadRadius: 0.2, color: gray.withOpacity(0.3))],
-              backgroundColor: context.cardColor,
-            ),
-            height: 130,
-            width: context.width() * 0.25,
+            width: context.width() * 0.2,
             margin: const EdgeInsets.only(right: 8),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // ✅ commonCacheImageWidget بدل NetworkImage مباشرة
                 cat.image != null
                     ? CircleAvatar(
-                  backgroundColor: context.cardColor,
-                  radius: 40,
+                  backgroundColor: Colors.transparent,
+                  radius: 36,
                   child: ClipOval(
                     child: commonCacheImageWidget(
                       cat.image!.src.validate(),
-                      height: 80,
-                      width: 80,
+                      height: 72,
+                      width: 72,
                       fit: BoxFit.cover,
                     ),
                   ),
                 )
                     : CircleAvatar(
-                  backgroundColor: context.cardColor,
+                  backgroundColor: Colors.transparent,
                   backgroundImage: AssetImage(ic_placeholder_logo),
-                  radius: 40,
+                  radius: 36,
                 ),
                 8.height,
                 Text(
@@ -325,7 +320,6 @@ class HomeScreenState extends State<HomeScreen2> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    // ✅ Section widgets — محددة هنا مرة واحدة
     Widget newProduct()     => DashboardComponent2(title: dashboard.newProduct!.title!,       subTitle: dashboard.newProduct!.viewAll!,       product: mNewestProductModel,    onTap: () => ViewAllScreen(dashboard.newProduct!.title,       isNewest: true).launch(context));
     Widget featureProduct() => DashboardComponent2(title: dashboard.featureProduct!.title!,   subTitle: dashboard.featureProduct!.viewAll!,   product: mFeaturedProductModel,  onTap: () => ViewAllScreen(dashboard.featureProduct!.title,   isFeatured: true).launch(context));
     Widget bestSelling()    => DashboardComponent2(title: dashboard.bestSaleProduct!.title!,  subTitle: dashboard.bestSaleProduct!.viewAll!,  product: mSellingProductModel,   onTap: () => ViewAllScreen(dashboard.bestSaleProduct!.title,  isBestSelling: true).launch(context));
@@ -384,10 +378,39 @@ class HomeScreenState extends State<HomeScreen2> {
       appBar: mTop(
         context,
         AppName,
+        leadingWidget: IconButton(
+          icon: const Icon(Icons.search_sharp, color: white),
+          onPressed: () => SearchScreen().launch(context),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search_sharp, color: white),
-            onPressed: () => SearchScreen().launch(context),
+            icon: Image.asset(ic_WhatsUp, height: 24, width: 24),
+            onPressed: () {
+              final number = getStringAsync(WHATSAPP);
+              if (number.isNotEmpty) {
+                redirectUrl("https://wa.me/$number");
+              } else {
+                toast('رقم الواتساب غير متوفر حالياً');
+              }
+            },
+          ),
+          Stack(
+            alignment: Alignment.topRight,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined, color: white),
+                onPressed: () => NotificationScreen().launch(context),
+              ),
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  height: 8,
+                  width: 8,
+                  decoration: const BoxDecoration(color: kBrandSecondary, shape: BoxShape.circle),
+                ),
+              ),
+            ],
           ),
         ],
       ) as PreferredSizeWidget?,

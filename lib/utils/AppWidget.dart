@@ -151,15 +151,15 @@ class SimpleEditText extends StatefulWidget {
 
   SimpleEditText(
       {this.fontSize = 20,
-      this.textColor = textColorPrimary,
-      this.isPassword = false,
-      this.isSecure = true,
-      this.text = '',
-      this.mController,
-      this.maxLine = 1,
-      this.hintText = '',
-      this.keyboardType,
-      this.validator});
+        this.textColor = textColorPrimary,
+        this.isPassword = false,
+        this.isSecure = true,
+        this.text = '',
+        this.mController,
+        this.maxLine = 1,
+        this.hintText = '',
+        this.keyboardType,
+        this.validator});
 
   @override
   State<StatefulWidget> createState() {
@@ -263,7 +263,7 @@ class PriceWidgetState extends State<PriceWidget> {
     } else {
       return widget.price.toString().isNotEmpty
           ? Text('$currency${widget.price.toString().replaceAll(".00", "")}',
-              style: GoogleFonts.robotoSerif(fontSize: widget.size, color: widget.color ?? textPrimaryColor, decoration: TextDecoration.lineThrough))
+          style: GoogleFonts.robotoSerif(fontSize: widget.size, color: widget.color ?? textPrimaryColor, decoration: TextDecoration.lineThrough))
           : Text('');
     }
   }
@@ -293,7 +293,10 @@ Widget mCart(BuildContext context, bool mIsLoggedIn, {Color color = Colors.white
   );
 }
 
-Widget mTop(BuildContext context, var title, {List<Widget>? actions, bool showBack = false}) {
+// ─────────────────────────────────────────────────────────────
+// mTop (✅ تم التعديل لإضافة باراميتر leadingWidget وتخصيصه)
+// ─────────────────────────────────────────────────────────────
+Widget mTop(BuildContext context, var title, {List<Widget>? actions, bool showBack = false, Widget? leadingWidget}) {
   return PreferredSize(
     preferredSize: Size.fromHeight(60.0),
     child: AppBar(
@@ -301,13 +304,13 @@ Widget mTop(BuildContext context, var title, {List<Widget>? actions, bool showBa
       backgroundColor: isHalloween ? mChristmasColor : primaryColor,
       leading: showBack
           ? IconButton(
-              icon: Icon(Icons.arrow_back, color: white),
-              onPressed: () {
-                finish(context,false);
-                appStore.setLoading(false);
-              },
-            )
-          : null,
+        icon: Icon(Icons.arrow_back, color: white),
+        onPressed: () {
+          finish(context, false);
+          appStore.setLoading(false);
+        },
+      )
+          : leadingWidget, // 👈 يستقبل الـ leadingWidget الممرر (مثل زر الواتساب) في حال عدم وجود زر رجوع
       actions: actions,
       title: Text(title, style: boldTextStyle(color: Colors.white, size: 18)),
       automaticallyImplyLeading: false,
@@ -321,11 +324,11 @@ Widget mTopNew(BuildContext context, var title, {List<Widget>? actions, bool sho
     backgroundColor: primaryColor,
     leading: showBack
         ? IconButton(
-            icon: Icon(Icons.arrow_back, color: white),
-            onPressed: () {
-              finish(context);
-            },
-          )
+      icon: Icon(Icons.arrow_back, color: white),
+      onPressed: () {
+        finish(context);
+      },
+    )
         : null,
     actions: actions,
     title: Text(title, style: boldTextStyle(color: Colors.white, size: 18)),
@@ -337,7 +340,7 @@ Widget mView(Widget widget, BuildContext context) {
   return Container(
     width: MediaQuery.of(context).size.width,
     decoration:
-        boxDecorationWithRoundedCorners(borderRadius: BorderRadius.only(topRight: Radius.circular(20), topLeft: Radius.circular(20)), backgroundColor: Theme.of(context).scaffoldBackgroundColor),
+    boxDecorationWithRoundedCorners(borderRadius: BorderRadius.only(topRight: Radius.circular(20), topLeft: Radius.circular(20)), backgroundColor: Theme.of(context).scaffoldBackgroundColor),
     child: widget,
   );
 }
@@ -346,21 +349,21 @@ Widget mProgress() {
   return isHalloween
       ? FestivalProgress()
       : Container(
-          alignment: Alignment.center,
-          child: Card(
-            semanticContainer: true,
-            clipBehavior: Clip.antiAliasWithSaveLayer,
-            elevation: 4,
-            margin: EdgeInsets.all(4),
-            shape: RoundedRectangleBorder(borderRadius: radius(50)),
-            child: Container(
-              width: 40,
-              height: 40,
-              padding: EdgeInsets.all(8.0),
-              child: CircularProgressIndicator(strokeWidth: 3, color: primaryColor),
-            ),
-          ),
-        );
+    alignment: Alignment.center,
+    child: Card(
+      semanticContainer: true,
+      clipBehavior: Clip.antiAliasWithSaveLayer,
+      elevation: 4,
+      margin: EdgeInsets.all(4),
+      shape: RoundedRectangleBorder(borderRadius: radius(50)),
+      child: Container(
+        width: 40,
+        height: 40,
+        padding: EdgeInsets.all(8.0),
+        child: CircularProgressIndicator(strokeWidth: 3, color: primaryColor),
+      ),
+    ),
+  );
 }
 
 Widget mFestivalProgress() {

@@ -5,12 +5,8 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:Twomenu/main.dart';
 import 'package:Twomenu/models/ProductReviewModel.dart';
 import 'package:Twomenu/network/rest_apis.dart';
-import 'package:Twomenu/utils/AppBarWidget.dart';
 import 'package:Twomenu/utils/AppWidget.dart';
-import 'package:Twomenu/utils/Colors.dart';
-import 'package:Twomenu/utils/Common.dart';
 import 'package:Twomenu/utils/Constants.dart';
-import 'package:Twomenu/utils/SharedPref.dart';
 import 'package:nb_utils/nb_utils.dart';
 import '../AppLocalizations.dart';
 

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:nb_utils/nb_utils.dart';
+
 import '/../component/HomeScreenComponent3/DashBoard3AppWidget.dart';
 import '/../models/ProductResponse.dart';
-import '/../utils/ProductWishListExtension.dart';
 import '/../utils/AppWidget.dart';
-import 'package:nb_utils/nb_utils.dart';
+import '/../utils/ProductWishListExtension.dart';
 
 class DashBoard3Product extends StatefulWidget {
   static String tag = '/Product';
@@ -49,7 +50,7 @@ class DashBoard3ProductState extends State<DashBoard3Product> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              decoration: boxDecorationWithRoundedCorners(borderRadius: radius(0.0), backgroundColor: Theme.of(context).colorScheme.background),
+              decoration: boxDecorationWithRoundedCorners(borderRadius: radius(0.0), backgroundColor: Theme.of(context).colorScheme.surface),
               child: Stack(
                 alignment: Alignment.bottomRight,
                 children: [
@@ -66,18 +67,19 @@ class DashBoard3ProductState extends State<DashBoard3Product> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   4.height,
-                  Text(widget.mProductModel!.name, style: primaryTextStyle(), maxLines: 1),
+                  // ✅ تم التعديل هنا باستخدام .validate() لحل مشكلة النوع (String? إلى String)
+                  Text(widget.mProductModel!.name.validate(), style: primaryTextStyle(), maxLines: 1),
                   2.height,
                   Row(
                     children: [
                       PriceWidget(
                         price: widget.mProductModel!.onSale == true
                             ? widget.mProductModel!.salePrice.validate().isNotEmpty
-                                ? double.parse(widget.mProductModel!.salePrice.toString()).toStringAsFixed(2)
-                                : double.parse(widget.mProductModel!.price.validate()).toStringAsFixed(2)
+                            ? double.parse(widget.mProductModel!.salePrice.toString()).toStringAsFixed(2)
+                            : double.parse(widget.mProductModel!.price.validate()).toStringAsFixed(2)
                             : widget.mProductModel!.regularPrice!.isNotEmpty
-                                ? double.parse(widget.mProductModel!.regularPrice.validate().toString()).toStringAsFixed(2)
-                                : double.parse(widget.mProductModel!.price.validate().toString()).toStringAsFixed(2),
+                            ? double.parse(widget.mProductModel!.regularPrice.validate().toString()).toStringAsFixed(2)
+                            : double.parse(widget.mProductModel!.price.validate().toString()).toStringAsFixed(2),
                         size: 14,
                       ),
                       4.width,

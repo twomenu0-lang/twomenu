@@ -123,3 +123,4 @@ class WalkThroughScreenState extends State<WalkThroughScreen> {
     );
   }
 }
+

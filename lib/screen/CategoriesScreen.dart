@@ -15,6 +15,7 @@ import 'package:nb_utils/nb_utils.dart';
 import '../AppLocalizations.dart';
 import '../main.dart';
 import 'ViewAllScreen.dart';
+import '/../screen/SmartCategoryScreen.dart'; // ✅ إضافة الـ import الخاص بالشاشة الذكية الجديدة
 
 class CategoriesScreen extends StatefulWidget {
   static String tag = '/CategoriesScreen';
@@ -148,11 +149,11 @@ class CategoriesScreenState extends State<CategoriesScreen> {
                           horizontal: 12, vertical: 8),
                       itemBuilder: (context, index) {
                         return GestureDetector(
+                          // ✅ تعديل الـ onTap في الـ Grid لفتح الـ SmartCategoryScreen
                           onTap: () {
-                            ViewAllScreen(
-                              mCategoryModel[index].name,
-                              isCategory: true,
-                              categoryId: mCategoryModel[index].id,
+                            SmartCategoryScreen(
+                              categoryName: mCategoryModel[index].name,
+                              categoryId:   mCategoryModel[index].id,
                             ).launch(context);
                           },
                           child: Column(
@@ -165,11 +166,11 @@ class CategoriesScreenState extends State<CategoriesScreen> {
                                   borderRadius: radius(8),
                                   backgroundColor: Theme.of(context)
                                       .colorScheme
-                                      .background,
+                                      .surface,
                                   border: Border.all(
                                       color: Theme.of(context)
                                           .colorScheme
-                                          .background),
+                                          .surface),
                                 ),
                                 child: mCategoryModel[index].image !=
                                     null
@@ -209,11 +210,11 @@ class CategoriesScreenState extends State<CategoriesScreen> {
                       padding: EdgeInsets.all(16),
                       itemBuilder: (context, index) {
                         return GestureDetector(
+                          // ✅ تعديل الـ onTap في الـ List لفتح الـ SmartCategoryScreen
                           onTap: () {
-                            ViewAllScreen(
-                              mCategoryModel[index].name,
-                              isCategory: true,
-                              categoryId: mCategoryModel[index].id,
+                            SmartCategoryScreen(
+                              categoryName: mCategoryModel[index].name,
+                              categoryId:   mCategoryModel[index].id,
                             ).launch(context);
                           },
                           child: Row(
@@ -227,11 +228,11 @@ class CategoriesScreenState extends State<CategoriesScreen> {
                                   borderRadius: radius(8),
                                   backgroundColor: Theme.of(context)
                                       .colorScheme
-                                      .background,
+                                      .surface,
                                   border: Border.all(
                                       color: Theme.of(context)
                                           .colorScheme
-                                          .background),
+                                          .surface),
                                 ),
                                 child: mCategoryModel[index].image !=
                                     null

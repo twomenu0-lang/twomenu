@@ -137,3 +137,4 @@ class ChooseProductDetailVariantState extends State<ChooseProductDetailVariant> 
     );
   }
 }
+

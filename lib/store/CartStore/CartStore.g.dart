@@ -6,10 +6,11 @@ part of 'CartStore.dart';
 // StoreGenerator
 // **************************************************************************
 
-// ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic
+// ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic, no_leading_underscores_for_local_identifiers
 
 mixin _$CartStore on _CartStore, Store {
-  final _$cartListAtom = Atom(name: '_CartStore.cartList');
+  late final _$cartListAtom =
+      Atom(name: '_CartStore.cartList', context: context);
 
   @override
   List<CartModel> get cartList {
@@ -24,7 +25,8 @@ mixin _$CartStore on _CartStore, Store {
     });
   }
 
-  final _$cartResponseAtom = Atom(name: '_CartStore.cartResponse');
+  late final _$cartResponseAtom =
+      Atom(name: '_CartStore.cartResponse', context: context);
 
   @override
   CartResponse? get cartResponse {
@@ -39,7 +41,8 @@ mixin _$CartStore on _CartStore, Store {
     });
   }
 
-  final _$mLineItemsAtom = Atom(name: '_CartStore.mLineItems');
+  late final _$mLineItemsAtom =
+      Atom(name: '_CartStore.mLineItems', context: context);
 
   @override
   List<LineItems> get mLineItems {
@@ -54,7 +57,8 @@ mixin _$CartStore on _CartStore, Store {
     });
   }
 
-  final _$shippingMethodsAtom = Atom(name: '_CartStore.shippingMethods');
+  late final _$shippingMethodsAtom =
+      Atom(name: '_CartStore.shippingMethods', context: context);
 
   @override
   List<Method> get shippingMethods {
@@ -69,7 +73,8 @@ mixin _$CartStore on _CartStore, Store {
     });
   }
 
-  final _$countryListAtom = Atom(name: '_CartStore.countryList');
+  late final _$countryListAtom =
+      Atom(name: '_CartStore.countryList', context: context);
 
   @override
   List<Country> get countryList {
@@ -84,7 +89,8 @@ mixin _$CartStore on _CartStore, Store {
     });
   }
 
-  final _$shippingAtom = Atom(name: '_CartStore.shipping');
+  late final _$shippingAtom =
+      Atom(name: '_CartStore.shipping', context: context);
 
   @override
   Shipping? get shipping {
@@ -99,8 +105,8 @@ mixin _$CartStore on _CartStore, Store {
     });
   }
 
-  final _$shippingMethodResponseAtom =
-      Atom(name: '_CartStore.shippingMethodResponse');
+  late final _$shippingMethodResponseAtom =
+      Atom(name: '_CartStore.shippingMethodResponse', context: context);
 
   @override
   ShippingMethodResponse? get shippingMethodResponse {
@@ -116,7 +122,8 @@ mixin _$CartStore on _CartStore, Store {
     });
   }
 
-  final _$isOutOfStockAtom = Atom(name: '_CartStore.isOutOfStock');
+  late final _$isOutOfStockAtom =
+      Atom(name: '_CartStore.isOutOfStock', context: context);
 
   @override
   bool get isOutOfStock {
@@ -131,7 +138,8 @@ mixin _$CartStore on _CartStore, Store {
     });
   }
 
-  final _$cartTotalDiscountAtom = Atom(name: '_CartStore.cartTotalDiscount');
+  late final _$cartTotalDiscountAtom =
+      Atom(name: '_CartStore.cartTotalDiscount', context: context);
 
   @override
   num get cartTotalDiscount {
@@ -146,7 +154,8 @@ mixin _$CartStore on _CartStore, Store {
     });
   }
 
-  final _$cartTotalAmountAtom = Atom(name: '_CartStore.cartTotalAmount');
+  late final _$cartTotalAmountAtom =
+      Atom(name: '_CartStore.cartTotalAmount', context: context);
 
   @override
   num get cartTotalAmount {
@@ -161,8 +170,8 @@ mixin _$CartStore on _CartStore, Store {
     });
   }
 
-  final _$cartTotalPayableAmountAtom =
-      Atom(name: '_CartStore.cartTotalPayableAmount');
+  late final _$cartTotalPayableAmountAtom =
+      Atom(name: '_CartStore.cartTotalPayableAmount', context: context);
 
   @override
   num get cartTotalPayableAmount {
@@ -178,7 +187,8 @@ mixin _$CartStore on _CartStore, Store {
     });
   }
 
-  final _$cartSavedAmountAtom = Atom(name: '_CartStore.cartSavedAmount');
+  late final _$cartSavedAmountAtom =
+      Atom(name: '_CartStore.cartSavedAmount', context: context);
 
   @override
   num get cartSavedAmount {
@@ -193,7 +203,8 @@ mixin _$CartStore on _CartStore, Store {
     });
   }
 
-  final _$cartTotalCountAtom = Atom(name: '_CartStore.cartTotalCount');
+  late final _$cartTotalCountAtom =
+      Atom(name: '_CartStore.cartTotalCount', context: context);
 
   @override
   num get cartTotalCount {
@@ -208,7 +219,8 @@ mixin _$CartStore on _CartStore, Store {
     });
   }
 
-  final _$selectedShipmentAtom = Atom(name: '_CartStore.selectedShipment');
+  late final _$selectedShipmentAtom =
+      Atom(name: '_CartStore.selectedShipment', context: context);
 
   @override
   int get selectedShipment {
@@ -223,45 +235,48 @@ mixin _$CartStore on _CartStore, Store {
     });
   }
 
-  final _$addToMyCartAsyncAction = AsyncAction('_CartStore.addToMyCart');
+  late final _$addToMyCartAsyncAction =
+      AsyncAction('_CartStore.addToMyCart', context: context);
 
   @override
   Future<void> addToMyCart(CartModel data) {
     return _$addToMyCartAsyncAction.run(() => super.addToMyCart(data));
   }
 
-  final _$updateToCartItemAsyncAction =
-      AsyncAction('_CartStore.updateToCartItem');
+  late final _$updateToCartItemAsyncAction =
+      AsyncAction('_CartStore.updateToCartItem', context: context);
 
   @override
   Future<void> updateToCartItem(dynamic req) {
     return _$updateToCartItemAsyncAction.run(() => super.updateToCartItem(req));
   }
 
-  final _$storeCartDataAsyncAction = AsyncAction('_CartStore.storeCartData');
+  late final _$storeCartDataAsyncAction =
+      AsyncAction('_CartStore.storeCartData', context: context);
 
   @override
   Future<void> storeCartData() {
     return _$storeCartDataAsyncAction.run(() => super.storeCartData());
   }
 
-  final _$clearCartAsyncAction = AsyncAction('_CartStore.clearCart');
+  late final _$clearCartAsyncAction =
+      AsyncAction('_CartStore.clearCart', context: context);
 
   @override
   Future<void> clearCart() {
     return _$clearCartAsyncAction.run(() => super.clearCart());
   }
 
-  final _$fetchShipmentDataAsyncAction =
-      AsyncAction('_CartStore.fetchShipmentData');
+  late final _$fetchShipmentDataAsyncAction =
+      AsyncAction('_CartStore.fetchShipmentData', context: context);
 
   @override
   Future<void> fetchShipmentData() {
     return _$fetchShipmentDataAsyncAction.run(() => super.fetchShipmentData());
   }
 
-  final _$fetchShippingMethodAsyncAction =
-      AsyncAction('_CartStore.fetchShippingMethod');
+  late final _$fetchShippingMethodAsyncAction =
+      AsyncAction('_CartStore.fetchShippingMethod', context: context);
 
   @override
   Future fetchShippingMethod(dynamic value) {
@@ -269,7 +284,8 @@ mixin _$CartStore on _CartStore, Store {
         .run(() => super.fetchShippingMethod(value));
   }
 
-  final _$_CartStoreActionController = ActionController(name: '_CartStore');
+  late final _$_CartStoreActionController =
+      ActionController(name: '_CartStore', context: context);
 
   @override
   void addAllCartItem(List<CartModel> productList) {

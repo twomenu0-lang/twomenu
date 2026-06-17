@@ -14,6 +14,7 @@ import '/../screen/SaleScreen.dart';
 import '/../screen/SearchScreen.dart';
 import '/../screen/ViewAllScreen.dart';
 import '/../screen/WebViewExternalProductScreen.dart';
+import '/../screen/SmartCategoryScreen.dart'; // ✅ إضافة الـ import للشاشة الذكية هنا أيضاً
 import '/../utils/AppWidget.dart';
 import '/../utils/Common.dart';
 import '/../utils/Constants.dart';
@@ -36,7 +37,6 @@ class HomeScreen3State extends State<HomeScreen3> {
 
   int _currentPage = 0;
 
-  // ✅ مرجع للتايمر — كان مفقوداً في النسخة القديمة (memory leak)
   Timer? _bannerTimer;
 
   @override
@@ -53,9 +53,8 @@ class HomeScreen3State extends State<HomeScreen3> {
   void init() {
     afterBuildCreated(() async {
       appStore.setLoading(true);
-      setValue(CARTCOUNT, appStore.count); // ✅ fire & forget
+      setValue(CARTCOUNT, appStore.count);
 
-      // ✅ تحميل Dashboard و Categories بالتوازي
       await Future.wait([
         fetchDashboardData(),
         fetchCategoryData(),
@@ -73,7 +72,6 @@ class HomeScreen3State extends State<HomeScreen3> {
     _bannerTimer?.cancel();
     _bannerTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (!mounted || !bannerPageController.hasClients) return;
-      // ✅ يلف على العدد الفعلي للصور بدل الرقم الثابت 2
       _currentPage = (_currentPage < (mSliderModel.length - 1)) ? _currentPage + 1 : 0;
       bannerPageController.animateToPage(
         _currentPage,
@@ -85,7 +83,6 @@ class HomeScreen3State extends State<HomeScreen3> {
 
   @override
   void dispose() {
-    // ✅ إيقاف التايمر عند مغادرة الشاشة
     _bannerTimer?.cancel();
     salePageController.dispose();
     bannerPageController.dispose();
@@ -93,7 +90,7 @@ class HomeScreen3State extends State<HomeScreen3> {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // OFFER & DEAL WIDGET — خاص بـ HomeScreen3 (تصميم مختلف)
+  // OFFER & DEAL WIDGET
   // ─────────────────────────────────────────────────────────────
   Widget _availableOfferAndDeal(
       String title,
@@ -134,7 +131,6 @@ class HomeScreen3State extends State<HomeScreen3> {
                 HorizontalList(
                   padding: EdgeInsets.only(left: context.width() * 0.3, right: 8),
                   physics: const NeverScrollableScrollPhysics(),
-                  // ✅ clamp بدل if/else
                   itemCount: product.length.clamp(0, 6),
                   itemBuilder: (context, i) {
                     return DashBoard3Product(
@@ -164,7 +160,7 @@ class HomeScreen3State extends State<HomeScreen3> {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // CATEGORY — مع commonCacheImageWidget
+  // CATEGORY
   // ─────────────────────────────────────────────────────────────
   Widget _category(BuildContext context) {
     if (mCategoryModel.isEmpty) return const SizedBox.shrink();
@@ -185,7 +181,6 @@ class HomeScreen3State extends State<HomeScreen3> {
             child: Stack(
               alignment: Alignment.bottomCenter,
               children: [
-                // ✅ commonCacheImageWidget بدل NetworkImage غير المحمية
                 cat.image != null
                     ? commonCacheImageWidget(
                   cat.image!.src.validate(),
@@ -213,7 +208,11 @@ class HomeScreen3State extends State<HomeScreen3> {
               ],
             ),
           ).onTap(() {
-            ViewAllScreen(cat.name, isCategory: true, categoryId: cat.id).launch(context);
+            // ✅ تعديل الـ onTap هنا ليوجه للمنطق الذكي بدلاً من شاشة عرض الكل مباشرة
+            SmartCategoryScreen(
+              categoryName: cat.name,
+              categoryId: cat.id,
+            ).launch(context);
           });
         },
       ),
@@ -345,7 +344,6 @@ class HomeScreen3State extends State<HomeScreen3> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    // ✅ Section widgets
     Widget newProduct()     => DashboardComponent3(title: dashboard.newProduct!.title!,        subTitle: dashboard.newProduct!.viewAll!,        product: mNewestProductModel,    onTap: () => ViewAllScreen(dashboard.newProduct!.title,        isNewest: true).launch(context));
     Widget featureProduct() => DashboardComponent3(title: dashboard.featureProduct!.title!,    subTitle: dashboard.featureProduct!.viewAll!,    product: mFeaturedProductModel,  onTap: () => ViewAllScreen(dashboard.featureProduct!.title,    isFeatured: true).launch(context));
     Widget bestSelling()    => DashboardComponent3(title: dashboard.bestSaleProduct!.title!,   subTitle: dashboard.bestSaleProduct!.viewAll!,   product: mSellingProductModel,   onTap: () => ViewAllScreen(dashboard.bestSaleProduct!.title,   isBestSelling: true).launch(context));

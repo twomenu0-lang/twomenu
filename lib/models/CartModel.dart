@@ -96,3 +96,4 @@ class CartModel {
     return data;
   }
 }
+

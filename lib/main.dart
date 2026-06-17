@@ -22,10 +22,10 @@ import '/../screen/NoInternetScreen.dart';
 import '/../screen/SplashScreen.dart';
 import '/../utils/Colors.dart';
 import '/../utils/Constants.dart';
+import '/../service/NotificationService.dart'; // 💡 ✅ إضافة الـ import الخاص بـ NotificationService
 import 'package:nb_utils/nb_utils.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 BuilderResponse builderResponse = BuilderResponse();
@@ -63,12 +63,41 @@ String _safeGetString(String key, {String defaultValue = ''}) {
   }
 }
 
+// 💡 ✅ استبدال دالة _initOneSignal القديمة بالدالة الجديدة المطورة لتخزين الإشعارات
 void _initOneSignal() {
   if (!isMobile) return;
 
   OneSignal.initialize(mOneSignalAPPKey);
   OneSignal.Notifications.requestPermission(false);
 
+  // ✅ استقبال وحفظ كل إشعار بيوصل (سواء التطبيق شغال أو في الخلفية)
+  OneSignal.Notifications.addForegroundWillDisplayListener((event) {
+    final notification = event.notification;
+    NotificationService.save(
+      id: notification.notificationId,
+      title: notification.title ?? '',
+      body: notification.body ?? '',
+    ).then((_) {
+      // تحديث العداد في الـ AppStore
+      appStore.setUnreadNotificationCount(NotificationService.unreadCount());
+    });
+    event.preventDefault(); // ✅ عشان تتحكم في العرض بنفسك
+    event.notification.display(); // ✅ عرض الإشعار زي الأول
+  });
+
+  // ✅ استقبال الإشعارات اللي المستخدم ضغط عليها (من الخلفية)
+  OneSignal.Notifications.addClickListener((event) {
+    final notification = event.notification;
+    NotificationService.save(
+      id: notification.notificationId,
+      title: notification.title ?? '',
+      body: notification.body ?? '',
+    ).then((_) {
+      appStore.setUnreadNotificationCount(NotificationService.unreadCount());
+    });
+  });
+
+  // ✅ حفظ الـ Player ID
   OneSignal.User.pushSubscription.addObserver((state) async {
     final playerId = state.current.id;
     if (playerId != null && playerId.isNotEmpty) {
@@ -187,6 +216,9 @@ void main() async {
   baseUrl = _safeGetString(APP_URL);
   ConsumerKey = _safeGetString(CONSUMER_KEY);
   ConsumerSecret = _safeGetString(CONSUMER_SECRET);
+
+  // 💡 ✅ تحديث عداد الإشعارات في الـ AppStore فوراً بعد الانتهاء من STEP 5 مباشرةً
+  appStore.setUnreadNotificationCount(NotificationService.unreadCount());
 
   // STEP 6: إعداد الثيم
   int themeModeIndex = getIntAsync(THEME_MODE_INDEX);

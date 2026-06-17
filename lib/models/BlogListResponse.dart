@@ -84,3 +84,4 @@ class Blog {
     return data;
   }
 }
+

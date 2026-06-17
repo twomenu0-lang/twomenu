@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import '/../component/HomeScreenComponent/Dashboard1ProductComponent.dart';
+import '/../component/HomeScreenComponent/ProductCard.dart';
 import '/../models/ProductResponse.dart';
 import '/../network/rest_apis.dart';
 import '/../utils/AppWidget.dart';
@@ -153,7 +153,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                         mainAxisSpacing: 12,
                         crossAxisSpacing: 12,
                         itemBuilder: (context, index) {
-                          return Dashboard1ProductComponent(mProductModel: mVendorProductList[index]);
+                          return ProductCard(mProductModel: mVendorProductList[index]);
                         },
                       )
                     : Text(appLocalization.translate('lbl_data_not_found')!, style: boldTextStyle()).paddingOnly(left: 8, right: 8)
@@ -180,3 +180,4 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
     );
   }
 }
+

@@ -80,6 +80,23 @@ void clearProductCache([int? productId]) {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// REVIEWS CACHE
+// ─────────────────────────────────────────────────────────────────
+final Map<int, dynamic> _reviewsCache = {};
+final Map<int, DateTime> _reviewsCacheTime = {};
+const int _reviewsCacheMinutes = 5;
+
+void clearReviewsCache([int? productId]) {
+  if (productId != null) {
+    _reviewsCache.remove(productId);
+    _reviewsCacheTime.remove(productId);
+  } else {
+    _reviewsCache.clear();
+    _reviewsCacheTime.clear();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
 // AUTH APIs
 // ─────────────────────────────────────────────────────────────────
 
@@ -198,10 +215,23 @@ Future getProductAttribute() async {
 }
 
 Future getProductReviews(id) async {
-  return handleResponse(await MightyAPI().getAsync('wc/v3/products/reviews?product=$id'));
+  if (id != null && _reviewsCache.containsKey(id) && _reviewsCacheTime.containsKey(id)) {
+    if (DateTime.now().difference(_reviewsCacheTime[id]!).inMinutes < _reviewsCacheMinutes) {
+      return _reviewsCache[id];
+    }
+  }
+  final result = await handleResponse(
+    await MightyAPI().getAsync('wc/v3/products/reviews?product=$id'),
+  );
+  if (id != null) {
+    _reviewsCache[id] = result;
+    _reviewsCacheTime[id] = DateTime.now();
+  }
+  return result;
 }
 
 Future postReview(request) async {
+  clearReviewsCache(request['product_id']); // ✅ امسح الـ cache للمنتج ده
   return handleResponse(await MightyAPI().postAsync('wc/v3/products/reviews', request));
 }
 

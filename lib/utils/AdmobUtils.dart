@@ -1,4 +1,3 @@
-import 'dart:io';
 
 String? getBannerAdUnitId() {
   return null;

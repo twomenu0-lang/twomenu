@@ -11,7 +11,6 @@ import '/../models/SliderModel.dart';
 import '/../network/rest_apis.dart';
 import '/../utils/Common.dart';
 import '/../utils/Constants.dart';
-import '/../utils/SharedPref.dart';
 import 'package:nb_utils/nb_utils.dart';
 import '../AppLocalizations.dart';
 import '../main.dart';

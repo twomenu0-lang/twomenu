@@ -106,3 +106,4 @@ class _ShippingComponentState extends State<ShippingComponent> {
         : SizedBox();
   }
 }
+

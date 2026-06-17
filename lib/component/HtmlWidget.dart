@@ -39,3 +39,4 @@ Future<void> launchUrl(String url, {bool forceWebView = false}) async {
     toast('Invalid URL: $url');
   });
 }
+

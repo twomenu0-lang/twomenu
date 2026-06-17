@@ -1,4 +1,4 @@
-﻿class BuilderResponse {
+class BuilderResponse {
   Dashboard? dashboard;
   Appsetup? appsetup;
 
@@ -192,3 +192,4 @@ class Appsetup {
     return data;
   }
 }
+

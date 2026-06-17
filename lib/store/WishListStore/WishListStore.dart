@@ -87,3 +87,4 @@ abstract class _WishListStore with Store {
     storeWishlistData();
   }
 }
+

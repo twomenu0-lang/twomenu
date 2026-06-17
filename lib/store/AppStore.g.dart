@@ -6,10 +6,11 @@ part of 'AppStore.dart';
 // StoreGenerator
 // **************************************************************************
 
-// ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic
+// ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic, no_leading_underscores_for_local_identifiers
 
 mixin _$AppStore on AppStoreBase, Store {
-  final _$isLoadingAtom = Atom(name: 'AppStoreBase.isLoading');
+  late final _$isLoadingAtom =
+      Atom(name: 'AppStoreBase.isLoading', context: context);
 
   @override
   bool get isLoading {
@@ -24,7 +25,8 @@ mixin _$AppStore on AppStoreBase, Store {
     });
   }
 
-  final _$isLoggedInAtom = Atom(name: 'AppStoreBase.isLoggedIn');
+  late final _$isLoggedInAtom =
+      Atom(name: 'AppStoreBase.isLoggedIn', context: context);
 
   @override
   bool get isLoggedIn {
@@ -39,8 +41,8 @@ mixin _$AppStore on AppStoreBase, Store {
     });
   }
 
-  final _$isNetworkAvailableAtom =
-      Atom(name: 'AppStoreBase.isNetworkAvailable');
+  late final _$isNetworkAvailableAtom =
+      Atom(name: 'AppStoreBase.isNetworkAvailable', context: context);
 
   @override
   bool get isNetworkAvailable {
@@ -55,8 +57,8 @@ mixin _$AppStore on AppStoreBase, Store {
     });
   }
 
-  final _$isGuestUserLoggedInAtom =
-      Atom(name: 'AppStoreBase.isGuestUserLoggedIn');
+  late final _$isGuestUserLoggedInAtom =
+      Atom(name: 'AppStoreBase.isGuestUserLoggedIn', context: context);
 
   @override
   bool get isGuestUserLoggedIn {
@@ -71,7 +73,8 @@ mixin _$AppStore on AppStoreBase, Store {
     });
   }
 
-  final _$isDarkModeOnAtom = Atom(name: 'AppStoreBase.isDarkModeOn');
+  late final _$isDarkModeOnAtom =
+      Atom(name: 'AppStoreBase.isDarkModeOn', context: context);
 
   @override
   bool get isDarkModeOn {
@@ -86,7 +89,7 @@ mixin _$AppStore on AppStoreBase, Store {
     });
   }
 
-  final _$countAtom = Atom(name: 'AppStoreBase.count');
+  late final _$countAtom = Atom(name: 'AppStoreBase.count', context: context);
 
   @override
   int? get count {
@@ -101,8 +104,8 @@ mixin _$AppStore on AppStoreBase, Store {
     });
   }
 
-  final _$mIsUserExistInReviewAtom =
-      Atom(name: 'AppStoreBase.mIsUserExistInReview');
+  late final _$mIsUserExistInReviewAtom =
+      Atom(name: 'AppStoreBase.mIsUserExistInReview', context: context);
 
   @override
   bool get mIsUserExistInReview {
@@ -118,7 +121,8 @@ mixin _$AppStore on AppStoreBase, Store {
     });
   }
 
-  final _$isNotificationOnAtom = Atom(name: 'AppStoreBase.isNotificationOn');
+  late final _$isNotificationOnAtom =
+      Atom(name: 'AppStoreBase.isNotificationOn', context: context);
 
   @override
   bool get isNotificationOn {
@@ -133,7 +137,8 @@ mixin _$AppStore on AppStoreBase, Store {
     });
   }
 
-  final _$isDarkModeAtom = Atom(name: 'AppStoreBase.isDarkMode');
+  late final _$isDarkModeAtom =
+      Atom(name: 'AppStoreBase.isDarkMode', context: context);
 
   @override
   bool? get isDarkMode {
@@ -148,8 +153,25 @@ mixin _$AppStore on AppStoreBase, Store {
     });
   }
 
-  final _$selectedLanguageCodeAtom =
-      Atom(name: 'AppStoreBase.selectedLanguageCode');
+  late final _$unreadNotificationCountAtom =
+      Atom(name: 'AppStoreBase.unreadNotificationCount', context: context);
+
+  @override
+  int get unreadNotificationCount {
+    _$unreadNotificationCountAtom.reportRead();
+    return super.unreadNotificationCount;
+  }
+
+  @override
+  set unreadNotificationCount(int value) {
+    _$unreadNotificationCountAtom
+        .reportWrite(value, super.unreadNotificationCount, () {
+      super.unreadNotificationCount = value;
+    });
+  }
+
+  late final _$selectedLanguageCodeAtom =
+      Atom(name: 'AppStoreBase.selectedLanguageCode', context: context);
 
   @override
   String get selectedLanguageCode {
@@ -165,7 +187,7 @@ mixin _$AppStore on AppStoreBase, Store {
     });
   }
 
-  final _$indexAtom = Atom(name: 'AppStoreBase.index');
+  late final _$indexAtom = Atom(name: 'AppStoreBase.index', context: context);
 
   @override
   int get index {
@@ -180,8 +202,8 @@ mixin _$AppStore on AppStoreBase, Store {
     });
   }
 
-  final _$dashboardScreeListAtom =
-      Atom(name: 'AppStoreBase.dashboardScreeList');
+  late final _$dashboardScreeListAtom =
+      Atom(name: 'AppStoreBase.dashboardScreeList', context: context);
 
   @override
   List<Widget> get dashboardScreeList {
@@ -196,8 +218,8 @@ mixin _$AppStore on AppStoreBase, Store {
     });
   }
 
-  final _$toggleDarkModeAsyncAction =
-      AsyncAction('AppStoreBase.toggleDarkMode');
+  late final _$toggleDarkModeAsyncAction =
+      AsyncAction('AppStoreBase.toggleDarkMode', context: context);
 
   @override
   Future<void> toggleDarkMode({bool? value}) {
@@ -205,7 +227,8 @@ mixin _$AppStore on AppStoreBase, Store {
         .run(() => super.toggleDarkMode(value: value));
   }
 
-  final _$setDarkModeAsyncAction = AsyncAction('AppStoreBase.setDarkMode');
+  late final _$setDarkModeAsyncAction =
+      AsyncAction('AppStoreBase.setDarkMode', context: context);
 
   @override
   Future<void> setDarkMode({bool? aIsDarkMode}) {
@@ -213,7 +236,8 @@ mixin _$AppStore on AppStoreBase, Store {
         .run(() => super.setDarkMode(aIsDarkMode: aIsDarkMode));
   }
 
-  final _$setLanguageAsyncAction = AsyncAction('AppStoreBase.setLanguage');
+  late final _$setLanguageAsyncAction =
+      AsyncAction('AppStoreBase.setLanguage', context: context);
 
   @override
   Future<void> setLanguage(String aSelectedLanguageCode) {
@@ -221,7 +245,8 @@ mixin _$AppStore on AppStoreBase, Store {
         .run(() => super.setLanguage(aSelectedLanguageCode));
   }
 
-  final _$AppStoreBaseActionController = ActionController(name: 'AppStoreBase');
+  late final _$AppStoreBaseActionController =
+      ActionController(name: 'AppStoreBase', context: context);
 
   @override
   void setLoading(bool aIsLoading) {
@@ -312,6 +337,17 @@ mixin _$AppStore on AppStoreBase, Store {
   }
 
   @override
+  void setUnreadNotificationCount(int val) {
+    final _$actionInfo = _$AppStoreBaseActionController.startAction(
+        name: 'AppStoreBase.setUnreadNotificationCount');
+    try {
+      return super.setUnreadNotificationCount(val);
+    } finally {
+      _$AppStoreBaseActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   void setNotification(bool val) {
     final _$actionInfo = _$AppStoreBaseActionController.startAction(
         name: 'AppStoreBase.setNotification');
@@ -334,6 +370,7 @@ count: ${count},
 mIsUserExistInReview: ${mIsUserExistInReview},
 isNotificationOn: ${isNotificationOn},
 isDarkMode: ${isDarkMode},
+unreadNotificationCount: ${unreadNotificationCount},
 selectedLanguageCode: ${selectedLanguageCode},
 index: ${index},
 dashboardScreeList: ${dashboardScreeList}

@@ -61,3 +61,4 @@ class _DashboardComponent2State extends State<DashboardComponent2> {
 Widget viewAll(Function onTap, String subTitle) {
   return TextIcon(onTap: onTap, prefix: Icon(Icons.add, size: 18), text: subTitle, textStyle: secondaryTextStyle());
 }
+

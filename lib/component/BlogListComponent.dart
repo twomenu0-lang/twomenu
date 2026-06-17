@@ -8,7 +8,7 @@ import 'package:nb_utils/nb_utils.dart';
 
 class BlogListComponent extends StatefulWidget {
   static String tag = '/BlogListComponent';
-  List<Blog> mBlogList;
+  final List<Blog> mBlogList;
 
   BlogListComponent(this.mBlogList);
 
@@ -89,7 +89,7 @@ class BlogListComponentState extends State<BlogListComponent> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 12,
                   offset: Offset(0, 4),
                 ),

@@ -57,3 +57,4 @@ class FestivalProgressState extends State<FestivalProgress> with SingleTickerPro
     );
   }
 }
+

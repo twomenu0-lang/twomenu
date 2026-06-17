@@ -115,3 +115,4 @@ Widget getDashboard4VendorWidget(VendorResponse vendor, BuildContext context, {d
     ),
   );
 }
+

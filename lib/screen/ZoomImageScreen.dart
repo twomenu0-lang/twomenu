@@ -61,3 +61,4 @@ class _ZoomImageScreenState extends State<ZoomImageScreen> {
     );
   }
 }
+

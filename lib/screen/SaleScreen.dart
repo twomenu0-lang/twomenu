@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:intl/intl.dart';
 import '/../AppLocalizations.dart';
-import '/../component/HomeScreenComponent/Dashboard1ProductComponent.dart';
+import '/../component/HomeScreenComponent/ProductCard.dart';
 import '/../main.dart';
 import '/../models/ProductResponse.dart';
 import '/../network/rest_apis.dart';
@@ -121,7 +121,7 @@ class SaleScreenState extends State<SaleScreen> {
                     shrinkWrap: true,
                     padding: EdgeInsets.only(left: 4, right: 4),
                     itemBuilder: (context, index) {
-                      return Dashboard1ProductComponent(mProductModel: mProductModel[index], width: context.width());
+                      return ProductCard(mProductModel: mProductModel[index], width: context.width());
                     },
                     crossAxisCount: 2,
 
@@ -137,3 +137,4 @@ class SaleScreenState extends State<SaleScreen> {
     );
   }
 }
+

@@ -54,3 +54,4 @@ class WalletResponse {
     return data;
   }
 }
+

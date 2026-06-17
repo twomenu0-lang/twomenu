@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '/../utils/Colors.dart';
 import '/../main.dart';
 import '/../utils/Constants.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -14,7 +13,7 @@ class AppTheme {
     hoverColor: Colors.grey,
     fontFamily: GoogleFonts.poppins().fontFamily,
     appBarTheme: AppBarTheme(
-      color: primaryColor,
+      backgroundColor: primaryColor,
       iconTheme: IconThemeData(color: Colors.white),
     ),
     cardColor: backgroundColor,
@@ -32,14 +31,13 @@ class AppTheme {
       onPrimary: colorAccent!,
       surface: Colors.white,
       secondary: colorAccent!,
-      background: itemBackgroundColor,
     ).copyWith(error: Colors.red),
   );
 
   static final ThemeData darkTheme = ThemeData(
     scaffoldBackgroundColor: Color(0xFF222222),
     appBarTheme: AppBarTheme(
-      color: primaryColor,
+      backgroundColor: primaryColor,
       iconTheme: IconThemeData(color: Color(0xFF1D2939)),
     ),
     cardColor: Color(0xFF1D2939),
@@ -56,7 +54,6 @@ class AppTheme {
       titleMedium: TextStyle(color: Colors.white70),
       titleSmall: TextStyle(color: Colors.white54),
     ), colorScheme: ColorScheme.light(
-      background: Color(0xFF1D2939),
       primary: Color(0xFF131d25),
       onPrimary: Color(0xFF1D2939),
       surface: Color(0xFF1D2939),
@@ -65,3 +62,4 @@ class AppTheme {
     ).copyWith(error: Color(0xFFCF6676)),
   );
 }
+

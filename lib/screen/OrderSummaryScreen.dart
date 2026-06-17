@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:intl/intl.dart';
@@ -14,8 +13,6 @@ import '/../models/ShippingMethodResponse.dart';
 import '/../network/rest_apis.dart';
 import '/../utils/AppBarWidget.dart';
 import '/../utils/AppWidget.dart';
-import '/../utils/Colors.dart';
-import '/../utils/Common.dart';
 import '/../utils/Constants.dart';
 import '/../utils/SharedPref.dart';
 import 'package:nb_utils/nb_utils.dart';

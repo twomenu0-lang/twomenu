@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
-import '/../component/HomeScreenComponent/Dashboard1ProductComponent.dart';
+import '/../component/HomeScreenComponent/ProductCard.dart';
 import '/../component/LayoutSelection.dart';
 import '/../main.dart';
 import '/../models/CategoryData.dart';
@@ -201,7 +201,7 @@ class _SubCategoryScreenState extends State<SubCategoryScreen> {
                               shrinkWrap: true,
                               padding: EdgeInsets.only(left: 12, right: 12, bottom: 8),
                               itemBuilder: (context, index) {
-                                return Dashboard1ProductComponent(mProductModel: mProductModel[index], width: context.width());
+                                return ProductCard(mProductModel: mProductModel[index], width: context.width());
                               },
                               crossAxisCount: crossAxisCount,
                               mainAxisSpacing: 6,
@@ -234,3 +234,4 @@ class _SubCategoryScreenState extends State<SubCategoryScreen> {
     );
   }
 }
+

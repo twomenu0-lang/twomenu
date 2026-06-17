@@ -71,3 +71,4 @@ class VideoPlayDialogState extends State<VideoPlayDialog> {
     );
   }
 }
+

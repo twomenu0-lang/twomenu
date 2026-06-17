@@ -218,3 +218,4 @@ class TeraWalletScreenState extends State<TeraWalletScreen> {
     );
   }
 }
+

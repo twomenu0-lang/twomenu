@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import '/../component/HomeScreenComponent/Dashboard1ProductComponent.dart';
+import '/../component/HomeScreenComponent/ProductCard.dart';
 import '/../main.dart';
 import '/../models/ProductAttribute.dart';
 import '/../models/ProductResponse.dart';
@@ -133,7 +133,7 @@ class SearchScreenState extends State<SearchScreen> {
       physics: NeverScrollableScrollPhysics(),
       itemCount: mProductModel.length,
       itemBuilder: (_, index) {
-        return Dashboard1ProductComponent(mProductModel: mProductModel[index]);
+        return ProductCard(mProductModel: mProductModel[index]);
       },
     );
 
@@ -472,3 +472,4 @@ class _FilterScreenState extends State<FilterScreen> {
     );
   }
 }
+

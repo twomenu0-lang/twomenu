@@ -8,7 +8,6 @@ import '/../screen/DashBoardScreen.dart';
 import '/../screen/OrderListScreen.dart';
 import '/../utils/AppWidget.dart';
 import '/../utils/Constants.dart';
-import '/../utils/AppImages.dart';
 import '/../utils/SharedPref.dart';
 import 'package:nb_utils/nb_utils.dart';
 

@@ -6,8 +6,6 @@ import '/../models/BlogResponse.dart';
 import '/../network/rest_apis.dart';
 import '/../screen/WebViewExternalProductScreen.dart';
 import '/../utils/AppWidget.dart';
-import '/../utils/Common.dart';
-import '/../utils/AppImages.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../main.dart';

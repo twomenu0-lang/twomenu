@@ -58,3 +58,4 @@ class WishListResponse {
     return data;
   }
 }
+

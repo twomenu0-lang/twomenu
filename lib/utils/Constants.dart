@@ -1,6 +1,6 @@
 import 'package:nb_utils/nb_utils.dart';
 
-const AppName = 'Two Menu';
+const AppName = 'تومينو';
 
 ///OneSignalAppID
 const mOneSignalAPPKey = 'f211bd10-9e3a-4064-a628-9fe6c266620e';

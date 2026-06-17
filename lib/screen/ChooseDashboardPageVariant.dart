@@ -137,3 +137,4 @@ class ChooseDashboardPageVariantState extends State<ChooseDashboardPageVariant> 
     );
   }
 }
+

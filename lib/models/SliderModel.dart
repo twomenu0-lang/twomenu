@@ -27,3 +27,4 @@ class SliderModel {
     return data;
   }
 }
+

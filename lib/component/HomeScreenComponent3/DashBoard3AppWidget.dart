@@ -38,3 +38,4 @@ Widget viewAllDashBoard3(BuildContext context, {String? viewAll}) {
         child: Text(viewAll!, style: boldTextStyle(color: appStore.isDarkMode! ? context.iconColor : white), textAlign: TextAlign.center)),
   );
 }
+

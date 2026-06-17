@@ -134,3 +134,4 @@ class VendorListComponentState extends State<VendorListComponent> {
         });
   }
 }
+

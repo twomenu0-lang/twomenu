@@ -18,7 +18,7 @@ class ProductListResponse {
 
 class ProductResponse {
   int? id;
-  var name;
+  String? name;
   String? slug;
   String? permalink;
   String? dateCreated;

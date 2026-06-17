@@ -9,6 +9,7 @@ import '/../models/ProductResponse.dart';
 import '/../screen/SearchScreen.dart';
 import '/../screen/ViewAllScreen.dart';
 import '/../screen/WebViewExternalProductScreen.dart';
+import '/../screen/SmartCategoryScreen.dart'; // ✅ إضافة الـ import للشاشة الذكية هنا أيضاً
 import '/../utils/AppWidget.dart';
 import '/../utils/Colors.dart';
 import '/../utils/Common.dart';
@@ -45,9 +46,8 @@ class HomeScreen4State extends State<HomeScreen4> {
   void init() {
     afterBuildCreated(() async {
       appStore.setLoading(true);
-      setValue(CARTCOUNT, appStore.count); // ✅ fire & forget
+      setValue(CARTCOUNT, appStore.count);
 
-      // ✅ تحميل بالتوازي
       await Future.wait([
         fetchDashboardData(),
         fetchCategoryData(),
@@ -61,7 +61,7 @@ class HomeScreen4State extends State<HomeScreen4> {
   @override
   void dispose() {
     bannerPageController.dispose();
-    saleBannerPageController.dispose(); // ✅ كان ناقص في النسخة القديمة!
+    saleBannerPageController.dispose();
     super.dispose();
   }
 
@@ -98,7 +98,7 @@ class HomeScreen4State extends State<HomeScreen4> {
             16.height,
             HorizontalList(
               padding: const EdgeInsets.only(left: 12, right: 12),
-              itemCount: product.length.clamp(0, 6), // ✅ clamp
+              itemCount: product.length.clamp(0, 6),
               itemBuilder: (context, i) {
                 return DashBoard4Product(
                   mProductModel: product[i],
@@ -114,7 +114,7 @@ class HomeScreen4State extends State<HomeScreen4> {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // CATEGORY — مع commonCacheImageWidget
+  // CATEGORY
   // ─────────────────────────────────────────────────────────────
   Widget _category(BuildContext context) {
     if (mCategoryModel.isEmpty) return const SizedBox.shrink();
@@ -126,7 +126,11 @@ class HomeScreen4State extends State<HomeScreen4> {
         itemBuilder: (BuildContext context, int index) {
           final cat = mCategoryModel[index];
           return GestureDetector(
-            onTap: () => ViewAllScreen(cat.name, isCategory: true, categoryId: cat.id).launch(context),
+            // ✅ التوجيه للمنطق الذكي بدلاً من شاشة عرض الكل مباشرة
+            onTap: () => SmartCategoryScreen(
+              categoryName: cat.name,
+              categoryId: cat.id,
+            ).launch(context),
             child: Column(
               children: [
                 Stack(
@@ -137,7 +141,6 @@ class HomeScreen4State extends State<HomeScreen4> {
                       backgroundImage: AssetImage(ic_halloween_category),
                       radius: 36,
                     ),
-                    // ✅ commonCacheImageWidget بدل NetworkImage مباشرة
                     cat.image != null
                         ? CircleAvatar(
                       backgroundColor: Colors.transparent,
@@ -287,7 +290,7 @@ class HomeScreen4State extends State<HomeScreen4> {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // VENDOR WIDGET — خاص بـ HomeScreen4
+  // VENDOR WIDGET
   // ─────────────────────────────────────────────────────────────
   Widget _vendor4Widget(
       BuildContext context,
@@ -345,18 +348,12 @@ class HomeScreen4State extends State<HomeScreen4> {
       );
     }
 
-    // ─────────────────────────────────────────────────────────
-    // ⚠️ BUG FIX: في النسخة الأصلية كل section دي كانت بتعرض
-    // mNewestProductModel بدل الـ product الصح!
-    // مثلاً: _bestSelling كانت بتعرض mNewestProductModel بدل mSellingProductModel
-    // تم التصحيح هنا:
-    // ─────────────────────────────────────────────────────────
     Widget newProduct()     => DashboardComponent4(title: dashboard.newProduct!.title!,        subTitle: dashboard.newProduct!.viewAll!,        product: mNewestProductModel,    onTap: () => ViewAllScreen(dashboard.newProduct!.title,        isNewest: true).launch(context));
-    Widget featureProduct() => DashboardComponent4(title: dashboard.featureProduct!.title!,    subTitle: dashboard.featureProduct!.viewAll!,    product: mFeaturedProductModel,  onTap: () => ViewAllScreen(dashboard.featureProduct!.title,    isFeatured: true).launch(context));   // ✅ إصلاح
-    Widget bestSelling()    => DashboardComponent4(title: dashboard.bestSaleProduct!.title!,   subTitle: dashboard.bestSaleProduct!.viewAll!,   product: mSellingProductModel,   onTap: () => ViewAllScreen(dashboard.bestSaleProduct!.title,   isBestSelling: true).launch(context)); // ✅ إصلاح
-    Widget saleProduct()    => DashboardComponent4(title: dashboard.saleProduct!.title!,       subTitle: dashboard.saleProduct!.viewAll!,       product: mSaleProductModel,      onTap: () => ViewAllScreen(dashboard.saleProduct!.title,       isSale: true).launch(context));        // ✅ إصلاح
-    Widget suggested()      => DashboardComponent4(title: dashboard.suggestionProduct!.title!, subTitle: dashboard.suggestionProduct!.viewAll!, product: mSuggestedProductModel, onTap: () => ViewAllScreen(dashboard.suggestionProduct!.title,  isSpecialProduct: true, specialProduct: "suggested_for_you").launch(context)); // ✅ إصلاح
-    Widget youMayLike()     => DashboardComponent4(title: dashboard.youMayLikeProduct!.title!, subTitle: dashboard.youMayLikeProduct!.viewAll!, product: mYouMayLikeProductModel,onTap: () => ViewAllScreen(dashboard.youMayLikeProduct!.title,  isSpecialProduct: true, specialProduct: "you_may_like").launch(context));       // ✅ إصلاح
+    Widget featureProduct() => DashboardComponent4(title: dashboard.featureProduct!.title!,    subTitle: dashboard.featureProduct!.viewAll!,    product: mFeaturedProductModel,  onTap: () => ViewAllScreen(dashboard.featureProduct!.title,    isFeatured: true).launch(context));
+    Widget bestSelling()    => DashboardComponent4(title: dashboard.bestSaleProduct!.title!,   subTitle: dashboard.bestSaleProduct!.viewAll!,   product: mSellingProductModel,   onTap: () => ViewAllScreen(dashboard.bestSaleProduct!.title,   isBestSelling: true).launch(context));
+    Widget saleProduct()    => DashboardComponent4(title: dashboard.saleProduct!.title!,       subTitle: dashboard.saleProduct!.viewAll!,       product: mSaleProductModel,      onTap: () => ViewAllScreen(dashboard.saleProduct!.title,       isSale: true).launch(context));
+    Widget suggested()      => DashboardComponent4(title: dashboard.suggestionProduct!.title!, subTitle: dashboard.suggestionProduct!.viewAll!, product: mSuggestedProductModel, onTap: () => ViewAllScreen(dashboard.suggestionProduct!.title,  isSpecialProduct: true, specialProduct: "suggested_for_you").launch(context));
+    Widget youMayLike()     => DashboardComponent4(title: dashboard.youMayLikeProduct!.title!, subTitle: dashboard.youMayLikeProduct!.viewAll!, product: mYouMayLikeProductModel,onTap: () => ViewAllScreen(dashboard.youMayLikeProduct!.title,  isSpecialProduct: true, specialProduct: "you_may_like").launch(context));
 
     final Widget body = ListView(
       shrinkWrap: true,

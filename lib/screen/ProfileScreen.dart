@@ -213,7 +213,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                 trailing: Transform.scale(
                   scale: 0.8,
                   child: CupertinoSwitch(
-                    activeColor: primaryColor,
+                    activeTrackColor: primaryColor,
                     value: appStore.isNotificationOn,
                     onChanged: (v) {
                       appStore.setNotification(v);
@@ -248,3 +248,4 @@ class ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+

@@ -112,3 +112,4 @@ class BlogListScreenState extends State<BlogListScreen> {
     );
   }
 }
+

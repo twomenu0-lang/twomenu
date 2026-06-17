@@ -130,3 +130,4 @@ Widget mVendorWidget(BuildContext context, List<VendorResponse> mVendorModel, va
         )
       : SizedBox();
 }
+

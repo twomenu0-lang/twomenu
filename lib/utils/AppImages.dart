@@ -54,3 +54,4 @@ const ic_christmas_product_bg = "images/mightystore/Christmas/product.jpg";
 const ic_christmas_gift = "images/mightystore/Christmas/gift.gif";
 const ic_christmas_tag = "images/mightystore/Christmas/tag.png";
 const ic_christmas_categories = "images/mightystore/Christmas/frame 02.png";
+

@@ -95,3 +95,4 @@ class _LayoutSelectionCategoryState extends State<LayoutSelectionCategory> {
     );
   }
 }
+

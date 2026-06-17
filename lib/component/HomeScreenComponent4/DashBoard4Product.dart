@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '/../models/ProductResponse.dart';
-import '/../utils/ProductWishListExtension.dart';
-import '/../utils/AppWidget.dart';
-import '/../utils/AppImages.dart';
 import 'package:nb_utils/nb_utils.dart';
+
+import '/../models/ProductResponse.dart';
+import '/../utils/AppImages.dart';
+import '/../utils/AppWidget.dart';
+import '/../utils/ProductWishListExtension.dart';
 
 class DashBoard4Product extends StatefulWidget {
   static String tag = '/Product';
@@ -34,7 +35,6 @@ class ProductState extends State<DashBoard4Product> {
 
   @override
   Widget build(BuildContext context) {
-
     String? img = widget.mProductModel!.images!.isNotEmpty ? widget.mProductModel!.images!.first.src : '';
 
     return GestureDetector(
@@ -66,18 +66,19 @@ class ProductState extends State<DashBoard4Product> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(widget.mProductModel!.name, style: primaryTextStyle(color: white), maxLines: 1),
+                        // ✅ تم التعديل هنا باستخدام .validate() لمنع أخطاء الـ Null Safety والأنواع
+                        Text(widget.mProductModel!.name.validate(), style: primaryTextStyle(color: white), maxLines: 1),
                         4.height,
                         Row(
                           children: [
                             PriceWidget(
                               price: widget.mProductModel!.onSale == true
                                   ? widget.mProductModel!.salePrice.validate().isNotEmpty
-                                      ? double.parse(widget.mProductModel!.salePrice.toString()).toStringAsFixed(2)
-                                      : double.parse(widget.mProductModel!.price.validate()).toStringAsFixed(2)
+                                  ? double.parse(widget.mProductModel!.salePrice.toString()).toStringAsFixed(2)
+                                  : double.parse(widget.mProductModel!.price.validate()).toStringAsFixed(2)
                                   : widget.mProductModel!.regularPrice!.isNotEmpty
-                                      ? double.parse(widget.mProductModel!.regularPrice.validate().toString()).toStringAsFixed(2)
-                                      : double.parse(widget.mProductModel!.price.validate().toString()).toStringAsFixed(2),
+                                  ? double.parse(widget.mProductModel!.regularPrice.validate().toString()).toStringAsFixed(2)
+                                  : double.parse(widget.mProductModel!.price.validate().toString()).toStringAsFixed(2),
                               size: 14,
                               color: white,
                             ),

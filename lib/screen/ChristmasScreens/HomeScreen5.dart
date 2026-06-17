@@ -10,6 +10,7 @@ import '/../models/ProductResponse.dart';
 import '/../screen/SearchScreen.dart';
 import '/../screen/ViewAllScreen.dart';
 import '/../screen/WebViewExternalProductScreen.dart';
+import '/../screen/SmartCategoryScreen.dart'; // ✅ إضافة الـ import للشاشة الذكية هنا أيضاً
 import '/../utils/AppWidget.dart';
 import '/../utils/Colors.dart';
 import '/../utils/Common.dart';
@@ -45,9 +46,8 @@ class HomeScreen5State extends State<HomeScreen5> {
   void init() {
     afterBuildCreated(() async {
       appStore.setLoading(true);
-      setValue(CARTCOUNT, appStore.count); // ✅ fire & forget
+      setValue(CARTCOUNT, appStore.count);
 
-      // ✅ تحميل بالتوازي
       await Future.wait([
         fetchDashboardData(),
         fetchCategoryData(),
@@ -61,7 +61,7 @@ class HomeScreen5State extends State<HomeScreen5> {
   @override
   void dispose() {
     bannerPageController.dispose();
-    saleBannerPageController.dispose(); // ✅ كان ناقص في النسخة القديمة
+    saleBannerPageController.dispose();
     super.dispose();
   }
 
@@ -98,7 +98,7 @@ class HomeScreen5State extends State<HomeScreen5> {
                 children: [
                   HorizontalList(
                     padding: const EdgeInsets.only(left: 12, right: 12),
-                    itemCount: product.length.clamp(0, 6), // ✅ clamp
+                    itemCount: product.length.clamp(0, 6),
                     itemBuilder: (context, i) {
                       return DashBoard5Product(
                         mProductModel: product[i],
@@ -128,7 +128,7 @@ class HomeScreen5State extends State<HomeScreen5> {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // CATEGORY — مع commonCacheImageWidget بدل NetworkImage
+  // CATEGORY
   // ─────────────────────────────────────────────────────────────
   Widget _category(BuildContext context, AppLocalizations appLocalization) {
     if (mCategoryModel.isEmpty) return const SizedBox.shrink();
@@ -159,7 +159,11 @@ class HomeScreen5State extends State<HomeScreen5> {
             itemBuilder: (context, index) {
               final cat = mCategoryModel[index];
               return GestureDetector(
-                onTap: () => ViewAllScreen(cat.name, isCategory: true, categoryId: cat.id).launch(context),
+                // ✅ التوجيه الذكي بدلاً من شاشة عرض الكل مباشرة
+                onTap: () => SmartCategoryScreen(
+                  categoryName: cat.name,
+                  categoryId: cat.id,
+                ).launch(context),
                 child: Column(
                   children: [
                     Container(
@@ -169,7 +173,6 @@ class HomeScreen5State extends State<HomeScreen5> {
                       decoration: BoxDecoration(
                         image: DecorationImage(image: AssetImage(ic_christmas_categories)),
                       ),
-                      // ✅ commonCacheImageWidget بدل NetworkImage مباشرة في CircleAvatar
                       child: cat.image != null
                           ? CircleAvatar(
                         backgroundColor: context.cardColor,
@@ -335,7 +338,6 @@ class HomeScreen5State extends State<HomeScreen5> {
       );
     }
 
-    // ✅ Section widgets — كل واحدة بتاخد الـ product الصح
     Widget newProduct()     => DashboardComponent5(title: dashboard.newProduct!.title!,        subTitle: dashboard.newProduct!.viewAll!,        product: mNewestProductModel,    onTap: () => ViewAllScreen(dashboard.newProduct!.title,        isNewest: true).launch(context));
     Widget featureProduct() => DashboardComponent5(title: dashboard.featureProduct!.title!,    subTitle: dashboard.featureProduct!.viewAll!,    product: mFeaturedProductModel,  onTap: () => ViewAllScreen(dashboard.featureProduct!.title,    isFeatured: true).launch(context));
     Widget bestSelling()    => DashboardComponent5(title: dashboard.bestSaleProduct!.title!,   subTitle: dashboard.bestSaleProduct!.viewAll!,   product: mSellingProductModel,   onTap: () => ViewAllScreen(dashboard.bestSaleProduct!.title,   isBestSelling: true).launch(context));

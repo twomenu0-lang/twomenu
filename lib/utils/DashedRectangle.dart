@@ -102,3 +102,4 @@ class DashRectPainter extends CustomPainter {
     return true;
   }
 }
+

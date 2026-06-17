@@ -35,6 +35,7 @@ class ProductDetailScreen1 extends StatefulWidget {
 
 class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
   ProductDetailResponse? productDetailNew;
+  ProductDetailResponse? mainProduct; // المنتج الرئيسي
 
   List<ProductDetailResponse> mProducts      = [];
   List<ProductReviewModel>    mReviewModel   = [];
@@ -116,6 +117,7 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
       if (mProducts.isEmpty) return;
 
       productDetailNew = mProducts[0];
+      mainProduct = mProducts[0]; // احفظ المنتج الرئيسي
       rating = double.tryParse(mProducts[0].averageRating ?? '0') ?? 0.0;
 
       // Variations IDs
@@ -450,7 +452,7 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        decoration: boxDecorationWithRoundedCorners(borderRadius: radius(8), backgroundColor: Theme.of(context).colorScheme.background),
+                        decoration: boxDecorationWithRoundedCorners(borderRadius: radius(8), backgroundColor: Theme.of(context).colorScheme.surface),
                         child: commonCacheImageWidget(ups[i].images!.first.src, height: 150, width: w, fit: BoxFit.cover).cornerRadiusWithClipRRect(8),
                       ),
                       4.height,
@@ -843,19 +845,19 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
               mUpcomingSale().visible(!productDetailNew!.onSale!),
 
               // Description
-              if (productDetailNew!.description!.isNotEmpty) ...[
+              if ((mainProduct?.description?.isNotEmpty == true ? mainProduct!.description : productDetailNew!.description)!.isNotEmpty) ...[
                 Divider(thickness: 6, color: dividerColor),
                 Text(appLocalization.translate('lbl_product_details')!, style: boldTextStyle()).paddingOnly(top: 4, left: 16, right: 16),
-                HtmlWidget(postContent: productDetailNew!.description).paddingOnly(left: 10),
+                HtmlWidget(postContent: (mainProduct?.description?.isNotEmpty == true ? mainProduct!.description : productDetailNew!.description)).paddingOnly(left: 10),
               ],
 
               if (productDetailNew!.attributes != null) _mSetAttribute().paddingBottom(8),
 
               // Short description
-              if (productDetailNew!.shortDescription.toString().isNotEmpty) ...[
+              if ((mainProduct?.shortDescription?.isNotEmpty == true ? mainProduct!.shortDescription : productDetailNew!.shortDescription).toString().isNotEmpty) ...[
                 Divider(thickness: 6, color: dividerColor),
                 Text(appLocalization.translate('lbl_short_description')!, style: boldTextStyle()).paddingOnly(top: 4, left: 16, right: 16),
-                HtmlWidget(postContent: productDetailNew!.shortDescription).paddingOnly(left: 10, right: 16),
+                HtmlWidget(postContent: (mainProduct?.shortDescription?.isNotEmpty == true ? mainProduct!.shortDescription : productDetailNew!.shortDescription)).paddingOnly(left: 10, right: 16),
               ],
 
               // Categories
@@ -869,7 +871,7 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
                       padding: const EdgeInsets.all(8),
                       decoration: boxDecorationWithRoundedCorners(
                         borderRadius: radius(8),
-                        backgroundColor: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).colorScheme.background,
+                        backgroundColor: appStore.isDarkMode! ? white.withOpacity(0.2) : Theme.of(context).colorScheme.surface,
                       ),
                       child: Text(e.name!, style: secondaryTextStyle()),
                     ).onTap(() => ViewAllScreen(e.name, isCategory: true, categoryId: e.id).launch(context));

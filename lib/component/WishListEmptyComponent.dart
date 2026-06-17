@@ -55,3 +55,4 @@ class WishListEmptyComponentState extends State<WishListEmptyComponent> {
     );
   }
 }
+
