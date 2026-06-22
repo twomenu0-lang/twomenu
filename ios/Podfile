@@ -1,5 +1,7 @@
 platform :ios, '14.0'
 
+# ✅ هذا السطر يوقف SPM تماماً
+ENV['SWIFT_PACKAGE_MANAGER_ENABLED'] = 'false'
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
 project 'Runner', {
@@ -31,12 +33,9 @@ target 'Runner' do
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
-# ✅ الإصلاح: inherit الـ pods من Runner بدل إعادة إضافة OneSignal
 target 'OneSignalNotificationServiceExtension' do
   use_frameworks!
   pod 'OneSignalXCFramework', '>= 5.0.0', '< 6.0'
-
-  # ⬇️ هذا السطر هو المفتاح — يمنع نسخ الـ frameworks مرتين
   inherit! :search_paths
 end
 
