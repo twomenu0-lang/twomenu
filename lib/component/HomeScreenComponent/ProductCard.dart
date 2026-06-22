@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../main.dart'; // ✅ إضافة مسار الـ main للوصول لـ cartStore
@@ -17,6 +18,14 @@ import '../../utils/ProductWishListExtension.dart';
 /// • ضغط الصورة/الاسم          ← فتح صفحة المنتج
 /// • ضغط "أضف للسلة" + بسيط    ← إضافة فورية + تأثير ✓ أخضر (الـ Toast من الـ Store)
 /// • ضغط "أضف للسلة" + خيارات  ← Bottom Sheet لاختيار Options
+/// • الزرار بيعكس حالة السلة الحقيقية دايمًا (مش حالة مؤقتة محلية):
+///     - المنتج مش في السلة  → "أضف للسلة" (أزرق)
+///     - لسه واصل توه         → "تمت الإضافة" (أخضر + ✓ متحرك) لمدة ~1.2 ثانية
+///     - المنتج في السلة فعلاً → "✓ في السلة" (أخضر ثابت) لحد ما يتشال
+///
+/// العرض:
+/// • isListView = false (افتراضي) ← كارت شبكة (Grid) — صورة فوق، البيانات تحتها
+/// • isListView = true            ← كارت قائمة (List) — صورة يمين/يسار، البيانات جنبها
 /// ─────────────────────────────────────────────────────────────
 class ProductCard extends StatefulWidget {
   static String tag = '/ProductCard';
@@ -26,6 +35,7 @@ class ProductCard extends StatefulWidget {
   final String? badgeText;
   final String? bestSellerText;
   final VoidCallback? onAddTap;
+  final bool isListView;
 
   const ProductCard({
     super.key,
@@ -34,6 +44,7 @@ class ProductCard extends StatefulWidget {
     this.badgeText,
     this.bestSellerText,
     this.onAddTap,
+    this.isListView = false,
   });
 
   @override
@@ -42,8 +53,8 @@ class ProductCard extends StatefulWidget {
 
 class _ProductCardState extends State<ProductCard>
     with SingleTickerProviderStateMixin {
-  bool _isAddPressed = false;
-  bool _addedToCart = false;
+  /// ✅ ومضة التأكيد المؤقتة فقط ("تمت الإضافة") — مش مصدر الحقيقة لحالة السلة
+  bool _justAdded = false;
 
   late final AnimationController _checkController;
   late final Animation<double> _checkAnim;
@@ -98,11 +109,20 @@ class _ProductCardState extends State<ProductCard>
 
   String get _oldPrice => _safePrice(widget.mProductModel!.regularPrice);
 
-  /// ✅ بناء الـ CartModel من الـ ProductResponse الحالي
+  /// ✅ هل المنتج ده فعلاً موجود في السلة دلوقتي؟ — مصدر الحقيقة الوحيد لحالة الزرار الدائمة
+  bool get _isInCart {
+    final id = widget.mProductModel?.id;
+    if (id == null) return false;
+    return cartStore.isItemInCart(id);
+  }
+
+  /// ✅ التعديل الثاني: استخدام الـ thumbnail لبناء الـ CartModel لتسريع السلة أيضاً
   CartModel _buildCartModel(ProductResponse product,
       {int quantity = 1, String? nameOverride}) {
     final images = product.images ?? [];
-    final firstImage = images.isNotEmpty ? (images.first.src ?? '') : '';
+    final firstImage = images.isNotEmpty
+        ? (images.first.thumbnail ?? images.first.src ?? '')
+        : '';
 
     return CartModel(
       proId: product.id,
@@ -119,7 +139,7 @@ class _ProductCardState extends State<ProductCard>
       stockQuantity: product.stockQuantity,
       stockStatus: product.inStock == false ? 'outofstock' : 'instock',
       thumbnail: firstImage,
-      full: firstImage,
+      full: images.isNotEmpty ? (images.first.src ?? '') : '',
       gallery: images.map((e) => e.src ?? '').toList(),
       createdAt: DateTime.now().toIso8601String(),
       quantity: quantity.toString(),
@@ -140,29 +160,39 @@ class _ProductCardState extends State<ProductCard>
 
     final product = widget.mProductModel!;
 
+    // ✅ المنتج البسيط: لو مش في السلة → ضيفه. لو موجود فعلاً → شيله.
+    // (cartStore.addToMyCart بتعمل toggle داخليًا أصلاً، فإحنا بس بنستدعيها
+    // ومنسيب الواجهة تتابع _isInCart الحقيقي بدل ما نخمّن الحالة محليًا)
     if (_isVariableOrGrouped) {
       _showVariationSheet(product);
-    } else {
-      _addSimpleProductToCart(product);
+      return;
     }
+
+    final wasInCart = _isInCart;
+    _addOrRemoveSimpleProduct(product, wasInCart);
   }
 
   /// ✅ ربط الـ Simple Product بالسلة الحقيقية عبر الـ Store ومزامنة الـ Caching
-  void _addSimpleProductToCart(ProductResponse product) async {
+  void _addOrRemoveSimpleProduct(ProductResponse product, bool wasInCart) async {
     final cartModel = _buildCartModel(product);
 
-    setState(() => _addedToCart = true);
-    _checkController.forward(from: 0);
+    // الومضة الخضراء "تمت الإضافة" تظهر بس لما إحنا فعلاً بنضيف (مش بنشيل)
+    if (!wasInCart) {
+      setState(() => _justAdded = true);
+      _checkController.forward(from: 0);
+    }
 
-    // استدعاء الأكشن الأصلي المسؤول عن الإضافة والـ Toggle وحفظ البيانات محلياً
+    // استدعاء الأكشن الأصلي المسؤول عن الإضافة/الحذف (toggle) وحفظ البيانات محلياً
     await cartStore.addToMyCart(cartModel);
 
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() => _addedToCart = false);
-        _checkController.reverse();
-      }
-    });
+    if (!wasInCart) {
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted) {
+          setState(() => _justAdded = false);
+          _checkController.reverse();
+        }
+      });
+    }
   }
 
   void _showVariationSheet(ProductResponse product) {
@@ -183,8 +213,9 @@ class _ProductCardState extends State<ProductCard>
     final product = widget.mProductModel;
     if (product == null) return const SizedBox.shrink();
 
+    // ✅ التعديل الأول: جلب رابط الصورة المصغرة thumbnail لعرض كروت المنتجات الرئيسية
     final String img = (product.images ?? []).isNotEmpty
-        ? (product.images!.first.src ?? '')
+        ? (product.images!.first.thumbnail ?? product.images!.first.src ?? '')
         : '';
 
     return GestureDetector(
@@ -192,7 +223,57 @@ class _ProductCardState extends State<ProductCard>
       child: Semantics(
         label: product.name ?? '',
         button: true,
-        child: Container(
+        child: widget.isListView
+            ? _buildListCard(context, product, img)
+            : _buildGridCard(context, product, img),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // GRID CARD (الشكل الحالي — بدون أي تعديل)
+  // ─────────────────────────────────────────────────────────
+
+  Widget _buildGridCard(
+      BuildContext context, ProductResponse product, String img) {
+    return Container(
+      width: widget.width,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(kCardRadius),
+        boxShadow: kFloatingShadow(
+          opacity: 0.05,
+          blur: 14,
+          offset: const Offset(0, 6),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _imageStack(context, product, img),
+          8.height,
+          _title(product),
+          _shortDesc(product),
+          6.height,
+          if (!_isVariableOrGrouped) _priceRow(),
+          8.height,
+          _addButton(),
+        ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // LIST CARD (الشكل الجديد المطلوب)
+  // ─────────────────────────────────────────────────────────
+
+  Widget _buildListCard(
+      BuildContext context, ProductResponse product, String img) {
+    return Stack(
+      children: [
+        Container(
           width: widget.width,
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
@@ -204,22 +285,49 @@ class _ProductCardState extends State<ProductCard>
               offset: const Offset(0, 6),
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _imageStack(context, product, img),
-              8.height,
-              _title(product),
-              _shortDesc(product),
-              6.height,
-              if (!_isVariableOrGrouped) _priceRow(),
-              8.height,
-              _addButton(),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: commonCacheImageWidget(
+                      img,
+                      height: 92,
+                      width: 92,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  mSale(product),
+                ],
+              ),
+              10.width,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    4.height,
+                    _title(product, maxLines: 2),
+                    _shortDesc(product),
+                    6.height,
+                    if (!_isVariableOrGrouped) _priceRow(),
+                    8.height,
+                    _addButton(),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
-      ),
+        PositionedDirectional(
+          top: 4,
+          end: 8,
+          child: ProductWishListExtension(mProductModel: product),
+        ),
+      ],
     );
   }
 
@@ -270,11 +378,11 @@ class _ProductCardState extends State<ProductCard>
     );
   }
 
-  Widget _title(ProductResponse product) {
+  Widget _title(ProductResponse product, {int maxLines = 1}) {
     return Text(
       product.name.validate(),
       style: boldTextStyle(size: 13),
-      maxLines: 1,
+      maxLines: maxLines,
       overflow: TextOverflow.ellipsis,
     );
   }
@@ -326,76 +434,95 @@ class _ProductCardState extends State<ProductCard>
     );
   }
 
-  /// الزر — يتحول أخضر ✓ بعد الإضافة، ويُظهر "اختر خياراتك" للـ variable
+  /// ✅ الزرار — بيتابع حالة السلة الحقيقية عن طريق Observer (MobX)
+  /// بدل ما يعتمد على متغير محلي بيرجع لأصله بعد ثانيتين.
+  ///
+  /// الحالات:
+  /// 1) منتج فيه خيارات (variable/grouped)  → "اختر خياراتك" دايمًا (أزرق)
+  /// 2) لسه واصل توه (_justAdded = true)     → "تمت الإضافة" + ✓ متحرك (أخضر، ~1.2 ثانية)
+  /// 3) موجود في السلة فعلاً (_isInCart)      → "✓ في السلة" (أخضر ثابت لحد ما يتشال)
+  /// 4) مش موجود في السلة                    → "أضف للسلة" (أزرق)
   Widget _addButton() {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isAddPressed = true),
-      onTapUp: (_) {
-        setState(() => _isAddPressed = false);
-        _handleAddTap();
-      },
-      onTapCancel: () => setState(() => _isAddPressed = false),
-      child: AnimatedScale(
-        scale: _isAddPressed ? 0.93 : 1.0,
-        duration: const Duration(milliseconds: 100),
-        curve: Curves.easeOut,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          decoration: BoxDecoration(
-            color: _addedToCart ? Colors.green.shade600 : kBrandPrimary,
-            borderRadius: BorderRadius.circular(kPillRadius),
-            boxShadow: [
-              BoxShadow(
-                color: (_addedToCart ? Colors.green : kBrandPrimary)
-                    .withValues(alpha: _isAddPressed ? 0.15 : 0.28),
-                blurRadius: _isAddPressed ? 4 : 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 9),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: _addedToCart
-                    ? [
-                  ScaleTransition(
-                    scale: _checkAnim,
-                    child: const Icon(Icons.check_rounded,
-                        color: Colors.white, size: 18),
+    return Observer(
+      builder: (_) {
+        final inCart = _isInCart;
+        final showGreen = _justAdded || (inCart && !_isVariableOrGrouped);
+
+        return GestureDetector(
+          onTap: _handleAddTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            decoration: BoxDecoration(
+              color: showGreen ? Colors.green.shade600 : kBrandPrimary,
+              borderRadius: BorderRadius.circular(kPillRadius),
+              boxShadow: [
+                BoxShadow(
+                  color: (showGreen ? Colors.green : kBrandPrimary)
+                      .withValues(alpha: 0.22),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(kPillRadius),
+                onTap: _handleAddTap,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 9),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: _buildButtonContent(inCart),
                   ),
-                  4.width,
-                  Text('تمت الإضافة',
-                      style:
-                      boldTextStyle(size: 12, color: Colors.white)),
-                ]
-                    : [
-                  Text(
-                    _isVariableOrGrouped
-                        ? 'اختر خياراتك'
-                        : 'أضف للسلة',
-                    style:
-                    boldTextStyle(size: 13, color: Colors.white),
-                  ),
-                  4.width,
-                  Icon(
-                    _isVariableOrGrouped
-                        ? Icons.tune_rounded
-                        : Icons.add_shopping_cart_rounded,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
+  }
+
+  List<Widget> _buildButtonContent(bool inCart) {
+    // منتج فيه خيارات → دايمًا "اختر خياراتك"، الزرار ده بيفتح Bottom Sheet بس
+    if (_isVariableOrGrouped) {
+      return [
+        Text('اختر خياراتك', style: boldTextStyle(size: 13, color: Colors.white)),
+        4.width,
+        const Icon(Icons.tune_rounded, color: Colors.white, size: 16),
+      ];
+    }
+
+    // ومضة التأكيد المؤقتة لسه شغالة
+    if (_justAdded) {
+      return [
+        ScaleTransition(
+          scale: _checkAnim,
+          child: const Icon(Icons.check_rounded, color: Colors.white, size: 18),
+        ),
+        4.width,
+        Text('تمت الإضافة', style: boldTextStyle(size: 12, color: Colors.white)),
+      ];
+    }
+
+    // الحالة الدائمة: المنتج فعلاً في السلة
+    if (inCart) {
+      return [
+        const Icon(Icons.check_circle_rounded, color: Colors.white, size: 16),
+        4.width,
+        Text('في السلة', style: boldTextStyle(size: 12, color: Colors.white)),
+      ];
+    }
+
+    // الحالة الافتراضية: مش في السلة
+    return [
+      Text('أضف للسلة', style: boldTextStyle(size: 13, color: Colors.white)),
+      4.width,
+      const Icon(Icons.add_shopping_cart_rounded, color: Colors.white, size: 16),
+    ];
   }
 }
 
@@ -444,13 +571,15 @@ class _VariationBottomSheetState extends State<_VariationBottomSheet> {
         : (product.name ?? '');
   }
 
-  // ✅ إضافة المنتج المتعدد الخيارات للسلة الحقيقية
+  // ✅ التعديل الثالث: إضافة خيار الـ thumbnail للمنتجات المتعددة عند الرفع للسلة
   void _addToCart() async {
     HapticFeedback.mediumImpact();
 
     final product = widget.product;
     final images = product.images ?? [];
-    final firstImage = images.isNotEmpty ? (images.first.src ?? '') : '';
+    final firstImage = images.isNotEmpty
+        ? (images.first.thumbnail ?? images.first.src ?? '')
+        : '';
 
     final cartModel = CartModel(
       proId: product.id,
@@ -467,7 +596,7 @@ class _VariationBottomSheetState extends State<_VariationBottomSheet> {
       stockQuantity: product.stockQuantity,
       stockStatus: product.inStock == false ? 'outofstock' : 'instock',
       thumbnail: firstImage,
-      full: firstImage,
+      full: images.isNotEmpty ? (images.first.src ?? '') : '',
       gallery: images.map((e) => e.src ?? '').toList(),
       createdAt: DateTime.now().toIso8601String(),
       quantity: '1',
@@ -518,7 +647,8 @@ class _VariationBottomSheetState extends State<_VariationBottomSheet> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: commonCacheImageWidget(
-                    product.images!.first.src ?? '',
+                    // ✅ التعديل الرابع: استخدام الـ thumbnail لرأس الـ Sheet المنبثقة للخيارات المتعددة
+                    product.images!.first.thumbnail ?? product.images!.first.src ?? '',
                     width: 64,
                     height: 64,
                     fit: BoxFit.cover,

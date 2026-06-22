@@ -105,8 +105,9 @@ class MyCartScreenState extends State<MyCartScreen> {
                 Text(appLocalization.translate('lbl_price_detail')!,
                     style: boldTextStyle()),
                 2.width,
+                // ✅ تم التعديل هنا: استخدام الترجمة الديناميكية مع الـ String Interpolation
                 Text(
-                  "(" + cartStore.cartList.length.toString() + " Items)",
+                  "(${cartStore.cartList.length} ${appLocalization.translate('lbl_items')})",
                   style: boldTextStyle(),
                 ),
               ],

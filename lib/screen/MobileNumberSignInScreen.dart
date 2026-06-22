@@ -162,7 +162,14 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
       await setValue(BILLING, jsonEncode(res['billing']));
       await setValue(SHIPPING, jsonEncode(res['shipping']));
       await setValue(IS_SOCIAL_LOGIN, true);
-      await setValue(IS_LOGGED_IN, true);
+      // ✅ تصحيح جوهري: نفس مشكلة SignUpScreen.dart بالضبط — كان الكود
+      // بيكتب setValue(IS_LOGGED_IN, true) في SharedPreferences فقط، من
+      // غير ما يحدّث appStore.isLoggedIn (الـ observable اللي شاشات
+      // السلة/الحساب بترصده عن طريق Observer()). النتيجة: بعد تسجيل
+      // الدخول بالهاتف بنجاح، الواجهة كانت تفضل تعرض المستخدم كـ "ضيف"
+      // إلى أن يتم إغلاق التطبيق بالكامل وإعادة فتحه من جديد.
+      // appStore.setLoggedIn() بتحدّث الـ observable والتخزين مع بعض.
+      appStore.setLoggedIn(true);
       appStore.setLoading(false);
       DashBoardScreen().launch(context, isNewTask: true);
     }).catchError((error) {

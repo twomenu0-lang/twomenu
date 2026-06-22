@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:share_plus/share_plus.dart'; // ✅ أضف هذا في pubspec.yaml: share_plus: ^7.0.0
+import 'package:share_plus/share_plus.dart';
 import '/../main.dart';
 import '/../models/OrderModel.dart';
 import '/../models/OrderTracking.dart';
@@ -39,17 +39,17 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   static const String _storeEmail = 'info@twomenu.shop';
   static const String _waNumber   = '201036363282';
 
-  // ── أسباب الإلغاء بالعربي ────────────────────────────────────────────────
-  final List<String> mCancelList = [
-    'العنوان المدخل غير صحيح',
-    'لم أعد بحاجة للمنتج',
-    'وجدت بديلاً بسعر أفضل',
-    'انخفض سعر المنتج بعد الطلب',
-    'تقييمات سلبية من الأصدقاء',
-    'تم الطلب بشكل خاطئ',
+  // ── مفاتيح أسباب الإلغاء (تطابق lbl_cancel1 … lbl_cancel6) ────────────────
+  final List<String> mCancelKeys = [
+    'lbl_cancel1',
+    'lbl_cancel2',
+    'lbl_cancel3',
+    'lbl_cancel4',
+    'lbl_cancel5',
+    'lbl_cancel6',
   ];
 
-  String? mValue;
+  String? mValue; // سيتم ضبطها بالقيمة المترجمة لاحقاً
   String? deliveryDate = "";
 
   @override
@@ -60,7 +60,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   init() async {
-    mValue = mCancelList.first;
+    // ضبط القيمة الافتراضية لأول سبب مترجم
+    mValue = AppLocalizations.of(context)!.translate(mCancelKeys.first);
     await _refreshOrder();
     fetchTrackingData();
     getTracking();
@@ -88,13 +89,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         _isRefreshing = false;
       });
       if (showFeedback) {
-        toast('تم تحديث حالة الطلب بنجاح ✓');
+        toast(AppLocalizations.of(context)!.translate('msg_order_updated_success')!);
       }
     } catch (e) {
       if (!mounted) return;
       setState(() => _isRefreshing = false);
       if (showFeedback) {
-        toast('تعذّر تحديث الطلب، تحقق من الاتصال');
+        toast(AppLocalizations.of(context)!.translate('msg_order_update_failed')!);
       }
     }
   }
@@ -156,42 +157,46 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   // ── ✅ مشاركة تفاصيل الطلب ────────────────────────────────────────────────
   Future<void> _shareOrder() async {
+    final loc = AppLocalizations.of(context)!;
     final order   = _currentOrder;
     final orderId = order?.id?.toString() ?? '';
-    final status  = _statusLabel(order?.status);
+    final status  = _statusLabel(context, order?.status);
     final total   = order?.total ?? '0';
     final date    = order?.dateCreated != null
-        ? createDateFormat(order!.dateCreated)
+        ? createDateFormat(order!.dateCreated,
+        locale: Localizations.localeOf(context).languageCode)
         : '';
     final itemNames = (order?.lineItems ?? [])
-        .map((i) => '• ${i.name ?? ''} (الكمية: ${i.quantity ?? 0})')
+        .map((i) => '• ${i.name ?? ''} (${loc.translate('lbl_qty')!}: ${i.quantity ?? 0})')
         .join('\n');
 
-    final text = '''
-تفاصيل الطلب #$orderId
-────────────────────
-📅 التاريخ: $date
-📦 الحالة: $status
-🛒 المنتجات:
-$itemNames
-💰 الإجمالي: EGP $total
-────────────────────
-للاستفسار تواصل معنا على واتساب:
-https://wa.me/$_waNumber
-'''.trim();
+    final text = loc.translate('msg_share_order_text', {
+      'order_id': orderId,
+      'date': date,
+      'status': status,
+      'items': itemNames,
+      'total': total,
+      'wa_number': _waNumber,
+    })!;
 
-    await Share.share(text, subject: 'تفاصيل الطلب #$orderId');
+    await Share.share(
+      text,
+      subject: loc.translate('msg_share_order_subject', {'order_id': orderId}),
+    );
   }
 
   // ── URL launchers ─────────────────────────────────────────────────────────
   Future<void> _openWhatsApp() async {
+    final loc = AppLocalizations.of(context)!;
     final orderId = _currentOrder?.id?.toString() ?? '';
-    final msg = Uri.encodeComponent('مرحباً، أريد الاستفسار عن طلبي رقم #$orderId');
+    final msg = Uri.encodeComponent(
+      loc.translate('msg_whatsapp_inquiry', {'order_id': orderId})!,
+    );
     final uri = Uri.parse('https://wa.me/$_waNumber?text=$msg');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      toast('تعذّر فتح واتساب');
+      toast(loc.translate('msg_whatsapp_failed')!);
     }
   }
 
@@ -228,16 +233,17 @@ https://wa.me/$_waNumber
     }
   }
 
-  String _statusLabel(String? status) {
+  String _statusLabel(BuildContext context, String? status) {
+    final loc = AppLocalizations.of(context)!;
     switch (status) {
-      case 'processing': return 'تم استلام الطلب وجاري التجهيز';
-      case 'shipped':    return 'تم الشحن — الطلب في الطريق إليك';
-      case 'completed':  return 'تم التسليم بنجاح';
-      case 'on-hold':    return 'قيد الانتظار';
-      case 'cancelled':  return 'ملغي';
-      case 'pending':    return 'في انتظار الدفع';
-      case 'refunded':   return 'تم الاسترداد';
-      case 'failed':     return 'فشل الطلب';
+      case 'processing': return loc.translate('lbl_status_processing')!;
+      case 'shipped':    return loc.translate('lbl_status_shipped')!;
+      case 'completed':  return loc.translate('lbl_status_completed')!;
+      case 'on-hold':    return loc.translate('lbl_status_on_hold')!;
+      case 'cancelled':  return loc.translate('lbl_cancelled')!;
+      case 'pending':    return loc.translate('lbl_status_pending')!;
+      case 'refunded':   return loc.translate('lbl_status_refunded')!;
+      case 'failed':     return loc.translate('lbl_status_failed')!;
       default:           return (status ?? '').toUpperCase();
     }
   }
@@ -253,11 +259,12 @@ https://wa.me/$_waNumber
   }
 
   Widget _buildProgressTracker() {
+    final loc = AppLocalizations.of(context)!;
     final steps = [
-      {'icon': Icons.receipt_long_outlined,   'label': 'تم الطلب'},
-      {'icon': Icons.inventory_2_outlined,    'label': 'جاري التجهيز'},
-      {'icon': Icons.local_shipping_outlined, 'label': 'تم الشحن'},
-      {'icon': Icons.home_outlined,           'label': 'تم التسليم'},
+      {'icon': Icons.receipt_long_outlined,   'label': loc.translate('lbl_ordered')!},
+      {'icon': Icons.inventory_2_outlined,    'label': loc.translate('lbl_processing')!},
+      {'icon': Icons.local_shipping_outlined, 'label': loc.translate('lbl_shipped')!},
+      {'icon': Icons.home_outlined,           'label': loc.translate('lbl_delivered')!}, // مفتاح جديد
     ];
     final current = _currentStep(_currentOrder?.status);
 
@@ -344,51 +351,58 @@ https://wa.me/$_waNumber
   }
 
   void _showCancelDialog(AppLocalizations loc) {
+    final cancelReasons = mCancelKeys.map((key) => loc.translate(key)!).toList();
     showDialog(
       context: context,
       builder: (_) => StatefulBuilder(
-        builder: (ctx, ss) => AlertDialog(
-          backgroundColor: Theme.of(context).cardTheme.color,
-          title: Text('إلغاء الطلب', style: boldTextStyle()),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              16.height,
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(6),
-                decoration: boxDecorationWithRoundedCorners(
-                  borderRadius: radius(8),
-                  backgroundColor: Theme.of(context).colorScheme.surface,
+        builder: (ctx, ss) {
+          // التأكد من أن القيمة المختارة حالياً ما زالت موجودة في القائمة
+          if (!cancelReasons.contains(mValue)) {
+            mValue = cancelReasons.first;
+          }
+          return AlertDialog(
+            backgroundColor: Theme.of(context).cardTheme.color,
+            title: Text(loc.translate('lbl_cancel_order')!, style: boldTextStyle()),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                16.height,
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(6),
+                  decoration: boxDecorationWithRoundedCorners(
+                    borderRadius: radius(8),
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                  ),
+                  child: DropdownButton<String>(
+                    value: mValue,
+                    isExpanded: true,
+                    underline: SizedBox(),
+                    dropdownColor: Theme.of(context).cardTheme.color,
+                    onChanged: (v) => ss(() => mValue = v),
+                    items: cancelReasons
+                        .map((e) => DropdownMenuItem(
+                      value: e,
+                      child: Text(e, style: primaryTextStyle()),
+                    ))
+                        .toList(),
+                  ),
                 ),
-                child: DropdownButton<String>(
-                  value: mValue,
-                  isExpanded: true,
-                  underline: SizedBox(),
-                  dropdownColor: Theme.of(context).cardTheme.color,
-                  onChanged: (v) => ss(() => mValue = v),
-                  items: mCancelList
-                      .map((e) => DropdownMenuItem(
-                    value: e,
-                    child: Text(e, style: primaryTextStyle()),
-                  ))
-                      .toList(),
+                20.height,
+                AppButton(
+                  width: context.width(),
+                  textStyle: primaryTextStyle(color: white),
+                  text: loc.translate('lbl_confirm_cancel')!, // مفتاح جديد
+                  color: primaryColor,
+                  onTap: () {
+                    finish(context);
+                    cancelOrderData(mValue);
+                  },
                 ),
-              ),
-              20.height,
-              AppButton(
-                width: context.width(),
-                textStyle: primaryTextStyle(color: white),
-                text: 'تأكيد الإلغاء',
-                color: primaryColor,
-                onTap: () {
-                  finish(context);
-                  cancelOrderData(mValue);
-                },
-              ),
-            ],
-          ),
-        ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -408,6 +422,21 @@ https://wa.me/$_waNumber
         order?.status != TRASH &&
         order?.status != FAILED;
 
+    // إعداد النصوص المساعدة
+    final statusText = _statusLabel(context, order?.status);
+    final statusSubText = () {
+      switch (order?.status) {
+        case 'shipped':
+          return loc.translate('msg_order_shipped_soon')!; // مفتاح جديد
+        case 'completed':
+          return loc.translate('msg_order_completed_thanks')!; // مفتاح جديد
+        case 'cancelled':
+          return loc.translate('msg_order_cancelled')!; // مفتاح جديد
+        default:
+          return loc.translate('msg_order_default_notification')!; // مفتاح جديد
+      }
+    }();
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -418,12 +447,11 @@ https://wa.me/$_waNumber
           onPressed: () => finish(context),
         ),
         title: Text(
-          'تفاصيل الطلب',
+          loc.translate('lbl_order_details')!,
           style: boldTextStyle(color: Colors.white, size: 18),
         ),
         centerTitle: true,
         actions: [
-          // ✅ زر تحديث — مع مؤشر دوران أثناء التحديث
           _isRefreshing
               ? Padding(
             padding: EdgeInsets.all(14),
@@ -438,15 +466,13 @@ https://wa.me/$_waNumber
           )
               : IconButton(
             icon: Icon(Icons.refresh, color: Colors.white),
-            onPressed: () => _refreshOrder(showFeedback: true), // ✅ showFeedback: true
-            tooltip: 'تحديث',
+            onPressed: () => _refreshOrder(showFeedback: true),
+            tooltip: loc.translate('lbl_update'), // موجود
           ),
-
-          // ✅ زر المشاركة — يستدعي _shareOrder() الذي يعمل فعلاً
           IconButton(
             icon: Icon(Icons.share, color: Colors.white),
-            onPressed: _shareOrder, // ✅ كان () {} — الآن يستدعي دالة المشاركة
-            tooltip: 'مشاركة',
+            onPressed: _shareOrder,
+            tooltip: loc.translate('lbl_share'), // مفتاح جديد (يُضاف لملفات JSON)
           ),
         ],
       ),
@@ -527,22 +553,26 @@ https://wa.me/$_waNumber
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _infoRow('رقم الطلب', '#${order?.id ?? ''}'),
+                            _infoRow(
+                              loc.translate('lbl_order_id')!, // موجود
+                              '#${order?.id ?? ''}',
+                            ),
                             6.height,
                             _infoRow(
-                              'تاريخ الطلب',
+                              loc.translate('lbl_transaction_date')!, // موجود
                               order?.dateCreated != null
-                                  ? createDateFormat(order!.dateCreated)
+                                  ? createDateFormat(order!.dateCreated,
+                                  locale: Localizations.localeOf(context).languageCode)
                                   : '',
                             ),
                             6.height,
                             _infoRow(
-                              'إجمالي الطلب',
+                              loc.translate('lbl_total_amount')!, // موجود
                               '${getStringAsync(DEFAULT_CURRENCY)} ${order?.total ?? ''}',
                             ),
                             6.height,
                             _infoRow(
-                              'طريقة الدفع',
+                              loc.translate('lbl_payment_methods')!, // موجود
                               _translatePayment(
                                 order?.paymentMethodTitle ?? order?.paymentMethod,
                               ),
@@ -576,24 +606,18 @@ https://wa.me/$_waNumber
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'حالة الطلب الحالية',
+                              loc.translate('lbl_current_order_status')!, // مفتاح جديد
                               style: secondaryTextStyle(size: 12, color: Colors.grey),
                             ),
                             6.height,
                             Text(
-                              _statusLabel(order?.status),
+                              statusText,
                               style: boldTextStyle(
                                   color: _statusColor(order?.status), size: 15),
                             ),
                             4.height,
                             Text(
-                              order?.status == 'shipped'
-                                  ? 'سيصلك طلبك قريباً'
-                                  : order?.status == 'completed'
-                                  ? 'شكراً لتسوقك معنا!'
-                                  : order?.status == 'cancelled'
-                                  ? 'تم إلغاء الطلب'
-                                  : 'سنقوم بإشعارك عند شحن طلبك',
+                              statusSubText,
                               style: secondaryTextStyle(size: 12, color: Colors.grey),
                             ),
                           ],
@@ -623,16 +647,12 @@ https://wa.me/$_waNumber
 
                 16.height,
 
-                // ══════════════════════════════════════════════════════════
                 // Progress Tracker
-                // ══════════════════════════════════════════════════════════
                 _buildProgressTracker(),
 
                 16.height,
 
-                // ══════════════════════════════════════════════════════════
                 // عنوان التوصيل
-                // ══════════════════════════════════════════════════════════
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: 16),
                   padding: EdgeInsets.all(16),
@@ -654,20 +674,26 @@ https://wa.me/$_waNumber
                               Icon(Icons.location_on_outlined,
                                   color: primaryColor, size: 18),
                               8.width,
-                              Text('عنوان التوصيل', style: boldTextStyle(size: 15)),
+                              Text(
+                                loc.translate('lbl_delivery_address')!, // موجود
+                                style: boldTextStyle(size: 15),
+                              ),
                             ],
                           ),
                           if (canCancel)
                             GestureDetector(
                               onTap: () {},
                               child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding:
+                                EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
                                   border: Border.all(color: Colors.grey.shade300),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
-                                child: Text('تغيير العنوان',
-                                    style: secondaryTextStyle(size: 12)),
+                                child: Text(
+                                  loc.translate('lbl_change_address')!, // مفتاح جديد
+                                  style: secondaryTextStyle(size: 12),
+                                ),
                               ),
                             ),
                         ],
@@ -694,9 +720,7 @@ https://wa.me/$_waNumber
 
                 16.height,
 
-                // ══════════════════════════════════════════════════════════
                 // الأصناف في هذا الطلب
-                // ══════════════════════════════════════════════════════════
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
@@ -712,7 +736,7 @@ https://wa.me/$_waNumber
                       Padding(
                         padding: EdgeInsets.fromLTRB(16, 14, 16, 0),
                         child: Text(
-                          'الأصناف في هذا الطلب (${lineItems.length})',
+                          loc.translate('lbl_items_in_order', {'count': lineItems.length.toString()})!, // مفتاح جديد مع placeholder
                           style: boldTextStyle(size: 15, color: primaryColor),
                         ),
                       ),
@@ -724,11 +748,14 @@ https://wa.me/$_waNumber
                             final variant =
                             getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1);
                             if (variant == 2) {
-                              ProductDetailScreen2(mProId: item.productId).launch(context);
+                              ProductDetailScreen2(mProId: item.productId)
+                                  .launch(context);
                             } else if (variant == 3) {
-                              ProductDetailScreen3(mProId: item.productId).launch(context);
+                              ProductDetailScreen3(mProId: item.productId)
+                                  .launch(context);
                             } else {
-                              ProductDetailScreen1(mProId: item.productId).launch(context);
+                              ProductDetailScreen1(mProId: item.productId)
+                                  .launch(context);
                             }
                           },
                           child: Padding(
@@ -768,14 +795,14 @@ https://wa.me/$_waNumber
                                       ),
                                       4.height,
                                       Text(
-                                        'الكمية: ${item.quantity ?? 0}',
+                                        '${loc.translate('lbl_qty')!} ${item.quantity ?? 0}',
                                         style: secondaryTextStyle(size: 12),
                                       ),
                                     ],
                                   ),
                                 ),
                                 Text(
-                                  'EGP ${item.total ?? '0'}',
+                                  '${loc.translate('lbl_egp')!} ${item.total ?? '0'}',
                                   style: boldTextStyle(size: 13),
                                 ),
                               ],
@@ -789,10 +816,14 @@ https://wa.me/$_waNumber
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('إجمالي الطلب',
-                                style: boldTextStyle(color: primaryColor, size: 15)),
-                            Text('EGP ${order?.total ?? '0'}',
-                                style: boldTextStyle(color: primaryColor, size: 15)),
+                            Text(
+                              loc.translate('lbl_total_order_price')!, // موجود
+                              style: boldTextStyle(color: primaryColor, size: 15),
+                            ),
+                            Text(
+                              '${loc.translate('lbl_egp')!} ${order?.total ?? '0'}',
+                              style: boldTextStyle(color: primaryColor, size: 15),
+                            ),
                           ],
                         ),
                       ),
@@ -802,9 +833,7 @@ https://wa.me/$_waNumber
 
                 16.height,
 
-                // ══════════════════════════════════════════════════════════
                 // تفاصيل الطلب (دفع + شحن + إجمالي)
-                // ══════════════════════════════════════════════════════════
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
@@ -824,27 +853,30 @@ https://wa.me/$_waNumber
                             Icon(Icons.receipt_long_outlined,
                                 color: primaryColor, size: 18),
                             8.width,
-                            Text('تفاصيل الطلب', style: boldTextStyle(size: 15)),
+                            Text(
+                              loc.translate('lbl_order_details')!, // موجود
+                              style: boldTextStyle(size: 15),
+                            ),
                           ],
                         ),
                       ),
                       Divider(height: 16),
                       _detailRow(
-                        'طريقة الدفع',
+                        loc.translate('lbl_payment_methods')!,
                         _translatePayment(
                           order?.paymentMethodTitle ?? order?.paymentMethod,
                         ),
                       ),
                       _detailRow(
-                        'رسوم التوصيل',
+                        loc.translate('lbl_shipping_fee')!, // موجود
                         (double.tryParse(order?.shippingTotal?.toString() ?? '0') ?? 0) > 0
-                            ? 'EGP ${order?.shippingTotal}'
-                            : 'مجاني',
+                            ? '${loc.translate('lbl_egp')!} ${order?.shippingTotal}'
+                            : loc.translate('lbl_free')!,
                       ),
                       Divider(height: 16),
                       _detailRow(
-                        'إجمالي الطلب',
-                        'EGP ${order?.total ?? '0'}',
+                        loc.translate('lbl_total_amount')!,
+                        '${loc.translate('lbl_egp')!} ${order?.total ?? '0'}',
                         isBold: true,
                       ),
                       12.height,
@@ -854,9 +886,7 @@ https://wa.me/$_waNumber
 
                 16.height,
 
-                // ══════════════════════════════════════════════════════════
                 // زر تتبع الطلب (واتساب)
-                // ══════════════════════════════════════════════════════════
                 GestureDetector(
                   onTap: _openWhatsApp,
                   child: Container(
@@ -869,10 +899,13 @@ https://wa.me/$_waNumber
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.location_on_outlined, color: Colors.white, size: 20),
+                        Icon(Icons.location_on_outlined,
+                            color: Colors.white, size: 20),
                         8.width,
-                        Text('تتبع الطلب عبر واتساب',
-                            style: boldTextStyle(color: Colors.white, size: 16)),
+                        Text(
+                          loc.translate('lbl_track_order_whatsapp')!, // مفتاح جديد
+                          style: boldTextStyle(color: Colors.white, size: 16),
+                        ),
                       ],
                     ),
                   ),
@@ -880,9 +913,7 @@ https://wa.me/$_waNumber
 
                 16.height,
 
-                // ══════════════════════════════════════════════════════════
                 // طلب مساعدة
-                // ══════════════════════════════════════════════════════════
                 GestureDetector(
                   onTap: _openWhatsApp,
                   child: Container(
@@ -898,9 +929,13 @@ https://wa.me/$_waNumber
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.headset_mic_outlined, color: primaryColor, size: 20),
+                        Icon(Icons.headset_mic_outlined,
+                            color: primaryColor, size: 20),
                         8.width,
-                        Text('طلب مساعدة', style: boldTextStyle(size: 15)),
+                        Text(
+                          loc.translate('lbl_request_help')!, // مفتاح جديد
+                          style: boldTextStyle(size: 15),
+                        ),
                       ],
                     ),
                   ),
@@ -908,9 +943,7 @@ https://wa.me/$_waNumber
 
                 16.height,
 
-                // ══════════════════════════════════════════════════════════
                 // تحتاج مساعدة؟
-                // ══════════════════════════════════════════════════════════
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: 16),
                   padding: EdgeInsets.all(16),
@@ -924,10 +957,15 @@ https://wa.me/$_waNumber
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('تحتاج مساعدة؟', style: boldTextStyle(size: 16)),
+                      Text(
+                        loc.translate('lbl_need_help')!, // مفتاح جديد
+                        style: boldTextStyle(size: 16),
+                      ),
                       4.height,
-                      Text('فريق الدعم متاح لخدمتك',
-                          style: secondaryTextStyle(size: 13, color: Colors.grey)),
+                      Text(
+                        loc.translate('msg_support_team_available')!, // مفتاح جديد
+                        style: secondaryTextStyle(size: 13, color: Colors.grey),
+                      ),
                       14.height,
                       Row(
                         children: [
@@ -945,11 +983,16 @@ https://wa.me/$_waNumber
                                     Icon(Icons.phone_outlined,
                                         color: primaryColor, size: 22),
                                     6.height,
-                                    Text('اتصل بنا', style: boldTextStyle(size: 13)),
+                                    Text(
+                                      loc.translate('lbl_call_us')!, // مفتاح جديد
+                                      style: boldTextStyle(size: 13),
+                                    ),
                                     4.height,
-                                    Text(_storePhone,
-                                        style: secondaryTextStyle(
-                                            size: 11, color: Colors.grey)),
+                                    Text(
+                                      _storePhone,
+                                      style: secondaryTextStyle(
+                                          size: 11, color: Colors.grey),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -970,7 +1013,10 @@ https://wa.me/$_waNumber
                                     Icon(Icons.email_outlined,
                                         color: primaryColor, size: 22),
                                     6.height,
-                                    Text('راسلنا', style: boldTextStyle(size: 13)),
+                                    Text(
+                                      loc.translate('lbl_email_us')!, // مفتاح جديد
+                                      style: boldTextStyle(size: 13),
+                                    ),
                                     4.height,
                                     Text(
                                       _storeEmail,
@@ -989,9 +1035,7 @@ https://wa.me/$_waNumber
                   ),
                 ),
 
-                // ══════════════════════════════════════════════════════════
                 // إلغاء الطلب
-                // ══════════════════════════════════════════════════════════
                 if (canCancel) ...[
                   16.height,
                   GestureDetector(
@@ -1010,7 +1054,7 @@ https://wa.me/$_waNumber
                           Icon(Icons.cancel_outlined, color: Colors.red, size: 20),
                           8.width,
                           Text(
-                            'إلغاء الطلب',
+                            loc.translate('lbl_cancel_order')!, // موجود
                             style: boldTextStyle(color: Colors.red, size: 15),
                           ),
                         ],
@@ -1069,13 +1113,19 @@ https://wa.me/$_waNumber
   }
 
   String _translatePayment(String? method) {
+    final loc = AppLocalizations.of(context)!;
     switch (method?.toLowerCase()) {
       case 'cash on delivery':
-      case 'cod':              return 'الدفع عند الاستلام';
-      case 'credit card':      return 'بطاقة ائتمان';
-      case 'paypal':           return 'باي بال';
-      case 'stripe':           return 'ستريب';
-      default:                 return method ?? '';
+      case 'cod':
+        return loc.translate('lbl_cash_on_delivery')!; // موجود
+      case 'credit card':
+        return loc.translate('lbl_credit_card')!; // مفتاح جديد
+      case 'paypal':
+        return loc.translate('lbl_paypal')!; // مفتاح جديد
+      case 'stripe':
+        return loc.translate('lbl_stripe')!; // مفتاح جديد
+      default:
+        return method ?? '';
     }
   }
 }

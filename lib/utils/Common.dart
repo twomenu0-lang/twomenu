@@ -20,27 +20,36 @@ import '../service/LoginService.dart';
 import 'Constants.dart';
 import 'AppImages.dart';
 
-String convertDate(date) {
+// ✅ تم التعديل لتصبح اللغة العربية 'ar' هي الافتراضية في حال عدم تمرير الـ locale
+String convertDate(date, {String locale = 'ar'}) {
   try {
-    return date != null ? DateFormat(orderDateFormat).format(DateTime.parse(date)) : '';
+    return date != null
+        ? DateFormat(orderDateFormat, locale).format(DateTime.parse(date))
+        : '';
   } catch (e) {
     log(e);
     return '';
   }
 }
 
-String createDateFormat(date) {
+// ✅ تم التعديل لتصبح اللغة العربية 'ar' هي الافتراضية في حال عدم تمرير الـ locale
+String createDateFormat(date, {String locale = 'ar'}) {
   try {
-    return date != null ? DateFormat(CreateDateFormat).format(DateTime.parse(date)) : '';
+    return date != null
+        ? DateFormat(CreateDateFormat, locale).format(DateTime.parse(date))
+        : '';
   } catch (e) {
     log(e);
     return '';
   }
 }
 
-String reviewConvertDate(date) {
+// ✅ تم التعديل لتصبح اللغة العربية 'ar' هي الافتراضية في حال عدم تمرير الـ locale
+String reviewConvertDate(date, {String locale = 'ar'}) {
   try {
-    return date != null ? DateFormat(reviewDateFormat).format(DateTime.parse(date)) : '';
+    return date != null
+        ? DateFormat(reviewDateFormat, locale).format(DateTime.parse(date))
+        : '';
   } catch (e) {
     log(e);
     return '';
@@ -168,7 +177,6 @@ String durationFormatter(int milliSeconds) {
   return formattedTime;
 }
 
-// ✅ تم تعديل هذه الدالة - إزالة native method call غير موجود
 Future<String> getProductIdFromNative() async {
   return '';
 }
@@ -336,4 +344,33 @@ Future<void> addCart({ProductDetailResponse? data, WishListResponse? mData}) asy
       wishListStore.addToWishList(mData);
     }
   }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// PATCH: تنظيف النصوص من رموز Unicode الخفية قبل إرسالها للسيرفر
+// ─────────────────────────────────────────────────────────────────
+// السبب: بعض لوحات المفاتيح (خصوصاً العربية على أجهزة سامسونج) بتحقن
+// رموز تحكم اتجاه النص الخفية (Bidi control characters) زي:
+//   U+200E (LRM - Left-to-Right Mark)
+//   U+200F (RLM - Right-to-Left Mark)
+//   U+202A-U+202E (Embedding/Override marks)
+//   U+2066-U+2069 (Isolate marks)
+//   U+FEFF (Zero Width No-Break Space / BOM)
+// الرموز دي مش ظاهرة بصرياً في حقل الإدخال، لكنها بتوصل فعلياً مع
+// النص للسيرفر، وبتخلي فحوصات زي filter_var(...FILTER_VALIDATE_EMAIL)
+// في PHP تفشل حتى لو الإيميل شكله سليم تماماً للعين.
+//
+// استخدمها على أي حقل نصي قبل إرساله للسيرفر، خصوصاً الإيميل.
+// ─────────────────────────────────────────────────────────────────
+
+/// ينظف النص من رموز التحكم الخفية (bidi control characters) ومن
+/// المسافات الزائدة في البداية والنهاية.
+String cleanInputText(String input) {
+  final cleaned = input.replaceAll(
+    RegExp(
+      r'[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]',
+    ),
+    '',
+  );
+  return cleaned.trim();
 }

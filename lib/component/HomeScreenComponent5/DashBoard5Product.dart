@@ -37,7 +37,10 @@ class ProductState extends State<DashBoard5Product> {
 
   @override
   Widget build(BuildContext context) {
-    String? img = widget.mProductModel!.images!.isNotEmpty ? widget.mProductModel!.images!.first.src : '';
+    // ✅ التعديل: استخدام الـ thumbnail وإذا كان فارغاً يتم الرجوع للـ src لتسريع التحميل والتوفير
+    String? img = widget.mProductModel!.images!.isNotEmpty
+        ? (widget.mProductModel!.images!.first.thumbnail ?? widget.mProductModel!.images!.first.src)
+        : '';
 
     return GestureDetector(
       onTap: () async {
@@ -68,7 +71,6 @@ class ProductState extends State<DashBoard5Product> {
                       ProductWishListExtension(mProductModel: widget.mProductModel!).paddingOnly(left: 4),
                     ],
                   ),
-                  // ✅ تم التعديل هنا باستخدام .validate() لحل مشكلة النوع (String? إلى String)
                   Text(widget.mProductModel!.name.validate(), style: primaryTextStyle(), maxLines: 1),
                   4.height,
                   Stack(

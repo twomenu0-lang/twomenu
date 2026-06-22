@@ -34,7 +34,10 @@ class DashBoard3ProductState extends State<DashBoard3Product> {
   Widget build(BuildContext context) {
     var productWidth = MediaQuery.of(context).size.width;
 
-    String? img = widget.mProductModel!.images!.isNotEmpty ? widget.mProductModel!.images!.first.src : '';
+    // ✅ التعديل: استخدام الـ thumbnail وإذا كان فارغاً يتم الرجوع للـ src لتسريع التحميل والتوفير
+    String? img = widget.mProductModel!.images!.isNotEmpty
+        ? (widget.mProductModel!.images!.first.thumbnail ?? widget.mProductModel!.images!.first.src)
+        : '';
 
     return GestureDetector(
       onTap: () async {
@@ -67,7 +70,6 @@ class DashBoard3ProductState extends State<DashBoard3Product> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   4.height,
-                  // ✅ تم التعديل هنا باستخدام .validate() لحل مشكلة النوع (String? إلى String)
                   Text(widget.mProductModel!.name.validate(), style: primaryTextStyle(), maxLines: 1),
                   2.height,
                   Row(

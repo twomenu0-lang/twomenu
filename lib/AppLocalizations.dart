@@ -19,7 +19,7 @@ class AppLocalizations {
 
   Future<bool> load() async {
     String jsonString =
-        await rootBundle.loadString('lang/${locale.languageCode}.json');
+    await rootBundle.loadString('lang/${locale.languageCode}.json');
     Map<String, dynamic> jsonMap = json.decode(jsonString);
 
     _localizedStrings = jsonMap.map((key, value) {
@@ -29,8 +29,18 @@ class AppLocalizations {
     return true;
   }
 
-  String? translate(String key) {
-    return _localizedStrings[key];
+  // الدالة المحدثة لدعم الـ Placeholders والديناميكية في النصوص
+  String? translate(String key, [Map<String, String>? params]) {
+    String? value = _localizedStrings[key];
+    if (value == null) return null;
+
+    if (params != null) {
+      params.forEach((paramKey, paramValue) {
+        value = value!.replaceAll('{$paramKey}', paramValue);
+      });
+    }
+
+    return value;
   }
 }
 
@@ -52,4 +62,3 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => true;
 }
-

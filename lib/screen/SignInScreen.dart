@@ -64,30 +64,37 @@ class SignInScreenState extends State<SignInScreen> {
     var appLocalization = AppLocalizations.of(context)!;
 
     void signInApi(req) async {
-
       appStore.setLoading(true);
       await login(req).then((res) async {
         if (!mounted) return;
-        await setValue(USER_ID, res['user_id']);
-        await setValue(FIRST_NAME, res['first_name']);
-        await setValue(LAST_NAME, res['last_name']);
-        await setValue(USER_EMAIL, res['user_email']);
-        await setValue(USERNAME, res['user_nicename']);
-        await setValue(TOKEN, res['token']);
-        await setValue(AVATAR, res['avatar']);
-        if (res['profile_image'] != null) {
-          await setValue(PROFILE_IMAGE, res['profile_image']);
-        }
-        await setValue(USER_DISPLAY_NAME, res['user_display_name']);
-        await setValue(BILLING, jsonEncode(res['billing']));
-        await setValue(SHIPPING, jsonEncode(res['shipping']));
 
-        await setValue(IS_LOGGED_IN, true);
-        await setValue(PASSWORD, passwordCont.text.toString());
-        //  await saveProfileImage(playerRequest).then((res) async {});
-        await setValue(IS_REMEMBERED, getBoolAsync(IS_REMEMBERED));
+        // ✅ تحسين الأداء: تنفيذ جميع عمليات التخزين بالتوازي بدلاً من التتابع
+        await Future.wait([
+          setValue(USER_ID, res['user_id']),
+          setValue(FIRST_NAME, res['first_name']),
+          setValue(LAST_NAME, res['last_name']),
+          setValue(USER_EMAIL, res['user_email']),
+          setValue(USERNAME, res['user_nicename']),
+          setValue(TOKEN, res['token']),
+          setValue(AVATAR, res['avatar']),
+          if (res['profile_image'] != null) setValue(PROFILE_IMAGE, res['profile_image']),
+          setValue(USER_DISPLAY_NAME, res['user_display_name']),
+          setValue(BILLING, jsonEncode(res['billing'])),
+          setValue(SHIPPING, jsonEncode(res['shipping'])),
+          setValue(PASSWORD, passwordCont.text.toString()),
+          setValue(IS_REMEMBERED, getBoolAsync(IS_REMEMBERED)),
+        ]);
+
+        // ✅ تصحيح جوهري: كان الكود بيكتب setValue(IS_LOGGED_IN, true) جوه
+        // Future.wait فوق، وده بيحدّث SharedPreferences فقط من غير ما يحدّث
+        // appStore.isLoggedIn (الـ observable اللي شاشات السلة/الحساب
+        // بترصده عن طريق Observer()). دي نفس العلة الموجودة في SignUpScreen
+        // و MobileNumberSignInScreen، وهنا بالذات هي الأهم لأن الشاشة دي
+        // المسار الرئيسي اللي بيدخل منه أي مستخدم عنده حساب شغال فعلاً.
+        // appStore.setLoggedIn() بتحدّث الـ observable والتخزين مع بعض.
+        appStore.setLoggedIn(true);
+
         appStore.setLoading(false);
-
         appStore.setBottomNavigationIndex(0);
         DashBoardScreen().launch(context, isNewTask: true);
       }).catchError((error) {
@@ -103,18 +110,25 @@ class SignInScreenState extends State<SignInScreen> {
         if (!mounted) return;
         await getCustomer(res['user_id']).then((response) async {
           if (!mounted) return;
-          await setValue(IS_SOCIAL_LOGIN, true);
-          await setValue(AVATAR, req['photoURL']);
-          await setValue(USER_ID, res['user_id']);
-          await setValue(FIRST_NAME, res['first_name']);
-          await setValue(LAST_NAME, res['last_name']);
-          await setValue(USER_EMAIL, res['user_email']);
-          await setValue(USERNAME, res['user_nicename']);
-          await setValue(TOKEN, res['token']);
-          await setValue(USER_DISPLAY_NAME, res['user_display_name']);
-          await setValue(BILLING, jsonEncode(res['billing']));
-          await setValue(SHIPPING, jsonEncode(res['shipping']));
-          await setValue(IS_LOGGED_IN, true);
+
+          // ✅ تحسين إضافي: دمج الـ Future.wait هنا أيضاً لتسريع الدخول عبر حسابات التواصل
+          await Future.wait([
+            setValue(IS_SOCIAL_LOGIN, true),
+            setValue(AVATAR, req['photoURL']),
+            setValue(USER_ID, res['user_id']),
+            setValue(FIRST_NAME, res['first_name']),
+            setValue(LAST_NAME, res['last_name']),
+            setValue(USER_EMAIL, res['user_email']),
+            setValue(USERNAME, res['user_nicename']),
+            setValue(TOKEN, res['token']),
+            setValue(USER_DISPLAY_NAME, res['user_display_name']),
+            setValue(BILLING, jsonEncode(res['billing'])),
+            setValue(SHIPPING, jsonEncode(res['shipping'])),
+          ]);
+
+          // ✅ نفس التصحيح: appStore.setLoggedIn() بدل setValue(IS_LOGGED_IN, true)
+          // المباشر، عشان شاشة السلة/الحساب تعرف فعلياً إن المستخدم بقى Logged in.
+          appStore.setLoggedIn(true);
 
           appStore.setLoading(false);
           DashBoardScreen().launch(context, isNewTask: true);
@@ -416,4 +430,3 @@ class _CustomDialogState extends State<CustomDialog> {
     );
   }
 }
-

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '/../AppLocalizations.dart'; // ✅ إضافة الـ import الخاص بالترجمة
 import '/../main.dart';
 import '/../screen/DashBoardScreen.dart';
 import '/../utils/AppImages.dart';
@@ -12,9 +13,7 @@ class WalkThroughScreen extends StatefulWidget {
 }
 
 class WalkThroughScreenState extends State<WalkThroughScreen> {
-  List<Widget> pages = [];
   var selectedIndex = 0;
-
   PageController _pageController = PageController();
 
   @override
@@ -22,8 +21,21 @@ class WalkThroughScreenState extends State<WalkThroughScreen> {
     super.initState();
   }
 
-  init() async {
-    pages = [
+  @override
+  void setState(fn) {
+    if (mounted) super.setState(fn);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // ✅ تم نقل الـ pages هنا مباشرة لتجنب استدعاء setState لانهائي داخل الـ build وتحسين الأداء
+    List<Widget> pages = [
       Container(
         alignment: Alignment.center,
         child: Column(
@@ -64,23 +76,6 @@ class WalkThroughScreenState extends State<WalkThroughScreen> {
         ),
       )
     ];
-    setState(() {});
-  }
-
-  @override
-  void setState(fn) {
-    if (mounted) super.setState(fn);
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    init();
 
     return SafeArea(
       child: Scaffold(
@@ -99,8 +94,12 @@ class WalkThroughScreenState extends State<WalkThroughScreen> {
               Positioned(
                   child: AnimatedCrossFade(
                       firstChild:
-                          Container(child: Text('Get Started', style: boldTextStyle(color: white)), padding: EdgeInsets.fromLTRB(16, 8, 16, 8), decoration: BoxDecoration(color: primaryColor, borderRadius: radius(8)))
-                              .onTap(() {
+                      Container(
+                        // ✅ تعديل نص زر ابدأ الآن ليدعم الترجمة الديناميكية بناءً على لغة التطبيق
+                          child: Text(AppLocalizations.of(context)!.translate('lbl_get_started') ?? 'Get Started', style: boldTextStyle(color: white)),
+                          padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+                          decoration: BoxDecoration(color: primaryColor, borderRadius: radius(8))
+                      ).onTap(() {
                         DashBoardScreen().launch(context, isNewTask: true);
                       }),
                       secondChild: SizedBox(),
@@ -111,7 +110,12 @@ class WalkThroughScreenState extends State<WalkThroughScreen> {
                   bottom: 20,
                   right: 20),
               Positioned(
-                  child: AnimatedContainer(duration: Duration(seconds: 1), child: Text('Skip', style: boldTextStyle(color: primaryColor)), padding: EdgeInsets.fromLTRB(16, 8, 16, 8)).onTap(() {
+                  child: AnimatedContainer(
+                      duration: Duration(seconds: 1),
+                      // ✅ تعديل نص زر تخطي ليدعم الترجمة الديناميكية بناءً على لغة التطبيق
+                      child: Text(AppLocalizations.of(context)!.translate('lbl_skip') ?? 'Skip', style: boldTextStyle(color: primaryColor)),
+                      padding: EdgeInsets.fromLTRB(16, 8, 16, 8)
+                  ).onTap(() {
                     DashBoardScreen().launch(context, isNewTask: true);
                   }),
                   right: 8,
@@ -123,4 +127,3 @@ class WalkThroughScreenState extends State<WalkThroughScreen> {
     );
   }
 }
-

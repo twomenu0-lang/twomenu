@@ -9,13 +9,13 @@ bool isSuccessful(int code) {
 
 
 Future handleResponse(Response response) async {
-  if (!await isNetworkAvailable()) {
-    throw 'You are not connected to Internet';
-  }
   String body = response.body;
   if (isSuccessful(response.statusCode)) {
     return jsonDecode(body);
   } else {
+    if (!await isNetworkAvailable()) {
+      throw 'You are not connected to Internet';
+    }
     var string = await (isJsonValid(body));
     if (string!.isNotEmpty) {
       throw string;
@@ -40,4 +40,3 @@ Future<String?> isJsonValid(json) async {
     return "";
   }
 }
-

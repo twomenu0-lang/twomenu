@@ -88,7 +88,7 @@ class HomeScreen1State extends State<HomeScreen1> {
       if (await canLaunchUrl(telUri)) {
         await launchUrl(telUri);
       } else {
-        if (mounted) toast('تعذر فتح واتساب');
+        if (mounted) toast(AppLocalizations.of(context)!.translate('msg_whatsapp_failed') ?? 'Could not open WhatsApp');
       }
     }
   }
@@ -118,13 +118,13 @@ class HomeScreen1State extends State<HomeScreen1> {
                 .paddingAll(8)
                 .onTap(() {
               if (title ==
-                  builderResponse.dashboard!.dealOfTheDay!.title) {
+                  (appLocalization.translate('lbl_deal_of_the_day') ?? builderResponse.dashboard!.dealOfTheDay!.title)) {
                 ViewAllScreen(title,
                     isSpecialProduct: true,
                     specialProduct: "deal_of_the_day")
                     .launch(context);
               } else if (title ==
-                  builderResponse.dashboard!.offerProduct!.title) {
+                  (appLocalization.translate('lbl_available_offers') ?? builderResponse.dashboard!.offerProduct!.title)) {
                 ViewAllScreen(title,
                     isSpecialProduct: true, specialProduct: "offer")
                     .launch(context);
@@ -178,12 +178,11 @@ class HomeScreen1State extends State<HomeScreen1> {
           crossAxisCount: 4,
           mainAxisSpacing: 12,
           crossAxisSpacing: 8,
-          childAspectRatio: 0.72, // ✅ تم التعديل لاستيعاب الحجم الجديد للأيقونة
+          childAspectRatio: 0.72,
         ),
         itemCount: itemCount,
         itemBuilder: (ctx, i) {
           if (needsMore && i == itemCount - 1) {
-            // ✅ تمرير كل الأقسام بدلاً من المخفية فقط
             return _buildMoreButton(ctx, categories);
           }
           return _buildCategoryItem(ctx, visible[i]);
@@ -205,13 +204,12 @@ class HomeScreen1State extends State<HomeScreen1> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ── الصورة المكبرة ──
           Container(
-            width: 75, // ✅ تم التكبير من 60 إلى 75
-            height: 75, // ✅ تم التكبير من 60 إلى 75
+            width: 75,
+            height: 75,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16), // ✅ تم التعديل ليتناسب مع الحجم الجديد
+              borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.07),
@@ -220,7 +218,7 @@ class HomeScreen1State extends State<HomeScreen1> {
                 ),
               ],
             ),
-            padding: const EdgeInsets.all(6), // ✅ تقليل الـ padding يعطي مساحة أكبر للصورة بداخل الكرت
+            padding: const EdgeInsets.all(6),
             child: hasImg
                 ? ClipRRect(
               borderRadius: BorderRadius.circular(10),
@@ -234,7 +232,6 @@ class HomeScreen1State extends State<HomeScreen1> {
                 : Image.asset(ic_placeholder_logo, fit: BoxFit.contain),
           ),
           const SizedBox(height: 6),
-          // ── الاسم ──
           Text(
             parseHtmlString(cat.name ?? ''),
             maxLines: 2,
@@ -247,41 +244,38 @@ class HomeScreen1State extends State<HomeScreen1> {
     );
   }
 
-  // ─── زر "المزيد +" المكبر ───────────────────────────────────
+  // ─── زر "المزيد +" المطور والمصقول بالهوية البصرية والحدود الثابتة ───
   Widget _buildMoreButton(BuildContext context, List<Category> allCategories) {
     return GestureDetector(
-      // ✅ فتح الـ Bottom Sheet ممرراً القائمة الكاملة
       onTap: () => _showMoreBottomSheet(context, allCategories),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 75, // ✅ تم التكبير من 60 إلى 75
-            height: 75, // ✅ تم التكبير من 60 إلى 75
+            width: 65,
+            height: 65,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              gradient: const LinearGradient(
-                colors: [kBrandPrimary, Color(0xFF4B52B8)],
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-              ),
+              border: Border.all(color: kBrandPrimary, width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: kBrandPrimary.withOpacity(0.30),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+                  color: Colors.black.withOpacity(0.07),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
             child: const Icon(
               Icons.grid_view_rounded,
-              color: Colors.white,
-              size: 30, // ✅ تم التكبير من 26 إلى 30 ليتناسب مع الكرت
+              color: kBrandPrimary,
+              size: 26,
             ),
           ),
           const SizedBox(height: 6),
           Text(
-            'المزيد +',
+            '${AppLocalizations.of(context)!.translate('lbl_more_categories') ?? 'المزيد'} +',
             textAlign: TextAlign.center,
             style: primaryTextStyle(size: 11, color: kBrandPrimary),
           ),
@@ -304,7 +298,6 @@ class HomeScreen1State extends State<HomeScreen1> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ── Handle ──
             Container(
               margin: const EdgeInsets.only(top: 12, bottom: 4),
               width: 40,
@@ -314,8 +307,6 @@ class HomeScreen1State extends State<HomeScreen1> {
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
-
-            // ── العنوان ──
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
               child: Row(
@@ -329,9 +320,9 @@ class HomeScreen1State extends State<HomeScreen1> {
                     ),
                   ),
                   8.width,
-                  const Text(
-                    'جميع الأقسام',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.of(context)!.translate('lbl_all_categories') ?? 'جميع الأقسام',
+                    style: const TextStyle(
                       fontFamily: 'Cairo',
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
@@ -347,8 +338,7 @@ class HomeScreen1State extends State<HomeScreen1> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      // ✅ عرض إجمالي عدد الأقسام بالكامل
-                      '${allCategories.length} قسم',
+                      '${allCategories.length} ${AppLocalizations.of(context)!.translate('lbl_category_count') ?? 'قسم'}',
                       style: const TextStyle(
                         fontFamily: 'Cairo',
                         fontSize: 11,
@@ -360,13 +350,10 @@ class HomeScreen1State extends State<HomeScreen1> {
                 ],
               ),
             ),
-
             const Divider(height: 1),
-
-            // ── Grid يحتوي على كافة الأقسام ──
             ConstrainedBox(
               constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.65, // ✅ زيادة الارتفاع لراحة أكبر أثناء التصفح
+                maxHeight: MediaQuery.of(context).size.height * 0.65,
               ),
               child: GridView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -375,9 +362,9 @@ class HomeScreen1State extends State<HomeScreen1> {
                   crossAxisCount: 4,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 8,
-                  childAspectRatio: 0.72, // ✅ متوافق مع النسبة المحدثة للأقسام المكبرة
+                  childAspectRatio: 0.72,
                 ),
-                itemCount: allCategories.length, // ✅ يعرض كل الأقسام
+                itemCount: allCategories.length,
                 itemBuilder: (ctx, i) {
                   final cat = allCategories[i];
                   return GestureDetector(
@@ -388,7 +375,7 @@ class HomeScreen1State extends State<HomeScreen1> {
                         categoryId: cat.id,
                       ).launch(context);
                     },
-                    child: _buildCategoryItem(ctx, cat), // ✅ يستدعي التصميم المحدث المكبر تلقائياً
+                    child: _buildCategoryItem(ctx, cat),
                   );
                 },
               ),
@@ -419,7 +406,7 @@ class HomeScreen1State extends State<HomeScreen1> {
                     mExternal_URL: i.url, title: i.title)
                     .launch(context);
               } else {
-                toast('Sorry');
+                toast(AppLocalizations.of(context)!.translate('lbl_attribute') ?? 'Sorry');
               }
             },
           );
@@ -487,8 +474,8 @@ class HomeScreen1State extends State<HomeScreen1> {
   // ─────────────────────────────────────────────────────────────
 
   Widget _newProduct(BuildContext context) => DashboardComponent(
-    title: builderResponse.dashboard!.newProduct!.title!,
-    subTitle: builderResponse.dashboard!.newProduct!.viewAll!,
+    title: AppLocalizations.of(context)!.translate('lbl_new_collections') ?? builderResponse.dashboard!.newProduct!.title!,
+    subTitle: AppLocalizations.of(context)!.translate('lbl_see_all') ?? builderResponse.dashboard!.newProduct!.viewAll!,
     product: mNewestProductModel,
     onTap: () => ViewAllScreen(
         builderResponse.dashboard!.newProduct!.title,
@@ -497,8 +484,8 @@ class HomeScreen1State extends State<HomeScreen1> {
   );
 
   Widget _featureProduct(BuildContext context) => DashboardComponent(
-    title: builderResponse.dashboard!.featureProduct!.title!,
-    subTitle: builderResponse.dashboard!.featureProduct!.viewAll!,
+    title: AppLocalizations.of(context)!.translate('lbl_featured_product') ?? builderResponse.dashboard!.featureProduct!.title!,
+    subTitle: AppLocalizations.of(context)!.translate('lbl_see_all') ?? builderResponse.dashboard!.featureProduct!.viewAll!,
     product: mFeaturedProductModel,
     onTap: () => ViewAllScreen(
         builderResponse.dashboard!.featureProduct!.title,
@@ -507,10 +494,10 @@ class HomeScreen1State extends State<HomeScreen1> {
   );
 
   Widget _bestSelling(BuildContext context) => DashboardComponent(
-    title: builderResponse.dashboard!.bestSaleProduct!.title!,
-    subTitle: builderResponse.dashboard!.bestSaleProduct!.viewAll!,
+    title: AppLocalizations.of(context)!.translate('lbl_top_selling') ?? builderResponse.dashboard!.bestSaleProduct!.title!,
+    subTitle: AppLocalizations.of(context)!.translate('lbl_see_all') ?? builderResponse.dashboard!.bestSaleProduct!.viewAll!,
     product: mSellingProductModel,
-    bestSellerText: 'الأكثر مبيعاً',
+    bestSellerText: AppLocalizations.of(context)!.translate('lbl_best_seller_badge') ?? 'الأكثر مبيعاً',
     onTap: () => ViewAllScreen(
         builderResponse.dashboard!.bestSaleProduct!.title,
         isBestSelling: true)
@@ -518,8 +505,8 @@ class HomeScreen1State extends State<HomeScreen1> {
   );
 
   Widget _saleProduct(BuildContext context) => DashboardComponent(
-    title: builderResponse.dashboard!.saleProduct!.title!,
-    subTitle: builderResponse.dashboard!.saleProduct!.viewAll!,
+    title: AppLocalizations.of(context)!.translate('lbl_trending_product') ?? builderResponse.dashboard!.saleProduct!.title!,
+    subTitle: AppLocalizations.of(context)!.translate('lbl_see_all') ?? builderResponse.dashboard!.saleProduct!.viewAll!,
     product: mSaleProductModel,
     onTap: () => ViewAllScreen(
         builderResponse.dashboard!.saleProduct!.title,
@@ -528,8 +515,8 @@ class HomeScreen1State extends State<HomeScreen1> {
   );
 
   Widget _suggested(BuildContext context) => DashboardComponent(
-    title: builderResponse.dashboard!.suggestionProduct!.title!,
-    subTitle: builderResponse.dashboard!.suggestionProduct!.viewAll!,
+    title: AppLocalizations.of(context)!.translate('lbl_recommendation_for_you') ?? builderResponse.dashboard!.suggestionProduct!.title!,
+    subTitle: AppLocalizations.of(context)!.translate('lbl_see_all') ?? builderResponse.dashboard!.suggestionProduct!.viewAll!,
     product: mSuggestedProductModel,
     onTap: () => ViewAllScreen(
         builderResponse.dashboard!.suggestionProduct!.title,
@@ -539,8 +526,8 @@ class HomeScreen1State extends State<HomeScreen1> {
   );
 
   Widget _youMayLike(BuildContext context) => DashboardComponent(
-    title: builderResponse.dashboard!.youMayLikeProduct!.title!,
-    subTitle: builderResponse.dashboard!.youMayLikeProduct!.viewAll!,
+    title: AppLocalizations.of(context)!.translate('lbl_you_might_like') ?? builderResponse.dashboard!.youMayLikeProduct!.title!,
+    subTitle: AppLocalizations.of(context)!.translate('lbl_see_all') ?? builderResponse.dashboard!.youMayLikeProduct!.viewAll!,
     product: mYouMayLikeProductModel,
     onTap: () => ViewAllScreen(
         builderResponse.dashboard!.youMayLikeProduct!.title,
@@ -603,12 +590,12 @@ class HomeScreen1State extends State<HomeScreen1> {
                     .visible(dashboard.featureProduct!.enable!);
               case 'deal_of_the_day':
                 return _availableOfferAndDeal(
-                  dashboard.dealOfTheDay!.title!,
+                  appLocalization.translate('lbl_deal_of_the_day') ?? dashboard.dealOfTheDay!.title!,
                   mDealProductModel,
-                  dashboard.dealOfTheDay!.viewAll!,
+                  appLocalization.translate('lbl_see_all') ?? dashboard.dealOfTheDay!.viewAll!,
                   context,
                   appLocalization,
-                  badgeText: 'عرض اليوم',
+                  badgeText: appLocalization.translate('lbl_deal_badge') ?? 'عرض اليوم',
                 )
                     .paddingTop(8)
                     .visible(dashboard.dealOfTheDay!.enable! &&
@@ -623,12 +610,12 @@ class HomeScreen1State extends State<HomeScreen1> {
                     .visible(dashboard.saleProduct!.enable!);
               case 'offer':
                 return _availableOfferAndDeal(
-                  dashboard.offerProduct!.title!,
+                  appLocalization.translate('lbl_available_offers') ?? dashboard.offerProduct!.title!,
                   mOfferProductModel,
-                  dashboard.dealOfTheDay!.viewAll!,
+                  appLocalization.translate('lbl_see_all') ?? dashboard.dealOfTheDay!.viewAll!,
                   context,
                   appLocalization,
-                  badgeText: 'خصم',
+                  badgeText: appLocalization.translate('lbl_discount_badge') ?? 'خصم',
                 )
                     .paddingTop(8)
                     .visible(dashboard.offerProduct!.enable! &&

@@ -11,6 +11,7 @@ import '/../utils/Constants.dart';
 import '/../utils/AppImages.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:photo_view/photo_view.dart';
+import '../AppLocalizations.dart'; // ✅ الخطوة 1: إضافة الـ import الجديد هنا قبل Common.dart
 import 'Common.dart';
 
 // ignore: must_be_immutable
@@ -255,14 +256,17 @@ class PriceWidgetState extends State<PriceWidget> {
     });
   }
 
+  // ✅ الخطوة 2: تعديل دالة build لدعم تعريب رمز العملة ديناميكياً
   @override
   Widget build(BuildContext context) {
+    final displayCurrency = AppLocalizations.of(context)?.translate('lbl_egp') ?? currency;
+
     if (!widget.isLineThroughEnabled) {
-      return Text('$currency${widget.price.toString().replaceAll(".00", "")}', style: GoogleFonts.robotoSerif(fontSize: widget.size, color: widget.color != null ? widget.color : primaryColor))
+      return Text('$displayCurrency${widget.price.toString().replaceAll(".00", "")}', style: GoogleFonts.robotoSerif(fontSize: widget.size, color: widget.color != null ? widget.color : primaryColor))
           .paddingOnly(right: 4);
     } else {
       return widget.price.toString().isNotEmpty
-          ? Text('$currency${widget.price.toString().replaceAll(".00", "")}',
+          ? Text('$displayCurrency${widget.price.toString().replaceAll(".00", "")}',
           style: GoogleFonts.robotoSerif(fontSize: widget.size, color: widget.color ?? textPrimaryColor, decoration: TextDecoration.lineThrough))
           : Text('');
     }
@@ -336,6 +340,7 @@ Widget mTopNew(BuildContext context, var title, {List<Widget>? actions, bool sho
   );
 }
 
+// ✅ تم استعادة اسم الدالة البرمجية mView لتفادي أي أخطاء تداخل واجهة في شاشات المنتجات
 Widget mView(Widget widget, BuildContext context) {
   return Container(
     width: MediaQuery.of(context).size.width,

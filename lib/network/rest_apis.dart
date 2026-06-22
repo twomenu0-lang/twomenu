@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart';
@@ -11,6 +12,20 @@ import '/../utils/SharedPref.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'NetworkUtils.dart';
 import 'mighty_api.dart';
+
+// ─────────────────────────────────────────────────────────────────
+// APP EXCEPTION
+// زي Exception العادي، لكن toString() بيرجع الرسالة نضيفة من غير
+// بادئة "Exception: " — عشان لما تتعرض بـ toast(error.toString())
+// تطلع لليوزر نظيفة ومفهومة بدل ما تبان كـ "Exception: ...".
+// ─────────────────────────────────────────────────────────────────
+class AppException implements Exception {
+  final String message;
+  AppException(this.message);
+
+  @override
+  String toString() => message;
+}
 
 // ─────────────────────────────────────────────────────────────────
 // AUTH STATE CACHE
@@ -100,13 +115,91 @@ void clearReviewsCache([int? productId]) {
 // AUTH APIs
 // ─────────────────────────────────────────────────────────────────
 
+// ✅ PATCH: createCustomer
+//
+// المشكلة الأصلية: الـ endpoint بتاع التسجيل (store/api/v1/auth/registration)
+// أحياناً بياخد وقت أطول من مهلة الشبكة العادية، بسبب إرسال إيميل ترحيب
+// بشكل متزامن من السيرفر. النتيجة: التطبيق يعرض "TimeoutException" لليوزر
+// رغم إن الحساب اتعمل فعلاً في قاعدة البيانات.
+//
+// الحل هنا له طبقتين:
+// 1) استخدام longTimeout (25 ثانية بدل 15) عشان نقلل احتمال الـ Timeout
+//    أصلاً من غير ما نأثر على باقي الـ endpoints في التطبيق.
+// 2) لو حصل Timeout رغم ذلك، نحاول تسجيل دخول تلقائي بنفس البيانات
+//    قبل ما نعرض رسالة فشل لليوزر — لأن لو الحساب اتعمل فعلاً في
+//    الخلفية، تسجيل الدخول هينجح ونكمل اليوزر عادي من غير ما يحس
+//    إن في حاجة حصلت أصلاً.
+//
+// ملحوظة: الحل الجذري الحقيقي هو تفعيل SMTP سريع في ووردبريس بدل
+// دالة mail() الافتراضية، وده اللي بيقلل احتمال الـ Timeout من
+// الأساس. الكود ده طبقة حماية إضافية، مش بديل عن إصلاح السيرفر.
 Future createCustomer(request) async {
-  return handleResponse(await MightyAPI().postAsync('store/api/v1/auth/registration', request));
+  try {
+    return handleResponse(
+      await MightyAPI().postAsync(
+        'store/api/v1/auth/registration',
+        request,
+        longTimeout: true,
+      ),
+    );
+  } on ApiTimeoutException catch (_) {
+    log('createCustomer timeout — verifying via login attempt');
+
+    // نحاول نتحقق هل الحساب اتعمل فعلاً عن طريق تسجيل دخول بنفس البيانات.
+    // ملحوظة: الـ keys هنا لازم تكون "username" و"password" (مش
+    // "user_login"/"user_pass") لأن دي أسماء الـ keys اللي بتستناها
+    // دالة login() نفسها — راجع استدعاء signInApi في SignUpScreen.dart.
+    // أما request['user_login'] و request['user_pass'] فهي القيم
+    // الأصلية اللي اتبعتت لـ createCustomer.
+    try {
+      final loginResult = await login({
+        'username': request['user_login'],
+        'password': request['user_pass'],
+      });
+
+      if (loginResult != null) {
+        log('createCustomer: account exists — login verification succeeded');
+        return loginResult;
+      }
+    } catch (verifyError) {
+      log('createCustomer: verification login failed too — $verifyError');
+    }
+
+    // لا الطلب الأصلي رد، ولا التحقق بتسجيل الدخول نجح.
+    // الأرجح إن الحساب لسه ما اتعملش، فنوضح ده لليوزر برسالة دقيقة
+    // بدل "Future not completed" المبهمة.
+    throw AppException(
+      'الاتصال بالسيرفر استغرق وقتاً أطول من المتوقع. لو كنت تظن أن الحساب تم إنشاؤه بالفعل، جرّب تسجيل الدخول مباشرة. وإلا، يرجى المحاولة مرة أخرى بعد قليل.',
+    );
+  }
 }
 
+// ✅ PATCH: تصحيح مسار تسجيل الدخول
+//
+// المسار الأصلي 'store/api/v1/auth/login' غير موجود فعلياً على
+// السيرفر (تم التأكد بـ curl مباشر: رد 404 / rest_no_route).
+// نظام تسجيل الدخول الحقيقي والشغال هو الـ JWT plugin الرسمي
+// المُركّب بالفعل على السيرفر (jwt-authentication-for-wp-rest-api)،
+// وقد تم تأكيد عمله بنجاح عبر اختبار مباشر بـ curl على:
+//   POST https://twomenu.shop/wp-json/jwt-auth/v1/token
+// والذي يتوقع بالضبط نفس شكل الـ request الحالي ({username, password})
+// ويرجع بالضبط نفس شكل الـ response المتوقع من باقي الكود
+// (token, user_id, first_name, last_name, user_email, user_nicename,
+//  avatar, billing, shipping, profile_image).
+//
+// ملحوظة مهمة: APP_URL المحفوظة بالفعل تساوي
+// 'https://twomenu.shop/wp-json/' (تم تأكيد ذلك من قيمة
+// MIGHTYSTORE_API_NAMESPACE = 'store' في كود الـ plugin، حيث أن
+// نفس الآلية تُستخدم في باقي الـ endpoints الناجحة مثل
+// 'store/api/v1/auth/registration'). لذلك يُكتب الـ endpoint هنا
+// بدون 'wp-json/' في أوله، لتفادي تكرارها في الرابط النهائي.
+//
+// تم استخدام postJwtAsync() الموجودة بالفعل في MightyAPI، والتي
+// ترسل الطلب لـ this.url + endPoint مباشرة (بدون توقيع OAuth)، وهو
+// الشكل المطلوب بالضبط لهذا الـ endpoint.
 Future login(request) async {
   clearAuthCache(); // مسح الـ cache عند الـ login
-  return handleResponse(await MightyAPI().postAsync('store/api/v1/auth/login', request));
+  return handleResponse(await MightyAPI().postJwtAsync('jwt-auth/v1/token', request));
 }
 
 Future forgetPassword(request) async {

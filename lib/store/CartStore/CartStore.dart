@@ -10,12 +10,20 @@ import '/../utils/Constants.dart';
 import '/../utils/SharedPref.dart';
 import 'package:mobx/mobx.dart';
 import 'package:nb_utils/nb_utils.dart';
+import '/../AppLocalizations.dart'; // ✅ الخطوة 1: إضافة الـ Import الجديد
 
 import '../../main.dart';
 
 part 'CartStore.g.dart';
 
 class CartStore = _CartStore with _$CartStore;
+
+// ✅ الخطوة 2: دالة مساعدة لترجمة النصوص داخل الـ Store الاعتماد على navigatorKey
+String _tr(String key, String fallback) {
+  final ctx = navigatorKey.currentContext;
+  if (ctx == null) return fallback;
+  return AppLocalizations.of(ctx)?.translate(key) ?? fallback;
+}
 
 abstract class _CartStore with Store {
   @observable
@@ -78,7 +86,8 @@ abstract class _CartStore with Store {
         }).catchError((error) {
           log(error.toString());
         });
-        toast('Item remove from cart');
+        // ✅ الخطوة 3: استبدال رسالة الحذف بالنص المترجم
+        toast(_tr('lbl_item_removed_from_cart', 'Item remove from cart'));
       } else {
         appStore.decrement(qty: data.quantity.toString().toInt());
         removeFromCartList(data);
@@ -99,7 +108,8 @@ abstract class _CartStore with Store {
         }).catchError((error) {
           log(error.toString());
         });
-        toast('Item added to cart');
+        // ✅ الخطوة 4: استبدال رسالة الإضافة بالنص المترجم
+        toast(_tr('lbl_item_added_to_cart', 'Item added to cart'));
       } else {
         addToCartList(data);
       }
@@ -107,15 +117,17 @@ abstract class _CartStore with Store {
     }
   }
 
+  // ✅ تم التعديل هنا واعتراض الرسائل بنجاح وطباعة الـ logs تقنياً للمطور فقط
   @action
   Future<void> updateToCartItem(req) async {
     updateCartItem(req).then((value) {
       appStore.setLoading(false);
       log(value['message']);
-      toast(value['message']);
+      toast(_tr('lbl_cart_updated', 'Cart Updated Successfully'));
       getCartListData();
     }).catchError((e) {
-      toast(e.toString());
+      log(e.toString());
+      toast(_tr('lbl_cart_not_updated', 'Cart Not Updated'));
     });
   }
 
@@ -324,4 +336,3 @@ abstract class _CartStore with Store {
     }
   }
 }
-

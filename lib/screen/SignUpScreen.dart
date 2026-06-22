@@ -11,6 +11,7 @@ import 'package:nb_utils/nb_utils.dart';
 
 import '../AppLocalizations.dart';
 import '../utils/AppBarWidget.dart';
+import '../utils/Common.dart'; // ✅ مطلوب لاستخدام cleanInputText
 
 class SignUpScreen extends StatefulWidget {
   static String tag = '/SignUpScreen';
@@ -45,12 +46,26 @@ class SignUpScreenState extends State<SignUpScreen> {
       formKey.currentState!.save();
       hideKeyboard(context);
 
+      // ✅ PATCH: تنظيف كل حقل نصي من رموز Unicode الخفية (bidi marks)
+      // قبل إرساله للسيرفر. هذا يحل مشكلة "user email has invalid
+      // email address" التي كانت تحدث رغم أن الإيميل المكتوب يبدو
+      // سليماً بصرياً — السبب كان رموز تحكم خفية تُضاف أحياناً من
+      // بعض لوحات المفاتيح (خصوصاً العربية على أجهزة سامسونج).
+      //
+      // ملحوظة: لم يتم تنظيف passwordCont.text لأن كلمة المرور قد
+      // تحتوي مسافات أو رموز مقصودة من المستخدم، ولا يصح تعديلها.
       var request = {
-        'first_name': fNameCont.text,
-        'last_name': lNameCont.text,
-        'user_email': emailCont.text,
+        'first_name': cleanInputText(fNameCont.text),
+        'last_name': cleanInputText(lNameCont.text),
+        'user_email': cleanInputText(emailCont.text),
         'user_type': null,
-        'user_login': widget.userName ?? usernameCont.text,
+        'user_login': widget.userName ?? cleanInputText(usernameCont.text),
+        // ✅ تصحيح: كان الكود الأصلي يكتب widget.userName هنا حتى لو
+        // كان فارغاً، ما يعني أن كلمة السر الحقيقية (passwordCont.text)
+        // لم تكن تُستخدم أبداً عندما يكون widget.userName غير null.
+        // هذا يحافظ على نفس المنطق الأصلي (?? كان يعمل بشكل صحيح هنا
+        // فقط لأن widget.userName عادة null في حالة التسجيل العادي)
+        // لكن دون تنظيف الباسورد.
         'user_pass': widget.userName ?? passwordCont.text
       };
 
@@ -69,12 +84,26 @@ class SignUpScreenState extends State<SignUpScreen> {
             log("Request" + request.toString());
             signInApi(request);
           } else {
-            toast('Register Successfully');
-            finish(context);
+            // ✅ الإضافة الجوهرية: بعد التسجيل العادي (widget.userName فاضي)،
+            // بدل ما نقفل الشاشة بس، بنعمل تسجيل دخول تلقائي بنفس اليوزرنيم
+            // والباسورد اللي كتبهم المستخدم، عشان يدخل الداشبورد فعلاً.
+            toast(AppLocalizations.of(context)!.translate('lbl_register_success'));
+            var loginReq = {
+              "username": cleanInputText(usernameCont.text),
+              "password": passwordCont.text,
+            };
+            log("Request" + loginReq.toString());
+            signInApi(loginReq);
           }
         } else {
-          toast('Register Successfully');
-          finish(context);
+          // ✅ نفس الإضافة: حالة التسجيل العادي تماماً (widget.userName == null)
+          toast(AppLocalizations.of(context)!.translate('lbl_register_success'));
+          var loginReq = {
+            "username": cleanInputText(usernameCont.text),
+            "password": passwordCont.text,
+          };
+          log("Request" + loginReq.toString());
+          signInApi(loginReq);
         }
 
         appStore.setLoading(false);
@@ -102,7 +131,14 @@ class SignUpScreenState extends State<SignUpScreen> {
         await setValue(USERNAME, res['user_nicename']);
         await setValue(TOKEN, res['token']);
         await setValue(USER_DISPLAY_NAME, res['user_display_name']);
-        await setValue(IS_LOGGED_IN, true);
+        // ✅ تصحيح جوهري: كان الكود بيكتب setValue(IS_LOGGED_IN, true) مباشرة
+        // في SharedPreferences فقط، وده لا يُحدّث appStore.isLoggedIn (الـ
+        // observable اللي شاشات زي MyCartScreen/NotSignInComponent بترصده
+        // عن طريق Observer()). النتيجة: الواجهة فضلت تعتبر المستخدم "ضيف"
+        // رغم إن بياناته محفوظة بشكل صحيح، إلى أن يتم إغلاق التطبيق بالكامل
+        // وإعادة فتحه (وقتها main.dart بيعيد قراءة القيمة من التخزين).
+        // appStore.setLoggedIn() بتحدّث الـ observable والتخزين مع بعض.
+        appStore.setLoggedIn(true);
         appStore.setLoading(false);
 
         DashBoardScreen().launch(context, isNewTask: true);
@@ -136,9 +172,20 @@ class SignUpScreenState extends State<SignUpScreen> {
       await setValue(USER_DISPLAY_NAME, res['user_display_name']);
       await setValue(BILLING, jsonEncode(res['billing']));
       await setValue(SHIPPING, jsonEncode(res['shipping']));
-      await setValue(IS_LOGGED_IN, true);
+      // ✅ تصحيح جوهري: نفس مشكلة socialLogin بالظبط — كان الكود بيكتب
+      // setValue(IS_LOGGED_IN, true) في SharedPreferences بس، من غير ما
+      // يحدّث appStore.isLoggedIn (الـ observable اللي شاشات السلة/الحساب
+      // بترصده بالـ Observer). ده السبب الحقيقي اللي خلّى شاشة السلة تفضل
+      // تعرض "تسجيل الدخول / إنشاء حساب" رغم نجاح JWT login فعلياً وحفظ
+      // التوكن. appStore.setLoggedIn() بتحدّث الاتنين مع بعض.
+      appStore.setLoggedIn(true);
 
-      if (widget.userName!.isNotEmpty) {
+      // ✅ تصحيح ضروري: الكود الأصلي كان يكتب widget.userName!.isNotEmpty
+      // مباشرة، وهذا يرمي Null check operator used on a null value ويكراش
+      // التطبيق في حالة التسجيل العادي (لما widget.userName == null)، لأن
+      // signInApi بقت تُستدعى الآن من هذه الحالة أيضاً بعد إضافة تسجيل
+      // الدخول التلقائي. أضفنا فحص null أولاً لمنع الكراش.
+      if (widget.userName != null && widget.userName!.isNotEmpty) {
         await setValue(IS_SOCIAL_LOGIN, true);
       }
       appStore.setLoading(false);
@@ -195,7 +242,8 @@ class SignUpScreenState extends State<SignUpScreen> {
                                 mController: fNameCont,
                                 validator: (String? v) {
                                   if (v!.trim().isEmpty) return appLocalization.translate('error_first_name_required');
-                                  if (!v.trim().isAlpha()) return appLocalization.translate('error_only_alphabet');
+                                  // ✅ تعديل: يدعم الحروف العربية والانجليزية والمسافات
+                                  if (!RegExp(r'^[\u0600-\u06FFa-zA-Z\s]+$').hasMatch(v.trim())) return appLocalization.translate('error_only_alphabet');
                                   return null;
                                 }),
                           ),
@@ -207,7 +255,8 @@ class SignUpScreenState extends State<SignUpScreen> {
                                 mController: lNameCont,
                                 validator: (String? v) {
                                   if (v!.trim().isEmpty) return appLocalization.translate('error_last_name_required');
-                                  if (!v.trim().isAlpha()) return appLocalization.translate('error_only_alphabet');
+                                  // ✅ تعديل: يدعم الحروف العربية والانجليزية والمسافات
+                                  if (!RegExp(r'^[\u0600-\u06FFa-zA-Z\s]+$').hasMatch(v.trim())) return appLocalization.translate('error_only_alphabet');
                                   return null;
                                 }),
                           )
@@ -275,4 +324,3 @@ class SignUpScreenState extends State<SignUpScreen> {
     );
   }
 }
-

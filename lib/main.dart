@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:intl/date_symbol_data_local.dart'; // ✅ إضافة الـ import المطلوب لتهيئة التواريخ المحلية
 import 'package:Twomenu/store/AppStore.dart';
 import 'package:Twomenu/store/CartStore/CartStore.dart';
 import 'package:Twomenu/store/WishListStore/WishListStore.dart';
@@ -170,6 +171,9 @@ void main() async {
 
   // STEP 2: nb_utils initialize
   await initialize();
+
+  // ✅ تم إضافة سطر التهيئة هنا فوراً بعد جاهزية الـ SharedPreferences والأدوات الأساسية
+  await initializeDateFormatting();
 
   // STEP 3: تحميل builder.json
   builderResponse = await loadContent();

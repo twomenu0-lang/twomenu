@@ -187,29 +187,33 @@ class _SubCategoryScreenState extends State<SubCategoryScreen> {
             children: [
               errorMsg.isEmpty && mProductModel.isNotEmpty
                   ? SingleChildScrollView(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.max,
-                        children: <Widget>[
-                          16.height,
-                          mSubCategory(mCategoryModel).visible(mCategoryModel.isNotEmpty),
-                          AlignedGridView.count(
-                              scrollDirection: Axis.vertical,
-                              itemCount: mProductModel.length,
-                              physics: NeverScrollableScrollPhysics(),
-                              shrinkWrap: true,
-                              padding: EdgeInsets.only(left: 12, right: 12, bottom: 8),
-                              itemBuilder: (context, index) {
-                                return ProductCard(mProductModel: mProductModel[index], width: context.width());
-                              },
-                              crossAxisCount: crossAxisCount,
-                              mainAxisSpacing: 6,
-                              crossAxisSpacing: 6),
-                          mProgress().visible(isLoadingMoreData).center()
-                        ],
-                      ),
-                    )
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.max,
+                  children: <Widget>[
+                    16.height,
+                    mSubCategory(mCategoryModel).visible(mCategoryModel.isNotEmpty),
+                    AlignedGridView.count(
+                        scrollDirection: Axis.vertical,
+                        itemCount: mProductModel.length,
+                        physics: NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        padding: EdgeInsets.only(left: 12, right: 12, bottom: 8),
+                        itemBuilder: (context, index) {
+                          return ProductCard(
+                            mProductModel: mProductModel[index],
+                            width: context.width(),
+                            isListView: crossAxisCount == 1,
+                          );
+                        },
+                        crossAxisCount: crossAxisCount,
+                        mainAxisSpacing: 6,
+                        crossAxisSpacing: 6),
+                    mProgress().visible(isLoadingMoreData).center()
+                  ],
+                ),
+              )
                   : EmptyScreen().center().visible(errorMsg.isEmpty && mProductModel.isEmpty && !appStore.isLoading),
               mProgress().paddingAll(8).center().visible(appStore.isLoading)
             ],
@@ -234,4 +238,3 @@ class _SubCategoryScreenState extends State<SubCategoryScreen> {
     );
   }
 }
-

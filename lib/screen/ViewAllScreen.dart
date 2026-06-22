@@ -294,64 +294,6 @@ class ViewAllScreenState extends State<ViewAllScreen> {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Widgets المساعدة
-  // ─────────────────────────────────────────────────────────────
-  Widget _productListWidget(ProductResponse product, BuildContext context) {
-    String img = product.images!.isNotEmpty
-        ? product.images!.first.src.validate()
-        : '';
-    return Container(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 90,
-            width: 90,
-            decoration: boxDecorationWithRoundedCorners(
-              borderRadius: radius(8),
-              backgroundColor: Theme.of(context).colorScheme.surface,
-            ),
-            child: Stack(children: [
-              commonCacheImageWidget(img, height: 120, width: 90, fit: BoxFit.cover)
-                  .cornerRadiusWithClipRRect(8),
-              mSale(product),
-            ]),
-          ),
-          10.width,
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(product.name.validate(), style: primaryTextStyle(), maxLines: 2),
-              8.height,
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(children: [
-                    PriceWidget(
-                      price: product.salePrice.validate().isNotEmpty
-                          ? product.salePrice.toString()
-                          : product.price.validate(),
-                      size: 14,
-                    ),
-                    4.width,
-                    PriceWidget(
-                      price: product.regularPrice.validate().toString(),
-                      size: 12,
-                      isLineThroughEnabled: true,
-                      color: Theme.of(context).textTheme.titleMedium!.color,
-                    ).visible(product.salePrice.validate().isNotEmpty),
-                  ]),
-                ],
-              ).paddingOnly(bottom: 8),
-            ],
-          ).expand(),
-        ],
-      ).paddingAll(8),
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────────
   // شريط الـ Siblings المطور والمصقول بالحجم والـ End Padding الجديد
   // ─────────────────────────────────────────────────────────────
   Widget _buildSiblingStrip() {
@@ -706,19 +648,13 @@ class ViewAllScreenState extends State<ViewAllScreen> {
       itemCount: mProductModel.length,
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
-      padding: const EdgeInsets.only(right: 8, left: 8, bottom: 8),
+      padding: const EdgeInsets.only(right: 12, left: 12, bottom: 8),
       itemBuilder: (context, index) {
-        return _productListWidget(mProductModel[index], context).onTap(() {
-          if (getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1) == 1) {
-            ProductDetailScreen1(mProId: mProductModel[index].id).launch(context);
-          } else if (getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1) == 2) {
-            ProductDetailScreen2(mProId: mProductModel[index].id).launch(context);
-          } else if (getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1) == 3) {
-            ProductDetailScreen3(mProId: mProductModel[index].id).launch(context);
-          } else {
-            ProductDetailScreen1(mProId: mProductModel[index].id).launch(context);
-          }
-        });
+        return ProductCard(
+          mProductModel: mProductModel[index],
+          width: context.width(),
+          isListView: true,
+        ).paddingOnly(bottom: 12);
       },
     );
 

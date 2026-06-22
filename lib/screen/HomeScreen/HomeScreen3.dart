@@ -14,7 +14,7 @@ import '/../screen/SaleScreen.dart';
 import '/../screen/SearchScreen.dart';
 import '/../screen/ViewAllScreen.dart';
 import '/../screen/WebViewExternalProductScreen.dart';
-import '/../screen/SmartCategoryScreen.dart'; // ✅ إضافة الـ import للشاشة الذكية هنا أيضاً
+import '/../screen/SmartCategoryScreen.dart';
 import '/../utils/AppWidget.dart';
 import '/../utils/Common.dart';
 import '/../utils/Constants.dart';
@@ -141,11 +141,11 @@ class HomeScreen3State extends State<HomeScreen3> {
                 ),
                 viewAllDashBoard3(
                   context,
-                  viewAll: builderResponse.dashboard!.youMayLikeProduct!.viewAll!,
+                  viewAll: appLocalization.translate('lbl_see_all') ?? builderResponse.dashboard!.youMayLikeProduct!.viewAll!,
                 ).paddingOnly(right: 16).onTap(() {
-                  if (title == builderResponse.dashboard!.dealOfTheDay!.title) {
+                  if (title == (appLocalization.translate('lbl_deal_of_the_day') ?? builderResponse.dashboard!.dealOfTheDay!.title)) {
                     ViewAllScreen(title, isSpecialProduct: true, specialProduct: "deal_of_the_day").launch(context);
-                  } else if (title == builderResponse.dashboard!.offerProduct!.title) {
+                  } else if (title == (appLocalization.translate('lbl_available_offers') ?? builderResponse.dashboard!.offerProduct!.title)) {
                     ViewAllScreen(appLocalization.translate('lbl_offer'), isSpecialProduct: true, specialProduct: "offer").launch(context);
                   } else {
                     ViewAllScreen(title);
@@ -208,7 +208,6 @@ class HomeScreen3State extends State<HomeScreen3> {
               ],
             ),
           ).onTap(() {
-            // ✅ تعديل الـ onTap هنا ليوجه للمنطق الذكي بدلاً من شاشة عرض الكل مباشرة
             SmartCategoryScreen(
               categoryName: cat.name,
               categoryId: cat.id,
@@ -253,7 +252,7 @@ class HomeScreen3State extends State<HomeScreen3> {
                 if (i.url!.isNotEmpty) {
                   WebViewExternalProductScreen(mExternal_URL: i.url, title: i.title).launch(context);
                 } else {
-                  toast('Sorry');
+                  toast(AppLocalizations.of(context)!.translate('lbl_attribute') ?? 'Sorry');
                 }
               });
             }).toList(),
@@ -344,12 +343,12 @@ class HomeScreen3State extends State<HomeScreen3> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    Widget newProduct()     => DashboardComponent3(title: dashboard.newProduct!.title!,        subTitle: dashboard.newProduct!.viewAll!,        product: mNewestProductModel,    onTap: () => ViewAllScreen(dashboard.newProduct!.title,        isNewest: true).launch(context));
-    Widget featureProduct() => DashboardComponent3(title: dashboard.featureProduct!.title!,    subTitle: dashboard.featureProduct!.viewAll!,    product: mFeaturedProductModel,  onTap: () => ViewAllScreen(dashboard.featureProduct!.title,    isFeatured: true).launch(context));
-    Widget bestSelling()    => DashboardComponent3(title: dashboard.bestSaleProduct!.title!,   subTitle: dashboard.bestSaleProduct!.viewAll!,   product: mSellingProductModel,   onTap: () => ViewAllScreen(dashboard.bestSaleProduct!.title,   isBestSelling: true).launch(context));
-    Widget saleProduct()    => DashboardComponent3(title: dashboard.saleProduct!.title!,       subTitle: dashboard.saleProduct!.viewAll!,       product: mSaleProductModel,      onTap: () => ViewAllScreen(dashboard.saleProduct!.title,       isSale: true).launch(context));
-    Widget suggested()      => DashboardComponent3(title: dashboard.suggestionProduct!.title!, subTitle: dashboard.suggestionProduct!.viewAll!, product: mSuggestedProductModel, onTap: () => ViewAllScreen(dashboard.suggestionProduct!.title,  isSpecialProduct: true, specialProduct: "suggested_for_you").launch(context));
-    Widget youMayLike()     => DashboardComponent3(title: dashboard.youMayLikeProduct!.title!, subTitle: dashboard.youMayLikeProduct!.viewAll!, product: mYouMayLikeProductModel,onTap: () => ViewAllScreen(dashboard.youMayLikeProduct!.title,  isSpecialProduct: true, specialProduct: "you_may_like").launch(context));
+    Widget newProduct()     => DashboardComponent3(title: appLocalization.translate('lbl_new_collections') ?? dashboard.newProduct!.title!,        subTitle: appLocalization.translate('lbl_see_all') ?? dashboard.newProduct!.viewAll!,        product: mNewestProductModel,    onTap: () => ViewAllScreen(dashboard.newProduct!.title,        isNewest: true).launch(context));
+    Widget featureProduct() => DashboardComponent3(title: appLocalization.translate('lbl_featured_product') ?? dashboard.featureProduct!.title!,    subTitle: appLocalization.translate('lbl_see_all') ?? dashboard.featureProduct!.viewAll!,    product: mFeaturedProductModel,  onTap: () => ViewAllScreen(dashboard.featureProduct!.title,    isFeatured: true).launch(context));
+    Widget bestSelling()    => DashboardComponent3(title: appLocalization.translate('lbl_top_selling') ?? dashboard.bestSaleProduct!.title!,   subTitle: appLocalization.translate('lbl_see_all') ?? dashboard.bestSaleProduct!.viewAll!,   product: mSellingProductModel,   onTap: () => ViewAllScreen(dashboard.bestSaleProduct!.title,   isBestSelling: true).launch(context));
+    Widget saleProduct()    => DashboardComponent3(title: appLocalization.translate('lbl_trending_product') ?? dashboard.saleProduct!.title!,       subTitle: appLocalization.translate('lbl_see_all') ?? dashboard.saleProduct!.viewAll!,       product: mSaleProductModel,      onTap: () => ViewAllScreen(dashboard.saleProduct!.title,       isSale: true).launch(context));
+    Widget suggested()      => DashboardComponent3(title: appLocalization.translate('lbl_recommendation_for_you') ?? dashboard.suggestionProduct!.title!, subTitle: appLocalization.translate('lbl_see_all') ?? dashboard.suggestionProduct!.viewAll!, product: mSuggestedProductModel, onTap: () => ViewAllScreen(dashboard.suggestionProduct!.title,  isSpecialProduct: true, specialProduct: "suggested_for_you").launch(context));
+    Widget youMayLike()     => DashboardComponent3(title: appLocalization.translate('lbl_you_might_like') ?? dashboard.youMayLikeProduct!.title!, subTitle: appLocalization.translate('lbl_see_all') ?? dashboard.youMayLikeProduct!.viewAll!, product: mYouMayLikeProductModel,onTap: () => ViewAllScreen(dashboard.youMayLikeProduct!.title,  isSpecialProduct: true, specialProduct: "you_may_like").launch(context));
 
     final Widget body = ListView(
       shrinkWrap: true,
@@ -375,14 +374,14 @@ class HomeScreen3State extends State<HomeScreen3> {
               case 'feature_products':
                 return featureProduct().paddingTop(8).visible(dashboard.featureProduct!.enable!);
               case 'deal_of_the_day':
-                return _availableOfferAndDeal(dashboard.dealOfTheDay!.title!, mDealProductModel, dashboard.dealOfTheDay!.viewAll!, context, appLocalization)
+                return _availableOfferAndDeal(appLocalization.translate('lbl_deal_of_the_day') ?? dashboard.dealOfTheDay!.title!, mDealProductModel, appLocalization.translate('lbl_see_all') ?? dashboard.dealOfTheDay!.viewAll!, context, appLocalization)
                     .paddingTop(8).visible(dashboard.dealOfTheDay!.enable! && mDealProductModel.isNotEmpty);
               case 'best_selling_product':
                 return bestSelling().paddingTop(8).visible(dashboard.bestSaleProduct!.enable!);
               case 'sale_product':
                 return saleProduct().paddingTop(8).visible(dashboard.saleProduct!.enable!);
               case 'offer':
-                return _availableOfferAndDeal(dashboard.offerProduct!.title!, mOfferProductModel, dashboard.dealOfTheDay!.viewAll!, context, appLocalization)
+                return _availableOfferAndDeal(appLocalization.translate('lbl_available_offers') ?? dashboard.offerProduct!.title!, mOfferProductModel, appLocalization.translate('lbl_see_all') ?? dashboard.offerProduct!.viewAll!, context, appLocalization)
                     .paddingTop(8).visible(dashboard.offerProduct!.enable! && mOfferProductModel.isNotEmpty);
               case 'suggested_for_you':
                 return suggested().paddingTop(8).visible(dashboard.suggestionProduct!.enable!);

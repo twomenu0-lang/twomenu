@@ -8,15 +8,24 @@ import '/../utils/Constants.dart';
 import '/../utils/SharedPref.dart';
 import 'package:mobx/mobx.dart';
 import 'package:nb_utils/nb_utils.dart';
+import '/../AppLocalizations.dart'; // ✅ الخطوة 1: إضافة الـ import الجديد هنا
 
 part 'WishListStore.g.dart';
 
 class WishListStore = _WishListStore with _$WishListStore;
 
+// ✅ الخطوة 1 المكملة: إضافة الـ helper function للترجمة ديناميكياً عبر الـ navigatorKey
+String _tr(String key, String fallback) {
+  final ctx = navigatorKey.currentContext;
+  if (ctx == null) return fallback;
+  return AppLocalizations.of(ctx)?.translate(key) ?? fallback;
+}
+
 abstract class _WishListStore with Store {
   @observable
   List<WishListResponse> wishList = ObservableList<WishListResponse>();
 
+  // ✅ الخطوة 2: استبدال الدالة بالكامل لتدعم الترجمة للمسجلين والزوار وتتجاهل رسائل السيرفر الثابتة
   @action
   Future<void> addToWishList(WishListResponse data) async {
     if (wishList.any((element) => element.proId == data.proId)) {
@@ -25,13 +34,13 @@ abstract class _WishListStore with Store {
 
         await removeWishList({'pro_id': data.proId}).then((value) {
           getWishlistItem();
-          toast(value["message"], print: true);
+          toast(_tr('lbl_product_deleted_from_wishlist', 'Product Deleted From Wishlist'));
         }).catchError((e) {
           log(e.toString());
         });
       } else {
         wishList.removeWhere((element) => element.proId == data.proId);
-        toast("Product Deleted From Wishlist");
+        toast(_tr('lbl_product_deleted_from_wishlist', 'Product Deleted From Wishlist'));
       }
     } else {
       if (!await isGuestUser() && await isLoggedIn()) {
@@ -39,13 +48,13 @@ abstract class _WishListStore with Store {
         var request = {'pro_id': data.proId};
         await addWishList(request).then((value) {
           getWishlistItem();
-          toast(value["message"], print: true);
+          toast(_tr('lbl_product_added_to_wishlist', 'Product Successfully Added To Wishlist'));
         }).catchError((e) {
           log(e.toString());
         });
       } else {
         wishList.add(data);
-        toast("Product Successfully Added To Wishlist");
+        toast(_tr('lbl_product_added_to_wishlist', 'Product Successfully Added To Wishlist'));
       }
     }
     storeWishlistData();
@@ -87,4 +96,3 @@ abstract class _WishListStore with Store {
     storeWishlistData();
   }
 }
-

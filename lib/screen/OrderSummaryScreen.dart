@@ -61,7 +61,7 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
   @override
   void initState() {
     super.initState();
-    addList();
+    // ✅ تم حذف استدعاء addList() من هنا لعدم توفر الـ Context في هذه المرحلة
     init();
   }
 
@@ -94,11 +94,7 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
     mAmount = double.parse(widget.mPrice);
   }
 
-  addList() {
-    paymentList!.clear();
-    paymentList!.add(PaymentClass(paymentIndex: 0, paymentMethod: 'Cash On Delivery'));
-    setState(() {});
-  }
+  // ✅ تم حذف دالة addList() القديمة بالكامل لبنائها ديناميكياً داخل الـ build
 
   void createNativeOrder(String mPayMethod, String? mPayTitle) async {
     hideKeyboard(context);
@@ -220,13 +216,21 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
 
   void payments() {
     if (paymentIndex == 0) {
-      createNativeOrder('cod', "Cash On Delivery");
+      // ✅ تعديل إرسال العنوان ليصبح مترجماً بدلاً من النص الثابت القديم
+      createNativeOrder('cod', AppLocalizations.of(context)!.translate('lbl_cash_on_delivery'));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     var appLocalization = AppLocalizations.of(context)!;
+
+    // ✅ بناء وتصفير مصفوفة طرق الدفع هنا بشكل ديناميكي ومترجم لالتقاط الـ context الحالي
+    paymentList!.clear();
+    paymentList!.add(PaymentClass(
+      paymentIndex: 0,
+      paymentMethod: appLocalization.translate('lbl_cash_on_delivery'),
+    ));
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,

@@ -7,6 +7,22 @@ import 'package:nb_utils/nb_utils.dart';
 import '../AppLocalizations.dart';
 import '../main.dart';
 
+// ✅ دالة مساعدة لتحويل حالة الطلب إلى نص مترجم وقصير يناسب كارت القائمة
+String _statusLabel(AppLocalizations loc, String? status) {
+  switch (status) {
+    case 'processing': return loc.translate('lbl_processing') ?? 'PROCESSING';
+    case 'shipped':    return loc.translate('lbl_shipped') ?? 'SHIPPED';
+    case 'completed':  return loc.translate('lbl_completed') ?? 'COMPLETED';
+    case 'cancelled':  return loc.translate('lbl_cancelled') ?? 'CANCELLED';
+  // الحالات التالية نصوصها الأصلية قصيرة ومناسبة لطبيعة الكارت (مثل: قيد الانتظار، فشل الطلب)
+    case 'on-hold':    return loc.translate('lbl_status_on_hold') ?? 'ON HOLD';
+    case 'pending':    return loc.translate('lbl_status_pending') ?? 'PENDING';
+    case 'refunded':   return loc.translate('lbl_status_refunded') ?? 'REFUNDED';
+    case 'failed':     return loc.translate('lbl_status_failed') ?? 'FAILED';
+    default:           return (status ?? '').toUpperCase();
+  }
+}
+
 Widget orderListWidget(context, List<OrderResponse> mOrderModel, Function(int index) onCall) {
   var appLocalization = AppLocalizations.of(context)!;
   return AnimatedListView(
@@ -103,8 +119,9 @@ Widget orderListWidget(context, List<OrderResponse> mOrderModel, Function(int in
                                   .titleSmall!
                                   .color)
                               .expand(),
+                          // ✅ تم التعديل هنا لاستدعاء دالة الترجمة القصيرة للحفاظ على تناسق التصميم
                           Text(
-                              (order.status ?? '').toUpperCase(),
+                              _statusLabel(appLocalization, order.status),
                               style: boldTextStyle(
                                   color: statusColor(order.status))),
                         ],
