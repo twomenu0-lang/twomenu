@@ -14,8 +14,16 @@ class WalletMobileInputScreen extends StatefulWidget {
 
   final int orderId;
   final String amount;
+  final String? orderNumber;   // ✅ إضافة لاستقبال رقم الطلب
+  final String? dateCreated;   // ✅ إضافة لاستقبال تاريخ الطلب
 
-  const WalletMobileInputScreen({super.key, required this.orderId, required this.amount});
+  const WalletMobileInputScreen({
+    super.key,
+    required this.orderId,
+    required this.amount,
+    this.orderNumber,
+    this.dateCreated,
+  });
 
   @override
   WalletMobileInputScreenState createState() => WalletMobileInputScreenState();
@@ -42,6 +50,8 @@ class WalletMobileInputScreenState extends State<WalletMobileInputScreen> {
         orderId: widget.orderId,
         amount: widget.amount,
         initialMessage: response.message,
+        orderNumber: widget.orderNumber,   // ✅ تمرير للشاشة التالية
+        dateCreated: widget.dateCreated,   // ✅ تمرير للشاشة التالية
       ).launch(context, pageRouteAnimation: PageRouteAnimation.Scale);
     }).catchError((error) {
       appStore.setLoading(false);

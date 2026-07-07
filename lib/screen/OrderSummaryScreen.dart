@@ -22,7 +22,6 @@ import 'PlaceOrderScreen.dart';
 import 'WebViewPaymentScreen.dart';
 import 'WalletMobileInputScreen.dart'; // ✅ الانتقال لشاشة المحفظة
 import 'CardPaymentSheet.dart'; // ✅ Bottom Sheet الدفع بالكارت
-// import 'EditProfileScreen.dart'; // ✅ قم بإلغاء التعليق عن هذا السطر واستيراد الشاشة إذا لم تكن مستوردة تلقائياً
 
 class OrderSummaryScreen extends StatefulWidget {
   static String tag = '/OrderSummaryScreen';
@@ -161,10 +160,12 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
       if (!context.mounted) return;
 
       if (mPayMethod == PAYMENT_METHOD_KASHIER_WALLET) {
-        // ✅ محفظة إلكترونية: ننتقل لشاشة إدخال رقم الموبايل لطلب الدفع
+        // ✅ التعديل ب — تمرير رقم وتاريخ الطلب لشاشة المحفظة الإلكترونية
         WalletMobileInputScreen(
           orderId: response['id'],
           amount: widget.mPrice,
+          orderNumber: response['number'].toString(),
+          dateCreated: response['date_created'],
         ).launch(context, pageRouteAnimation: PageRouteAnimation.Scale);
       } else if (mPayMethod == PAYMENT_METHOD_KASHIER_CARD) {
         // ✅ الدفع بالكارت: نعرض صفحة كاشير المستضافة داخل Bottom Sheet
@@ -178,11 +179,12 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
         if (!context.mounted) return;
 
         if (isPaymentDone == true) {
+          // ✅ التعديل أ — استبدال orderKey بـ orderNumber في شاشة الكارت
           await PlaceOrderScreen(
             mOrderID: response['id'],
             total: widget.mPrice,
             transactionId: response['transaction_id'],
-            orderKey: response['order_key'],
+            orderNumber: response['number'].toString(),
             paymentMethod: response['payment_method'],
             dateCreated: response['date_created'],
           ).launch(context, pageRouteAnimation: PageRouteAnimation.Scale);
@@ -190,12 +192,12 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
           toast('لم تكتمل عملية الدفع، حاول مرة أخرى');
         }
       } else {
-        // الدفع الافتراضي كاش عند الاستلام
+        // ✅ التعديل أ — استبدال orderKey بـ orderNumber في شاشة الكاش
         await PlaceOrderScreen(
           mOrderID: response['id'],
           total: widget.mPrice,
           transactionId: response['transaction_id'],
-          orderKey: response['order_key'],
+          orderNumber: response['number'].toString(),
           paymentMethod: response['payment_method'],
           dateCreated: response['date_created'],
         ).launch(context, pageRouteAnimation: PageRouteAnimation.Scale);
@@ -208,15 +210,13 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
   }
 
   // ───────────────────────────────────────────────────────────────
-  // التعديل 3 — فحص الحماية داخل دالة createWebViewOrder مع توجيه ذكي
+  // التعديل ج — توحيد مسار الـ webview وتمرير القيم المحدثة لقاعدة البيانات
   // ───────────────────────────────────────────────────────────────
   Future createWebViewOrder() async {
     if (!accessAllowed) return;
 
-    // ✅ منع الاستمرار وتوجيه المستخدم لتعديل الملف الشخصي إذا كانت البيانات ناقصة
     if (shipping == null || billing == null) {
       toast('من فضلك أكمل بيانات العنوان في الملف الشخصي أولاً');
-      // const EditProfileScreen().launch(context); // 👈 تفعيل التوجيه المباشر هنا
       return;
     }
 
@@ -246,14 +246,16 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
     appStore.setLoading(true);
     await createOrderApi(request.toJson()).then((response) {
       if (!mounted) return;
-      processPaymentApi(response['id']);
+      // ✅ تمرير رقم الطلب وتاريخ الإنشاء لمعالج الدفع
+      processPaymentApi(response['id'], response['number'], response['date_created']);
     }).catchError((error) {
       appStore.setLoading(false);
       toast(error.toString());
     });
   }
 
-  processPaymentApi(var mOrderId) async {
+  // ✅ تعديل التوقيع وبنية معالجة دفع الويب فيو للعبور الإلزامي بـ PlaceOrderScreen
+  processPaymentApi(var mOrderId, var mOrderNumber, var mDateCreated) async {
     var request = {"order_id": mOrderId};
     try {
       final res = await getCheckOutUrl(request);
@@ -268,34 +270,26 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
       if (!context.mounted) return;
 
       if (isPaymentDone) {
-        appStore.setLoading(true);
-        if (!await isGuestUser()) {
-          await clearCartItems();
-          if (!context.mounted) return;
-          appStore.setLoading(false);
-          appStore.setCount(0);
-          const DashBoardScreen().launch(context, isNewTask: true);
-        } else {
-          appStore.setCount(0);
-          removeKey(CART_DATA);
-          const DashBoardScreen().launch(context, isNewTask: true);
-        }
+        // ✅ التوحيد: التوجه إلى شاشة تتبع الطلب PlaceOrderScreen لمسح السلة والحفاظ على التسلسل الموحد
+        await PlaceOrderScreen(
+          mOrderID: mOrderId,
+          total: widget.mPrice,
+          transactionId: '',
+          orderNumber: mOrderNumber.toString(),
+          paymentMethod: 'webview',
+          dateCreated: mDateCreated ?? DateTime.now().toIso8601String(),
+        ).launch(context, isNewTask: true, pageRouteAnimation: PageRouteAnimation.Scale);
       }
     } catch (error) {
       appStore.setLoading(false);
     }
   }
 
-  // ───────────────────────────────────────────────────────────────
-  // التعديل 2 — فحص الحماية داخل دالة payments مع توجيه ذكي
-  // ───────────────────────────────────────────────────────────────
   void payments() {
     var appLocalization = AppLocalizations.of(context)!;
 
-    // ✅ منع الاستمرار وتوجيه المستخدم لتعديل الملف الشخصي إذا كانت البيانات ناقصة
     if (shipping == null || billing == null) {
       toast('من فضلك أكمل بيانات العنوان في الملف الشخصي أولاً');
-      // const EditProfileScreen().launch(context); // 👈 تفعيل التوجيه المباشر هنا
       return;
     }
 
@@ -312,7 +306,6 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
   Widget build(BuildContext context) {
     var appLocalization = AppLocalizations.of(context)!;
 
-    // بناء وتصفير مصفوفة طرق الدفع ديناميكياً لتشمل المحفظة والكارت
     paymentList!.clear();
     paymentList!.add(PaymentClass(
       paymentIndex: 0,

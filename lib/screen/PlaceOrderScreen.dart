@@ -17,14 +17,14 @@ import '../utils/Colors.dart';
 // ignore: must_be_immutable
 class PlaceOrderScreen extends StatefulWidget {
   static String tag = '/PlaceOrderScreen';
-  var mOrderID, total, transactionId, orderKey, paymentMethod, dateCreated;
+  var mOrderID, total, transactionId, orderNumber, paymentMethod, dateCreated; // ✅ تم التغيير لـ orderNumber
 
   PlaceOrderScreen({
     super.key,
     this.mOrderID,
     this.total,
     this.transactionId,
-    this.orderKey,
+    this.orderNumber, // ✅ تم التغيير لـ orderNumber
     this.paymentMethod,
     this.dateCreated,
   });
@@ -77,14 +77,23 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
     }
   }
 
+  // ✅ التعديل ب — مسح السلة فوراً بمجرد إنشاء نوت الطلب بنجاح في السيرفر لمنع تكرار السلة عند الرجوع
   Future createOrderTracking() async {
     appStore.setLoading(true);
     var request = {
       'customer_note': true,
       'note': "{\n\"status\":\"Ordered\",\n\"message\":\"Your order has been placed.\"\n} ",
     };
-    await createOrderNotes(widget.mOrderID, request).then((res) {
+    await createOrderNotes(widget.mOrderID, request).then((res) async {
       if (!mounted) return;
+
+      if (!await isGuestUser()) {
+        await clearCartItems().catchError((_) {});
+      }
+      if (!mounted) return;
+      cartStore.clearCart();
+      appStore.setCount(0);
+      removeKey(CART_DATA);
       appStore.setLoading(false);
     }).catchError((error) {
       if (!mounted) return;
@@ -93,43 +102,25 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
     });
   }
 
+  // ✅ تبسيط الدالة لتصبح مسؤولة فقط عن التوجيه النظيف
   onComplete() async {
-    if (!await isGuestUser()) {
-      clearCartItems().then((response) async {
-        if (!mounted) return;
-        cartStore.clearCart();
-        appStore.setCount(0);
-        await const DashBoardScreen().launch(context, isNewTask: true);
-        await Future.delayed(const Duration(milliseconds: 800));
-        if (!mounted) return;
-        const OrderListScreen().launch(context);
-      }).catchError((error) {
-        setState(() {});
-        toast(error.toString());
-      });
-    } else {
-      appStore.setCount(0);
-      cartStore.clearCart();
-      await const DashBoardScreen().launch(context, isNewTask: true);
-      await Future.delayed(const Duration(milliseconds: 800));
-      if (!mounted) return;
-      const OrderListScreen().launch(context);
-    }
+    await const DashBoardScreen().launch(context, isNewTask: true);
+    await Future.delayed(const Duration(milliseconds: 800));
+    if (!mounted) return;
+    const OrderListScreen().launch(context);
   }
 
   void _shareOrder(AppLocalizations appLocalization) {
     final text =
         '🛍️ ${appLocalization.translate('lbl_oder_placed_successfully')}\n\n'
         '💰 ${appLocalization.translate('lbl_total_amount_')}: ${widget.total}\n'
-        '🔖 ${appLocalization.translate('order_id')}: ${widget.orderKey}\n'
+        '🔖 ${appLocalization.translate('order_id')}: ${widget.orderNumber}\n' // ✅ استخدام orderNumber
         '📅 ${appLocalization.translate('lbl_transaction_date')}: ${date.toString()}';
     Share.share(text);
   }
 
   // ── Progress Tracker — نفس تصميم OrderDetailScreen ──────────────────────
   Widget _buildProgressTracker() {
-    // processing = step 1 (تم الطلب + جاري التجهيز)
-    // الشاشة دي بتظهر مباشرة بعد الطلب يعني دايماً step = 1
     const int currentStep = 1;
 
     final steps = [
@@ -149,7 +140,7 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
         ],
       ),
       child: Directionality(
-        textDirection: TextDirection.rtl, // ✅ RTL من اليمين لليسار
+        textDirection: TextDirection.rtl,
         child: Row(
           children: List.generate(steps.length, (i) {
             final isActive  = i <= currentStep;
@@ -197,7 +188,6 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        // نقطة المؤشر على الخطوة الحالية فقط
                         if (i == currentStep) ...[
                           4.height,
                           Container(
@@ -240,171 +230,178 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E2235) : const Color(0xFFF4F5FA);
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60.0),
-        child: AppBar(
-          elevation: 0,
-          backgroundColor: isHalloween ? mChristmasColor : primaryColor,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: white),
-            onPressed: () => onComplete(),
+    // ✅ التعديل ج — تغليف شجرة الـ Widgets بـ PopScope لمنع تخطي الـ hardware/gesture back
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        onComplete(); // تحويل أي محاولة رجوع لتسلسل التوجيه الآمن
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(60.0),
+          child: AppBar(
+            elevation: 0,
+            backgroundColor: isHalloween ? mChristmasColor : primaryColor,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: white),
+              onPressed: () => onComplete(),
+            ),
+            automaticallyImplyLeading: false,
           ),
-          automaticallyImplyLeading: false,
         ),
-      ),
-      body: BodyCornerWidget(
-        child: FadeTransition(
-          opacity: _fadeAnim,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: Column(
-              children: [
-
-                // ── أيقونة النجاح ────────────────────────────────────────
-                ScaleTransition(
-                  scale: _scaleAnim,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        width: 110, height: 110,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFF66953A).withOpacity(0.08),
-                        ),
-                      ),
-                      Container(
-                        width: 85, height: 85,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFF66953A).withOpacity(0.15),
-                        ),
-                      ),
-                      Container(
-                        width: 64, height: 64,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xFF66953A),
-                        ),
-                        child: const Icon(Icons.check, color: white, size: 34),
-                      ),
-                      Positioned(
-                        top: 2, right: 10,
-                        child: Icon(Icons.star,
-                            color: primaryColor!.withOpacity(0.5), size: 10),
-                      ),
-                      Positioned(
-                        bottom: 4, left: 8,
-                        child: Icon(Icons.star,
-                            color: primaryColor!.withOpacity(0.4), size: 8),
-                      ),
-                      Positioned(
-                        top: 10, left: 14,
-                        child: Container(
-                          width: 5, height: 5,
+        body: BodyCornerWidget(
+          child: FadeTransition(
+            opacity: _fadeAnim,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+              child: Column(
+                children: [
+                  // ── أيقونة النجاح ────────────────────────────────────────
+                  ScaleTransition(
+                    scale: _scaleAnim,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                          width: 110, height: 110,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: primaryColor!.withOpacity(0.3),
+                            color: const Color(0xFF66953A).withOpacity(0.08),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                20.height,
-
-                // ── العنوان ──────────────────────────────────────────────
-                Text(
-                  'تم الطلب بنجاح!',
-                  style: boldTextStyle(size: 22),
-                  textAlign: TextAlign.center,
-                ),
-                10.height,
-                Text(
-                  'شكراً لثقتك بنا، سنقوم بتجهيز طلبك\nوإرساله إليك في أقرب وقت.',
-                  style: secondaryTextStyle(size: 13),
-                  textAlign: TextAlign.center,
-                ),
-                24.height,
-
-                // ── بطاقة تفاصيل الطلب ──────────────────────────────────
-                Container(
-                  decoration: BoxDecoration(
-                    color: cardBg,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Column(
-                    children: [
-                      _DetailRow(
-                        icon: Icons.account_balance_wallet_outlined,
-                        label: appLocalization.translate('lbl_total_amount_')!,
-                        value: widget.total.toString(),
-                        isPrice: true,
-                      ),
-                      const Divider(height: 1, indent: 16, endIndent: 16),
-                      _DetailRow(
-                        icon: Icons.copy_outlined,
-                        label: appLocalization.translate('order_id')!,
-                        value: widget.orderKey.toString(),
-                        onTap: () {
-                          Clipboard.setData(
-                              ClipboardData(text: widget.orderKey.toString()));
-                          toast('تم نسخ رقم الطلب');
-                        },
-                      ),
-                      const Divider(height: 1, indent: 16, endIndent: 16),
-                      _DetailRow(
-                        icon: Icons.calendar_today_outlined,
-                        label: appLocalization.translate('lbl_transaction_date')!,
-                        value: date.toString(),
-                      ),
-                    ],
-                  ),
-                ),
-                20.height,
-
-                // ── Progress Tracker — موحد مع OrderDetailScreen ─────────
-                _buildProgressTracker(),
-                28.height,
-
-                // ── زر مشاركة تفاصيل الطلب ──────────────────────────────
-                SizedBox(
-                  width: context.width(),
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _shareOrder(appLocalization),
-                    icon: const Icon(Icons.share_outlined, color: white, size: 20),
-                    label: Text('مشاركة تفاصيل الطلب',
-                        style: primaryTextStyle(color: white)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        Container(
+                          width: 85, height: 85,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFF66953A).withOpacity(0.15),
+                          ),
+                        ),
+                        Container(
+                          width: 64, height: 64,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFF66953A),
+                          ),
+                          child: const Icon(Icons.check, color: white, size: 34),
+                        ),
+                        Positioned(
+                          top: 2, right: 10,
+                          child: Icon(Icons.star,
+                              color: primaryColor!.withOpacity(0.5), size: 10),
+                        ),
+                        Positioned(
+                          bottom: 4, left: 8,
+                          child: Icon(Icons.star,
+                              color: primaryColor!.withOpacity(0.4), size: 8),
+                        ),
+                        Positioned(
+                          top: 10, left: 14,
+                          child: Container(
+                            width: 5, height: 5,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: primaryColor!.withOpacity(0.3),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                12.height,
+                  20.height,
 
-                // ── زر العودة للرئيسية ───────────────────────────────────
-                SizedBox(
-                  width: context.width(),
-                  height: 50,
-                  child: OutlinedButton(
-                    onPressed: () => onComplete(),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: primaryColor,
-                      side: BorderSide(color: primaryColor!.withOpacity(0.4)),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: Text('العودة إلى الرئيسية',
-                        style: primaryTextStyle(color: primaryColor)),
+                  // ── العنوان ──────────────────────────────────────────────
+                  Text(
+                    'تم الطلب بنجاح!',
+                    style: boldTextStyle(size: 22),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-                16.height,
-              ],
+                  10.height,
+                  Text(
+                    'شكراً لثقتك بنا، سنقوم بتجهيز طلبك\nوإرساله إليك في أقرب وقت.',
+                    style: secondaryTextStyle(size: 13),
+                    textAlign: TextAlign.center,
+                  ),
+                  24.height,
+
+                  // ── بطاقة تفاصيل الطلب ──────────────────────────────────
+                  Container(
+                    decoration: BoxDecoration(
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      children: [
+                        _DetailRow(
+                          icon: Icons.account_balance_wallet_outlined,
+                          label: appLocalization.translate('lbl_total_amount_')!,
+                          value: widget.total.toString(),
+                          isPrice: true,
+                        ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        _DetailRow(
+                          icon: Icons.copy_outlined,
+                          label: appLocalization.translate('order_id')!,
+                          value: widget.orderNumber.toString(), // ✅ استخدام orderNumber
+                          onTap: () {
+                            Clipboard.setData(
+                                ClipboardData(text: widget.orderNumber.toString())); // ✅ استخدام orderNumber
+                            toast('تم نسخ رقم الطلب');
+                          },
+                        ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        _DetailRow(
+                          icon: Icons.calendar_today_outlined,
+                          label: appLocalization.translate('lbl_transaction_date')!,
+                          value: date.toString(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  20.height,
+
+                  // ── Progress Tracker — موحد مع OrderDetailScreen ─────────
+                  _buildProgressTracker(),
+                  28.height,
+
+                  // ── زر مشاركة تفاصيل الطلب ──────────────────────────────
+                  SizedBox(
+                    width: context.width(),
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _shareOrder(appLocalization),
+                      icon: const Icon(Icons.share_outlined, color: white, size: 20),
+                      label: Text('مشاركة تفاصيل الطلب',
+                          style: primaryTextStyle(color: white)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                  ),
+                  12.height,
+
+                  // ── زر العودة للرئيسية ───────────────────────────────────
+                  SizedBox(
+                    width: context.width(),
+                    height: 50,
+                    child: OutlinedButton(
+                      onPressed: () => onComplete(),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: primaryColor,
+                        side: BorderSide(color: primaryColor!.withOpacity(0.4)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: Text('العودة إلى الرئيسية',
+                          style: primaryTextStyle(color: primaryColor)),
+                    ),
+                  ),
+                  16.height,
+                ],
+              ),
             ),
           ),
         ),

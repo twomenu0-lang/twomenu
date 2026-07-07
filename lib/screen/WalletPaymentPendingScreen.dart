@@ -2,12 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '/../main.dart';
 import '/../network/rest_apis.dart';
-import '/../utils/AppWidget.dart'; // ✅ الصحيح
-import '/../utils/Constants.dart'; // ✅ إضافة — كانت السبب في undefined CART_DATA
+import '/../utils/AppWidget.dart';
+import '/../utils/Constants.dart';
 import 'package:nb_utils/nb_utils.dart';
 import '../AppLocalizations.dart';
 import 'DashBoardScreen.dart';
-// ✅ تم حذف import 'Successscreen.dart' لأنه غير مستخدم فعلياً هنا
+import 'PlaceOrderScreen.dart'; // ✅ إضافة الـ import للتوحيد
 
 class WalletPaymentPendingScreen extends StatefulWidget {
   static String tag = '/WalletPaymentPendingScreen';
@@ -15,8 +15,17 @@ class WalletPaymentPendingScreen extends StatefulWidget {
   final int orderId;
   final String amount;
   final String? initialMessage;
+  final String? orderNumber;   // ✅ إضافة لاستقبال رقم الطلب
+  final String? dateCreated;   // ✅ إضافة لاستقبال تاريخ الطلب
 
-  const WalletPaymentPendingScreen({super.key, required this.orderId, required this.amount, this.initialMessage});
+  const WalletPaymentPendingScreen({
+    super.key,
+    required this.orderId,
+    required this.amount,
+    this.initialMessage,
+    this.orderNumber,
+    this.dateCreated,
+  });
 
   @override
   WalletPaymentPendingScreenState createState() => WalletPaymentPendingScreenState();
@@ -61,10 +70,19 @@ class WalletPaymentPendingScreenState extends State<WalletPaymentPendingScreen> 
 
         if (result.isSuccess) {
           timer.cancel();
-          clearCartItems().catchError((_) {});
-          appStore.setCount(0);
-          removeKey(CART_DATA);
-          const DashBoardScreen().launch(context, isNewTask: true);
+          if (!mounted) return;
+
+          // ✅ التوحيد: بدل التوجه المباشر لـ DashBoardScreen، بنعدي على PlaceOrderScreen
+          // مسح السلة أصبح مسؤولية PlaceOrderScreen وبدء تتبع الطلب
+          PlaceOrderScreen(
+            mOrderID: widget.orderId,
+            total: widget.amount,
+            transactionId: '',
+            orderNumber: widget.orderNumber,
+            paymentMethod: 'kashier_wallet',
+            dateCreated: widget.dateCreated ?? DateTime.now().toIso8601String(),
+          ).launch(context, isNewTask: true, pageRouteAnimation: PageRouteAnimation.Scale);
+
         } else if (result.isFailed) {
           timer.cancel();
           if (mounted) showFailedDialog();
