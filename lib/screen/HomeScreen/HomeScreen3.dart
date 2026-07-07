@@ -25,6 +25,8 @@ import '../../AppLocalizations.dart';
 class HomeScreen3 extends StatefulWidget {
   static String tag = '/HomeScreen3';
 
+  const HomeScreen3({super.key});
+
   @override
   HomeScreen3State createState() => HomeScreen3State();
 }
@@ -404,7 +406,7 @@ class HomeScreen3State extends State<HomeScreen3> {
         actions: [
           IconButton(
             icon: const Icon(Icons.search_sharp, color: white),
-            onPressed: () => SearchScreen().launch(context),
+            onPressed: () => const SearchScreen().launch(context),
           ),
         ],
       ) as PreferredSizeWidget?,

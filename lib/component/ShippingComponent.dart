@@ -11,7 +11,7 @@ import '../main.dart';
 class ShippingComponent extends StatefulWidget {
   final Function? onCall;
 
-  ShippingComponent({this.onCall});
+  const ShippingComponent({super.key, this.onCall});
 
   @override
   _ShippingComponentState createState() => _ShippingComponentState();
@@ -49,7 +49,7 @@ class _ShippingComponentState extends State<ShippingComponent> {
                       children: [
                         Text(appLocalization.translate("lbl_Shipping")!, style: boldTextStyle()),
                         Text(appLocalization.translate("lbl_change")!, style: secondaryTextStyle(color: primaryColor, size: 12)).onTap(() async {
-                          bool isChanged = await (EditProfileScreen().launch(context, pageRouteAnimation: PageRouteAnimation.Fade));
+                          bool isChanged = await (const EditProfileScreen().launch(context, pageRouteAnimation: PageRouteAnimation.Fade));
                           if (isChanged) {
                           /*  cartStore.countryList.clear();*/
                          /*   cartStore.shippingMethodResponse = null;*/
@@ -65,19 +65,19 @@ class _ShippingComponentState extends State<ShippingComponent> {
                     getBoolAsync(IS_GUEST_USER) == true
                         ? Text(appLocalization.translate('lbl_please_update_shipping_address')!, style: primaryTextStyle())
                         : cartStore.shipping!.getAddress()!.isNotEmpty
-                            ? Text("(" + cartStore.shipping!.getAddress()! + ")", style: secondaryTextStyle()).visible(cartStore.shipping!.getAddress()!.isNotEmpty)
+                            ? Text("(${cartStore.shipping!.getAddress()!})", style: secondaryTextStyle()).visible(cartStore.shipping!.getAddress()!.isNotEmpty)
                             : Text(appLocalization.translate('lbl_please_update_shipping_address')!, style: primaryTextStyle()),
                     cartStore.shippingMethods.isNotEmpty
                         ? AnimatedListView(
                             itemCount: cartStore.shippingMethods.length,
                             scrollDirection: Axis.vertical,
                             shrinkWrap: true,
-                            padding: EdgeInsets.only(top: 8),
-                            physics: NeverScrollableScrollPhysics(),
+                            padding: const EdgeInsets.only(top: 8),
+                            physics: const NeverScrollableScrollPhysics(),
                             itemBuilder: (BuildContext context, int index) {
                               Method method = cartStore.shippingMethods[index];
                               return Container(
-                                padding: EdgeInsets.only(top: 4, bottom: 4),
+                                padding: const EdgeInsets.only(top: 4, bottom: 4),
                                 child: Row(
                                   children: [
                                     Container(
@@ -85,9 +85,9 @@ class _ShippingComponentState extends State<ShippingComponent> {
                                             borderRadius: radius(4), backgroundColor: cartStore.selectedShipment == index ? primaryColor! : Colors.grey.withOpacity(0.3)),
                                         width: 16,
                                         height: 16,
-                                        child: Icon(Icons.done, size: 12, color: Colors.white).visible(cartStore.selectedShipment == index)),
+                                        child: const Icon(Icons.done, size: 12, color: Colors.white).visible(cartStore.selectedShipment == index)),
                                     Text(
-                                      method.id != "free_shipping" ? method.methodTitle! + ":" : method.methodTitle!,
+                                      method.id != "free_shipping" ? "${method.methodTitle!}:" : method.methodTitle!,
                                       style: primaryTextStyle(),
                                     ).paddingLeft(8),
                                     Text(getStringAsync(DEFAULT_CURRENCY) + method.cost.toString(), style: primaryTextStyle()).paddingLeft(8).visible(method.id != "free_shipping")
@@ -103,7 +103,7 @@ class _ShippingComponentState extends State<ShippingComponent> {
               ],
             );
           })
-        : SizedBox();
+        : const SizedBox();
   }
 }
 

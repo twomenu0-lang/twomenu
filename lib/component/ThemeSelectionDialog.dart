@@ -9,6 +9,8 @@ import '../main.dart';
 class ThemeSelectionDialog extends StatefulWidget {
   static String tag = '/ThemeSelectionDialog';
 
+  const ThemeSelectionDialog({super.key});
+
   @override
   ThemeSelectionDialogState createState() => ThemeSelectionDialogState();
 }
@@ -37,11 +39,11 @@ class ThemeSelectionDialogState extends State<ThemeSelectionDialog> {
 
     List<String?> themeModeList = [appLocalization.translate('lbl_light'), appLocalization.translate('lbl_dark'), appLocalization.translate('lbl_system_default')];
 
-    return Container(
+    return SizedBox(
       width: context.width(),
       child: AnimatedListView(
         shrinkWrap: true,
-        padding: EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.only(bottom: 16),
         itemCount: themeModeList.length,
         itemBuilder: (BuildContext context, int index) {
           return RadioListTile(

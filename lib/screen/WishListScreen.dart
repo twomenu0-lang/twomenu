@@ -20,6 +20,8 @@ import 'SearchScreen.dart';
 class WishListScreen extends StatefulWidget {
   static String tag = '/WishListScreen';
 
+  const WishListScreen({super.key});
+
   @override
   WishListScreenState createState() => WishListScreenState();
 }
@@ -51,7 +53,7 @@ class WishListScreenState extends State<WishListScreen> {
         scrollDirection: Axis.vertical,
         itemCount: wishListStore.wishList.length,
         shrinkWrap: true,
-        padding: EdgeInsets.only(left: 16, right: 10, top: 16),
+        padding: const EdgeInsets.only(left: 16, right: 10, top: 16),
         crossAxisCount: 2,
         mainAxisSpacing: 8,
         crossAxisSpacing: 8,
@@ -86,9 +88,9 @@ class WishListScreenState extends State<WishListScreen> {
         appLocalization.translate('lbl_wish_list'),
         actions: [
           IconButton(
-              icon: Icon(Icons.search_sharp, color: white),
+              icon: const Icon(Icons.search_sharp, color: white),
               onPressed: () {
-                SearchScreen().launch(context);
+                const SearchScreen().launch(context);
               })
         ],
       ) as PreferredSizeWidget?,
@@ -97,7 +99,7 @@ class WishListScreenState extends State<WishListScreen> {
           child: Stack(
             children: [
               if (!getBoolAsync(IS_LOGGED_IN))
-                WishListNotSignInComponent(isWishlist: true)
+                const WishListNotSignInComponent(isWishlist: true)
                     .visible(!appStore.isLoading),
               if (wishListStore.wishList.isNotEmpty)
                 Stack(
@@ -110,7 +112,7 @@ class WishListScreenState extends State<WishListScreen> {
               if (getBoolAsync(IS_LOGGED_IN) &&
                   wishListStore.wishList.isEmpty &&
                   !appStore.isLoading)
-                WishListEmptyComponent().visible(!appStore.isLoading),
+                const WishListEmptyComponent().visible(!appStore.isLoading),
               if (appStore.isLoading && wishListStore.wishList.isEmpty)
                 mProgress().center().visible(
                     appStore.isLoading && wishListStore.wishList.isEmpty)

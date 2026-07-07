@@ -12,7 +12,7 @@ class WishListComponent extends StatefulWidget {
   final WishListResponse? mWishListModel;
   final Function onClick;
 
-  WishListComponent({this.mWishListModel, required this.onClick});
+  const WishListComponent({super.key, this.mWishListModel, required this.onClick});
 
   @override
   WishListComponentState createState() => WishListComponentState();
@@ -57,12 +57,12 @@ class WishListComponentState extends State<WishListComponent> {
                 children: [
                   Container(
                     decoration: boxDecorationWithRoundedCorners(backgroundColor: Colors.red, borderRadius: radiusOnly(topLeft: 8)),
+                    padding: const EdgeInsets.fromLTRB(6, 2, 6, 2),
                     child: Text(appLocalization.translate('lbl_sale')!, style: secondaryTextStyle(color: white, size: 12)),
-                    padding: EdgeInsets.fromLTRB(6, 2, 6, 2),
                   ).visible(widget.mWishListModel!.salePrice!.isNotEmpty),
                   Container(
-                    margin: EdgeInsets.all(6),
-                    padding: EdgeInsets.all(4),
+                    margin: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(shape: BoxShape.circle, color: Theme.of(context).cardTheme.color),
                     child: Icon(Icons.close, color: Theme.of(context).textTheme.titleSmall!.color, size: 16),
                   ).onTap(() async {
@@ -98,7 +98,7 @@ class WishListComponentState extends State<WishListComponent> {
                       .visible(widget.mWishListModel!.salePrice.validate().isNotEmpty),
                 ],
               ).paddingOnly(left: 8, right: 8),
-              Divider(color: view_color),
+              const Divider(color: view_color),
               if (widget.mWishListModel!.inStock == false)
                 Text(appLocalization.translate('lbl_sold_out')!, style: boldTextStyle(color: greyColor)).paddingOnly(top: 6, bottom: 10).center()
               else

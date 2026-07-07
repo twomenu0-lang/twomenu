@@ -4,7 +4,7 @@ import '/../utils/Constants.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 class LoginService {
-  static FirebaseAuth _auth = FirebaseAuth.instance;
+  static final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn googleSignIn = GoogleSignIn();
 
   Future<Map> signInWithGoogle() async {
@@ -31,7 +31,7 @@ class LoginService {
       String firstName = '';
       String lastName = '';
 
-      if (currentUser.displayName.validate().split(' ').length >= 1) firstName = currentUser.displayName.splitBefore(' ');
+      if (currentUser.displayName.validate().split(' ').isNotEmpty) firstName = currentUser.displayName.splitBefore(' ');
       if (currentUser.displayName.validate().split(' ').length >= 2) lastName = currentUser.displayName.splitAfter(' ');
 
       setValue(PROFILE_IMAGE, currentUser.photoURL);

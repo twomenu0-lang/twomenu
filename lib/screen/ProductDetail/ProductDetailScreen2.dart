@@ -30,7 +30,7 @@ import '../WebViewExternalProductScreen.dart';
 
 class ProductDetailScreen2 extends StatefulWidget {
   final int? mProId;
-  const ProductDetailScreen2({Key? key, this.mProId}) : super(key: key);
+  const ProductDetailScreen2({super.key, this.mProId});
 
   @override
   _ProductDetailScreenState createState() => _ProductDetailScreenState();
@@ -107,7 +107,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen2> {
       productDetailNew = mProducts[0];
       mainProduct = mProducts[0]; // احفظ المنتج الرئيسي
       rating = double.tryParse(productDetailNew!.averageRating ?? '0') ?? 0.0;
-      productDetailNew!.variations!.forEach((e) => mProductVariationsIds.add(e));
+      for (var e in productDetailNew!.variations!) {
+        mProductVariationsIds.add(e);
+      }
       mProductsList = List.from(mProducts.skip(1));
       final type = productDetailNew!.type;
       if (type == "variable" || type == "variation") {
@@ -327,8 +329,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen2> {
               ]),
             ).onTap(() {
               final v = getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1);
-              if (v == 2) ProductDetailScreen2(mProId: ups[i].id).launch(context);
-              else if (v == 3) ProductDetailScreen3(mProId: ups[i].id).launch(context);
+              if (v == 2) {
+                ProductDetailScreen2(mProId: ups[i].id).launch(context);
+              } else if (v == 3) ProductDetailScreen3(mProId: ups[i].id).launch(context);
               else ProductDetailScreen1(mProId: ups[i].id).launch(context);
             });
           }),
@@ -344,7 +347,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen2> {
           Text(appLocalization.translate('lbl_product_include')!, style: boldTextStyle()).paddingOnly(left: 12, top: 8),
           AnimatedListView(physics: const NeverScrollableScrollPhysics(), scrollDirection: Axis.vertical, shrinkWrap: true, itemCount: grp.length, padding: const EdgeInsets.symmetric(horizontal: 6),
               itemBuilder: (context, i) => GestureDetector(
-                onTap: () { final v = getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1); if (v == 2) ProductDetailScreen2(mProId: grp[i].id).launch(context); else if (v == 3) ProductDetailScreen3(mProId: grp[i].id).launch(context); else ProductDetailScreen1(mProId: grp[i].id).launch(context); },
+                onTap: () { final v = getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1); if (v == 2) {
+                  ProductDetailScreen2(mProId: grp[i].id).launch(context);
+                } else if (v == 3) ProductDetailScreen3(mProId: grp[i].id).launch(context); else ProductDetailScreen1(mProId: grp[i].id).launch(context); },
                 child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(grp[i].name!, style: primaryTextStyle()), 4.height,
@@ -357,8 +362,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen2> {
                           textAlign: TextAlign.center, style: boldTextStyle(color: grp[i].inStock == false ? primaryColor : white, size: 12)),
                     ).onTap(() async {
                       if (grp[i].inStock == true) {
-                        if (grp[i].type == 'external') WebViewExternalProductScreen(mExternal_URL: grp[i].externalUrl, title: appLocalization.translate('lbl_external_product')).launch(context);
-                        else if (!getBoolAsync(IS_LOGGED_IN)) SignInScreen().launch(context, pageRouteAnimation: PageRouteAnimation.Slide);
+                        if (grp[i].type == 'external') {
+                          WebViewExternalProductScreen(mExternal_URL: grp[i].externalUrl, title: appLocalization.translate('lbl_external_product')).launch(context);
+                        } else if (!getBoolAsync(IS_LOGGED_IN)) const SignInScreen().launch(context, pageRouteAnimation: PageRouteAnimation.Slide);
                         else { addCart(data: grp[i]); init(); setState(() {}); }
                       }
                     }),
@@ -377,7 +383,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen2> {
     final imgSlider = productDetailNew != null ? Column(children: [Container(height: 450, width: context.width(), decoration: boxDecorationWithRoundedCorners(borderRadius: const BorderRadius.only(topRight: Radius.circular(20), topLeft: Radius.circular(20)), backgroundColor: Theme.of(context).scaffoldBackgroundColor),
         child: PageView(controller: _pageController, onPageChanged: (i) { selectIndex = i; setState(() {}); }, children: productImg1.map((i) => commonCacheImageWidget(i.validate(), fit: BoxFit.cover, width: double.infinity).cornerRadiusWithClipRRectOnly(topLeft: 20, topRight: 20).onTap(() => ZoomImageScreen(mImgList: productDetailNew!.images).launch(context))).toList())), dotIndicator]) : const SizedBox.shrink();
 
-    final mFavourite = productDetailNew != null ? Observer(builder: (_) => GestureDetector(onTap: () { if (productDetailNew!.type! == 'external') toast(appLocalization.translate('lbl_external_wishlist_msg')!); else { checkWishList(productDetailNew, context); setState(() {}); } },
+    final mFavourite = productDetailNew != null ? Observer(builder: (_) => GestureDetector(onTap: () { if (productDetailNew!.type! == 'external') {
+      toast(appLocalization.translate('lbl_external_wishlist_msg')!);
+    } else { checkWishList(productDetailNew, context); setState(() {}); } },
         child: Container(padding: const EdgeInsets.all(8), decoration: boxDecorationWithRoundedCorners(borderRadius: BorderRadius.circular(8), backgroundColor: Theme.of(context).cardTheme.color!, border: Border.all(color: primaryColor!)),
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [wishListStore.isItemInWishlist(productDetailNew!.id!) == false ? Icon(Icons.favorite_border, color: primaryColor) : Icon(Icons.favorite, color: primaryColor), 4.width,
               Text(wishListStore.isItemInWishlist(productDetailNew!.id!) == false ? appLocalization.translate('lbl_wish_list')!.toUpperCase() : appLocalization.translate('lbl_wishlisted')!.toUpperCase(), textAlign: TextAlign.center, style: boldTextStyle(color: primaryColor, wordSpacing: 2, size: 14))])).visible(productDetailNew!.isAddedWishList != null))) : const SizedBox.shrink();
@@ -389,8 +397,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen2> {
             Text(productDetailNew!.inStock! == true ? productDetailNew!.type! == 'external' ? productDetailNew!.buttonText! : inCart ? appLocalization.translate('lbl_remove_cart')!.toUpperCase() : appLocalization.translate('lbl_add_to_cart')!.toUpperCase() : appLocalization.translate('lbl_sold_out')!.toUpperCase(),
                 textAlign: TextAlign.center, style: boldTextStyle(color: white, wordSpacing: 1, size: 14))])).onTap(() {
         if (productDetailNew!.inStock == true) {
-          if (mIsExternalProduct) WebViewExternalProductScreen(mExternal_URL: mExternalUrl, title: appLocalization.translate('lbl_external_product')).launch(context);
-          else if (!getBoolAsync(IS_LOGGED_IN)) SignInScreen().launch(context, pageRouteAnimation: PageRouteAnimation.Slide);
+          if (mIsExternalProduct) {
+            WebViewExternalProductScreen(mExternal_URL: mExternalUrl, title: appLocalization.translate('lbl_external_product')).launch(context);
+          } else if (!getBoolAsync(IS_LOGGED_IN)) const SignInScreen().launch(context, pageRouteAnimation: PageRouteAnimation.Slide);
           else { addCart(data: productDetailNew!); init(); setState(() {}); }
         }
       });

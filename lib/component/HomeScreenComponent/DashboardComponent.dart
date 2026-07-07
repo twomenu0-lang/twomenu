@@ -15,14 +15,14 @@ import 'ProductCard.dart';
 /// ─────────────────────────────────────────────────────────────
 class DashboardComponent extends StatefulWidget {
   const DashboardComponent({
-    Key? key,
+    super.key,
     required this.title,
     required this.subTitle,
     required this.product,
     required this.onTap,
     this.badgeText,
     this.bestSellerText,
-  }) : super(key: key);
+  });
 
   final String title;
   final String subTitle;

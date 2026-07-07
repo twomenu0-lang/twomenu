@@ -13,6 +13,8 @@ import '../main.dart';
 class ChooseProductDetailVariant extends StatefulWidget {
   static String tag = '/ChooseDashboardScreen';
 
+  const ChooseProductDetailVariant({super.key});
+
   @override
   ChooseProductDetailVariantState createState() => ChooseProductDetailVariantState();
 }
@@ -46,12 +48,12 @@ class ChooseProductDetailVariantState extends State<ChooseProductDetailVariant> 
           showBack: true,
           actions: [
             IconButton(
-              padding: EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.only(right: 8),
               onPressed: () {
                 appStore.setBottomNavigationIndex(0);
-                DashBoardScreen().launch(context, isNewTask: true);
+                const DashBoardScreen().launch(context, isNewTask: true);
               },
-              icon: Icon(Ionicons.ios_home_outline, size: 24,color: white),
+              icon: const Icon(Ionicons.ios_home_outline, size: 24,color: white),
             ),
           ],
         ) as PreferredSizeWidget?,
@@ -98,7 +100,7 @@ class ChooseProductDetailVariantState extends State<ChooseProductDetailVariant> 
       width: context.width() * 0.46,
       height: context.height() * 0.4,
       alignment: Alignment.center,
-      margin: EdgeInsets.only(top: 8),
+      margin: const EdgeInsets.only(top: 8),
       decoration: BoxDecoration(
         borderRadius: radius(8),
         border: Border.all(color: getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1) == code ? primaryColor! : Theme
@@ -109,22 +111,22 @@ class ChooseProductDetailVariantState extends State<ChooseProductDetailVariant> 
         fit: StackFit.expand,
         children: [
           Image.asset('images/Twomenu/productDetail_$code.jpg', fit: BoxFit.cover, alignment: Alignment.topCenter).cornerRadiusWithClipRRect(8),
-          AnimatedContainer(duration: Duration(milliseconds: 800), color: getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1) == code ? transparentColor : Colors.black45)
+          AnimatedContainer(duration: const Duration(milliseconds: 800), color: getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1) == code ? transparentColor : Colors.black45)
               .cornerRadiusWithClipRRect(8),
           AnimatedContainer(
-            duration: Duration(milliseconds: 800),
-            child: Text(title.validate(), style: boldTextStyle(color: getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1) == code ? white : textPrimaryColor)),
+            duration: const Duration(milliseconds: 800),
             decoration: BoxDecoration(color: getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1) == code ? Colors.black.withOpacity(0.5) : Colors.grey, borderRadius: radius(defaultRadius)),
-            padding: EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
+            padding: const EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
+            child: Text(title.validate(), style: boldTextStyle(color: getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1) == code ? white : textPrimaryColor)),
           ).center(),
           Positioned(
             bottom: 8,
             right: 8,
             child: AnimatedContainer(
-              duration: Duration(milliseconds: 800),
-              padding: EdgeInsets.all(4),
-              child: Icon(Icons.check, size: 18, color: white),
+              duration: const Duration(milliseconds: 800),
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(color: primaryColor, shape: BoxShape.circle, boxShadow: defaultBoxShadow()),
+              child: const Icon(Icons.check, size: 18, color: white),
             ).visible(getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1) == code),
           ),
         ],

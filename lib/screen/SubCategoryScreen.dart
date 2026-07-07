@@ -21,14 +21,14 @@ class SubCategoryScreen extends StatefulWidget {
   int? categoryId = 0;
   String? headerName = "";
 
-  SubCategoryScreen(this.headerName, {this.categoryId});
+  SubCategoryScreen(this.headerName, {super.key, this.categoryId});
 
   @override
   _SubCategoryScreenState createState() => _SubCategoryScreenState();
 }
 
 class _SubCategoryScreenState extends State<SubCategoryScreen> {
-  var scrollController = new ScrollController();
+  var scrollController = ScrollController();
 
   List<ProductResponse> mProductModel = [];
   List<Category> mCategoryModel = [];
@@ -132,11 +132,11 @@ class _SubCategoryScreenState extends State<SubCategoryScreen> {
 
   Widget mSubCategory(List<Category> category) {
     return Container(
-      margin: EdgeInsets.only(top: 16),
+      margin: const EdgeInsets.only(top: 16),
       height: MediaQuery.of(context).size.width * 0.15,
       child: AnimatedListView(
         itemCount: category.length,
-        padding: EdgeInsets.only(left: 8, right: 8, bottom: 16),
+        padding: const EdgeInsets.only(left: 8, right: 8, bottom: 16),
         shrinkWrap: true,
         scrollDirection: Axis.horizontal,
         itemBuilder: (context, i) {
@@ -145,9 +145,9 @@ class _SubCategoryScreenState extends State<SubCategoryScreen> {
               SubCategoryScreen(mCategoryModel[i].name, categoryId: mCategoryModel[i].id).launch(context);
             },
             child: Container(
-              margin: EdgeInsets.only(right: 8),
+              margin: const EdgeInsets.only(right: 8),
               decoration: boxDecorationWithRoundedCorners(borderRadius: radius(10), backgroundColor: context.cardColor, border: Border.all()),
-              padding: EdgeInsets.all(8),
+              padding: const EdgeInsets.all(8),
               child: Row(
                 children: <Widget>[
                   if (category[i].image != null) commonCacheImageWidget(category[i].image!.src, width: MediaQuery.of(context).size.width * 0.1, fit: BoxFit.contain),
@@ -177,7 +177,7 @@ class _SubCategoryScreenState extends State<SubCategoryScreen> {
               onPressed: () {
                 layoutSelectionBottomSheet(context);
               },
-              icon: Icon(MaterialCommunityIcons.view_dashboard_outline, color: Colors.white, size: 20)),
+              icon: const Icon(MaterialCommunityIcons.view_dashboard_outline, color: Colors.white, size: 20)),
           mCart(context, mIsLoggedIn)
         ],
       ) as PreferredSizeWidget?,
@@ -197,9 +197,9 @@ class _SubCategoryScreenState extends State<SubCategoryScreen> {
                     AlignedGridView.count(
                         scrollDirection: Axis.vertical,
                         itemCount: mProductModel.length,
-                        physics: NeverScrollableScrollPhysics(),
+                        physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
-                        padding: EdgeInsets.only(left: 12, right: 12, bottom: 8),
+                        padding: const EdgeInsets.only(left: 12, right: 12, bottom: 8),
                         itemBuilder: (context, index) {
                           return ProductCard(
                             mProductModel: mProductModel[index],
@@ -214,7 +214,7 @@ class _SubCategoryScreenState extends State<SubCategoryScreen> {
                   ],
                 ),
               )
-                  : EmptyScreen().center().visible(errorMsg.isEmpty && mProductModel.isEmpty && !appStore.isLoading),
+                  : const EmptyScreen().center().visible(errorMsg.isEmpty && mProductModel.isEmpty && !appStore.isLoading),
               mProgress().paddingAll(8).center().visible(appStore.isLoading)
             ],
           ),

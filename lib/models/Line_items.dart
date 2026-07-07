@@ -10,9 +10,9 @@ class LineItems {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['product_id'] = this.proId;
-    data['quantity'] = this.quantity;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['product_id'] = proId;
+    data['quantity'] = quantity;
     return data;
   }
 }

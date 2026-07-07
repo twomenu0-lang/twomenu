@@ -5,12 +5,12 @@ import '/../utils/Utils.dart';
 
 class Countdown extends StatefulWidget {
   const Countdown({
-    Key? key,
+    super.key,
     required this.duration,
     required this.builder,
     this.onFinish,
     this.interval = const Duration(seconds: 1),
-  }) : super(key: key);
+  });
 
   final Duration duration;
   final Duration interval;
@@ -62,13 +62,13 @@ class _CountdownState extends State<Countdown> {
 
 class CountdownFormatted extends StatelessWidget {
   const CountdownFormatted({
-    Key? key,
+    super.key,
     required this.duration,
     required this.builder,
     this.onFinish,
     this.interval = const Duration(seconds: 1),
     this.formatter,
-  }) : super(key: key);
+  });
 
   final Duration duration;
   final Duration interval;

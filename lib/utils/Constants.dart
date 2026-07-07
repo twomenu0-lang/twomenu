@@ -1,6 +1,6 @@
 import 'package:nb_utils/nb_utils.dart';
 
-const AppName = 'تومينو';
+const AppName = 'تومنيو';
 
 ///OneSignalAppID
 const mOneSignalAPPKey = 'f211bd10-9e3a-4064-a628-9fe6c266620e';
@@ -178,3 +178,7 @@ const consumerSecret = "ADD CONSUMER SECRET";
 
 const Default_DASHBOARD_PAGE_VARIANT = 1;
 const Default_PRODUCT_DETAIL_VARIANT = 1;
+
+// KASHIER WALLET INTEGRATION CONSTANT
+const PAYMENT_METHOD_KASHIER_WALLET = 'kashier_wallet';
+const String PAYMENT_METHOD_KASHIER_CARD = 'kashier_card';

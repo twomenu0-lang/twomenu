@@ -189,7 +189,7 @@ class ProductResponse {
     soldIndividually = json['sold_individually'];
     weight = json['weight'];
     dimensions = json['dimensions'] != null
-        ? new Dimensions.fromJson(json['dimensions'])
+        ? Dimensions.fromJson(json['dimensions'])
         : null;
     shippingRequired = json['shipping_required'];
     shippingTaxable = json['shipping_taxable'];
@@ -206,19 +206,19 @@ class ProductResponse {
     if (json['categories'] != null) {
       categories = <Categories>[];
       json['categories'].forEach((v) {
-        categories!.add(new Categories.fromJson(v));
+        categories!.add(Categories.fromJson(v));
       });
     }
     if (json['images'] != null) {
       images = <Images>[];
       json['images'].forEach((v) {
-        images!.add(new Images.fromJson(v));
+        images!.add(Images.fromJson(v));
       });
     }
     if (json['attributes'] != null) {
       attributes = <Attributes>[];
       json['attributes'].forEach((v) {
-        attributes!.add(new Attributes.fromJson(v));
+        attributes!.add(Attributes.fromJson(v));
       });
     }
     menuOrder = json['menu_order'];
@@ -227,73 +227,73 @@ class ProductResponse {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['slug'] = this.slug;
-    data['permalink'] = this.permalink;
-    data['date_created'] = this.dateCreated;
-    data['date_modified'] = this.dateModified;
-    data['type'] = this.type;
-    data['status'] = this.status;
-    data['featured'] = this.featured;
-    data['catalog_visibility'] = this.catalogVisibility;
-    data['description'] = this.description;
-    data['short_description'] = this.shortDescription;
-    data['sku'] = this.sku;
-    data['price'] = this.price;
-    data['regular_price'] = this.regularPrice;
-    data['sale_price'] = this.salePrice;
-    data['date_on_sale_from'] = this.dateOnSaleFrom;
-    data['date_on_sale_to'] = this.dateOnSaleTo;
-    data['price_html'] = this.priceHtml;
-    data['on_sale'] = this.onSale;
-    data['purchasable'] = this.purchasable;
-    data['total_sales'] = this.totalSales;
-    data['virtual'] = this.virtual;
-    data['downloadable'] = this.downloadable;
-    data['download_limit'] = this.downloadLimit;
-    data['download_expiry'] = this.downloadExpiry;
-    data['download_type'] = this.downloadType;
-    data['external_url'] = this.externalUrl;
-    data['button_text'] = this.buttonText;
-    data['tax_status'] = this.taxStatus;
-    data['tax_class'] = this.taxClass;
-    data['manage_stock'] = this.manageStock;
-    data['stock_quantity'] = this.stockQuantity;
-    data['in_stock'] = this.inStock;
-    data['backorders'] = this.backorders;
-    data['backorders_allowed'] = this.backordersAllowed;
-    data['backordered'] = this.backOrdered;
-    data['sold_individually'] = this.soldIndividually;
-    data['weight'] = this.weight;
-    if (this.dimensions != null) {
-      data['dimensions'] = this.dimensions!.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['slug'] = slug;
+    data['permalink'] = permalink;
+    data['date_created'] = dateCreated;
+    data['date_modified'] = dateModified;
+    data['type'] = type;
+    data['status'] = status;
+    data['featured'] = featured;
+    data['catalog_visibility'] = catalogVisibility;
+    data['description'] = description;
+    data['short_description'] = shortDescription;
+    data['sku'] = sku;
+    data['price'] = price;
+    data['regular_price'] = regularPrice;
+    data['sale_price'] = salePrice;
+    data['date_on_sale_from'] = dateOnSaleFrom;
+    data['date_on_sale_to'] = dateOnSaleTo;
+    data['price_html'] = priceHtml;
+    data['on_sale'] = onSale;
+    data['purchasable'] = purchasable;
+    data['total_sales'] = totalSales;
+    data['virtual'] = virtual;
+    data['downloadable'] = downloadable;
+    data['download_limit'] = downloadLimit;
+    data['download_expiry'] = downloadExpiry;
+    data['download_type'] = downloadType;
+    data['external_url'] = externalUrl;
+    data['button_text'] = buttonText;
+    data['tax_status'] = taxStatus;
+    data['tax_class'] = taxClass;
+    data['manage_stock'] = manageStock;
+    data['stock_quantity'] = stockQuantity;
+    data['in_stock'] = inStock;
+    data['backorders'] = backorders;
+    data['backorders_allowed'] = backordersAllowed;
+    data['backordered'] = backOrdered;
+    data['sold_individually'] = soldIndividually;
+    data['weight'] = weight;
+    if (dimensions != null) {
+      data['dimensions'] = dimensions!.toJson();
     }
-    data['shipping_required'] = this.shippingRequired;
-    data['shipping_taxable'] = this.shippingTaxable;
-    data['shipping_class'] = this.shippingClass;
-    data['shipping_class_id'] = this.shippingClassId;
-    data['reviews_allowed'] = this.reviewsAllowed;
-    data['average_rating'] = this.averageRating;
-    data['rating_count'] = this.ratingCount;
-    data['related_ids'] = this.relatedIds;
-    data['upsell_ids'] = this.upSellIds;
-    data['cross_sell_ids'] = this.crossSellIds;
-    data['parent_id'] = this.parentId;
-    data['purchase_note'] = this.purchaseNote;
-    if (this.categories != null) {
-      data['categories'] = this.categories!.map((v) => v.toJson()).toList();
+    data['shipping_required'] = shippingRequired;
+    data['shipping_taxable'] = shippingTaxable;
+    data['shipping_class'] = shippingClass;
+    data['shipping_class_id'] = shippingClassId;
+    data['reviews_allowed'] = reviewsAllowed;
+    data['average_rating'] = averageRating;
+    data['rating_count'] = ratingCount;
+    data['related_ids'] = relatedIds;
+    data['upsell_ids'] = upSellIds;
+    data['cross_sell_ids'] = crossSellIds;
+    data['parent_id'] = parentId;
+    data['purchase_note'] = purchaseNote;
+    if (categories != null) {
+      data['categories'] = categories!.map((v) => v.toJson()).toList();
     }
-    if (this.images != null) {
-      data['images'] = this.images!.map((v) => v.toJson()).toList();
+    if (images != null) {
+      data['images'] = images!.map((v) => v.toJson()).toList();
     }
-    if (this.attributes != null) {
-      data['attributes'] = this.attributes!.map((v) => v.toJson()).toList();
+    if (attributes != null) {
+      data['attributes'] = attributes!.map((v) => v.toJson()).toList();
     }
-    data['menu_order'] = this.menuOrder;
-    data['is_added_cart'] = this.isAddedCart;
-    data['is_added_wishlist'] = this.isAddedWishList;
+    data['menu_order'] = menuOrder;
+    data['is_added_cart'] = isAddedCart;
+    data['is_added_wishlist'] = isAddedWishList;
     return data;
   }
 }
@@ -312,10 +312,10 @@ class Dimensions {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['length'] = this.length;
-    data['width'] = this.width;
-    data['height'] = this.height;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['length'] = length;
+    data['width'] = width;
+    data['height'] = height;
     return data;
   }
 }
@@ -334,10 +334,10 @@ class Categories {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['slug'] = this.slug;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['slug'] = slug;
     return data;
   }
 }
@@ -376,15 +376,15 @@ class Images {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['date_created'] = this.dateCreated;
-    data['date_modified'] = this.dateModified;
-    data['src'] = this.src;
-    data['thumbnail'] = this.thumbnail; // ✅ حفظ الـ thumbnail
-    data['name'] = this.name;
-    data['alt'] = this.alt;
-    data['position'] = this.position;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['date_created'] = dateCreated;
+    data['date_modified'] = dateModified;
+    data['src'] = src;
+    data['thumbnail'] = thumbnail; // ✅ حفظ الـ thumbnail
+    data['name'] = name;
+    data['alt'] = alt;
+    data['position'] = position;
     return data;
   }
 }
@@ -415,13 +415,13 @@ class Attributes {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['position'] = this.position;
-    data['visible'] = this.visible;
-    data['variation'] = this.variation;
-    data['options'] = this.options;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['position'] = position;
+    data['visible'] = visible;
+    data['variation'] = variation;
+    data['options'] = options;
     return data;
   }
 }
@@ -446,13 +446,13 @@ class Store {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['shop_name'] = this.shopName;
-    data['url'] = this.url;
-    if (this.address != null) {
-      data['address'] = this.address!.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['shop_name'] = shopName;
+    data['url'] = url;
+    if (address != null) {
+      data['address'] = address!.toJson();
     }
     return data;
   }
@@ -480,13 +480,13 @@ class Address {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['city'] = this.city;
-    data['country'] = this.country;
-    data['state'] = this.state;
-    data['street_1'] = this.street_1;
-    data['street_2'] = this.street_2;
-    data['zip'] = this.zip;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['city'] = city;
+    data['country'] = country;
+    data['state'] = state;
+    data['street_1'] = street_1;
+    data['street_2'] = street_2;
+    data['zip'] = zip;
     return data;
   }
 }
@@ -551,39 +551,39 @@ class VendorResponse {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['banner'] = this.banner;
-    data['banner_id'] = this.bannerId;
-    data['enabled'] = this.enabled;
-    data['featured'] = this.featured;
-    data['first_name'] = this.firstName;
-    data['gravatar'] = this.avatar;
-    data['gravatar_id'] = this.avatarId;
-    data['id'] = this.id;
-    data['last_name'] = this.lastName;
-    data['location'] = this.location;
-    data['payment'] = this.payment;
-    data['phone'] = this.phone;
-    data['products_per_page'] = this.productsPerPage;
-    data['registered'] = this.registered;
-    data['shop_url'] = this.shopUrl;
-    data['show_email'] = this.showEmail;
-    data['show_more_product_tab'] = this.showMoreProductTab;
-    data['store_name'] = this.storeName;
-    data['store_toc'] = this.storeToc;
-    data['toc_enabled'] = this.tocEnabled;
-    data['trusted'] = this.trusted;
-    if (this.address != null) {
-      data['address'] = this.address!.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['banner'] = banner;
+    data['banner_id'] = bannerId;
+    data['enabled'] = enabled;
+    data['featured'] = featured;
+    data['first_name'] = firstName;
+    data['gravatar'] = avatar;
+    data['gravatar_id'] = avatarId;
+    data['id'] = id;
+    data['last_name'] = lastName;
+    data['location'] = location;
+    data['payment'] = payment;
+    data['phone'] = phone;
+    data['products_per_page'] = productsPerPage;
+    data['registered'] = registered;
+    data['shop_url'] = shopUrl;
+    data['show_email'] = showEmail;
+    data['show_more_product_tab'] = showMoreProductTab;
+    data['store_name'] = storeName;
+    data['store_toc'] = storeToc;
+    data['toc_enabled'] = tocEnabled;
+    data['trusted'] = trusted;
+    if (address != null) {
+      data['address'] = address!.toJson();
     }
-    if (this.rating != null) {
-      data['rating'] = this.rating!.toJson();
+    if (rating != null) {
+      data['rating'] = rating!.toJson();
     }
-    if (this.social != null) {
-      data['social'] = this.social!.toJson();
+    if (social != null) {
+      data['social'] = social!.toJson();
     }
-    if (this.storeOpenClose != null) {
-      data['store_open_close'] = this.storeOpenClose!.toJson();
+    if (storeOpenClose != null) {
+      data['store_open_close'] = storeOpenClose!.toJson();
     }
     return data;
   }
@@ -603,9 +603,9 @@ class Rating {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['count'] = this.count;
-    data['rating'] = this.rating;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['count'] = count;
+    data['rating'] = rating;
     return data;
   }
 }
@@ -626,10 +626,10 @@ class StoreOpenClose {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['close_notice'] = this.closeNotice;
-    data['enabled'] = this.enabled;
-    data['open_notice'] = this.openNotice;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['close_notice'] = closeNotice;
+    data['enabled'] = enabled;
+    data['open_notice'] = openNotice;
     return data;
   }
 }
@@ -660,15 +660,15 @@ class Social {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['fb'] = this.fb;
-    data['flickr'] = this.flicker;
-    data['gplus'] = this.gPlus;
-    data['instagram'] = this.instagram;
-    data['linkedin'] = this.linkDin;
-    data['pinterest'] = this.pinterest;
-    data['twitter'] = this.twitter;
-    data['youtube'] = this.youtube;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['fb'] = fb;
+    data['flickr'] = flicker;
+    data['gplus'] = gPlus;
+    data['instagram'] = instagram;
+    data['linkedin'] = linkDin;
+    data['pinterest'] = pinterest;
+    data['twitter'] = twitter;
+    data['youtube'] = youtube;
     return data;
   }
 }

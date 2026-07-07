@@ -1,3 +1,4 @@
+// lib/store/AppStore.dart
 import 'package:flutter/material.dart';
 import '/../main.dart';
 import '/../screen/CategoriesScreen.dart';
@@ -46,6 +47,10 @@ abstract class AppStoreBase with Store {
   @observable
   int unreadNotificationCount = 0;
 
+  // ✅ flag ترقية المستوى — يُفحص عند فتح التطبيق لعرض Level-Up Dialog
+  @observable
+  bool tierUpgraded = false;
+
   @observable
   String selectedLanguageCode = defaultLanguage;
 
@@ -55,11 +60,11 @@ abstract class AppStoreBase with Store {
 
   @observable
   List<Widget> dashboardScreeList = [
-    isHalloween ? HomeScreen5() : MyHomeScreen(),
-    CategoriesScreen(),
+    isHalloween ? const HomeScreen5() : const MyHomeScreen(),
+    const CategoriesScreen(),
     MyCartScreen(isShowBack: false),
-    WishListScreen(),
-    ProfileScreen(),
+    const WishListScreen(),
+    const ProfileScreen(),
   ];
 
   @action
@@ -94,18 +99,24 @@ abstract class AppStoreBase with Store {
     setValue(IS_GUEST_USER, val);
   }
 
+  // ── ✅ تعديل وحماية دالة وضع الليل من قيم الـ Null المفاجئة ──
   @action
   Future<void> setDarkMode({bool? aIsDarkMode}) async {
-    isDarkMode = aIsDarkMode;
+    isDarkMode = aIsDarkMode ?? false;
 
-    if (isDarkMode!) {
+    if (isDarkMode == true) {
       textPrimaryColorGlobal = Colors.white54;
       textSecondaryColorGlobal = Colors.white70;
-      setStatusBarColor(primaryColor!);
+      if (primaryColor != null) setStatusBarColor(primaryColor!);
     } else {
-      textPrimaryColorGlobal = textPrimaryColour!;
-      textSecondaryColorGlobal = textSecondaryColour!;
-      setStatusBarColor(primaryColor!);
+      // حماية الألوان العامة إذا استدعيت الدالة مبكراً في main.dart قبل _initColors()
+      if (textPrimaryColour != null) {
+        textPrimaryColorGlobal = textPrimaryColour!;
+      }
+      if (textSecondaryColour != null) {
+        textSecondaryColorGlobal = textSecondaryColour!;
+      }
+      if (primaryColor != null) setStatusBarColor(primaryColor!);
     }
   }
 
@@ -143,5 +154,10 @@ abstract class AppStoreBase with Store {
   void setNotification(bool val) {
     isNotificationOn = val;
     setValue(IS_NOTIFICATION_ON, val);
+  }
+
+  @action
+  void setTierUpgraded(bool val) {
+    tierUpgraded = val;
   }
 }

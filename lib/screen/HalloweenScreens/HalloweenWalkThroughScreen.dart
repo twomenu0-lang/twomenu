@@ -9,6 +9,8 @@ import '../DashBoardScreen.dart';
 class HalloweenWalkThroughScreen extends StatefulWidget {
   static String tag = '/HalloweenWalkThroughScreen';
 
+  const HalloweenWalkThroughScreen({super.key});
+
   @override
   HalloweenWalkThroughScreenState createState() => HalloweenWalkThroughScreenState();
 }
@@ -42,7 +44,7 @@ class HalloweenWalkThroughScreenState extends State<HalloweenWalkThroughScreen> 
             Stack(
               alignment: Alignment.bottomCenter,
               children: [
-                Container(
+                SizedBox(
                   width: context.width(),
                   height: context.height(),
                   child: PageView.builder(
@@ -65,7 +67,7 @@ class HalloweenWalkThroughScreenState extends State<HalloweenWalkThroughScreen> 
                   right: 20,
                   top: 40,
                   child: Text('Skip', style: primaryTextStyle(color: white)).onTap(() async {
-                    DashBoardScreen().launch(context, isNewTask: true);
+                    const DashBoardScreen().launch(context, isNewTask: true);
                   }),
                 ),
                 Positioned(
@@ -75,7 +77,7 @@ class HalloweenWalkThroughScreenState extends State<HalloweenWalkThroughScreen> 
                   child: AppButton(
                     width: context.width(),
                     onTap: () async {
-                      DashBoardScreen().launch(context, isNewTask: true);
+                      const DashBoardScreen().launch(context, isNewTask: true);
                     },
                     color: white,
                     textColor: primaryColor,

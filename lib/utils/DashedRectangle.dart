@@ -7,7 +7,7 @@ class DashedRectangle extends StatelessWidget {
   final double strokeWidth;
   final double gap;
 
-  DashedRectangle({this.color = Colors.black, this.strokeWidth = 1.0, this.gap = 5.0});
+  const DashedRectangle({super.key, this.color = Colors.black, this.strokeWidth = 1.0, this.gap = 5.0});
 
   @override
   Widget build(BuildContext context) {
@@ -39,34 +39,34 @@ class DashRectPainter extends CustomPainter {
     double x = size.width;
     double y = size.height;
 
-    Path _topPath = getDashedPath(
-      a: math.Point(0, 0),
+    Path topPath = getDashedPath(
+      a: const math.Point(0, 0),
       b: math.Point(x, 0),
       gap: gap,
     );
 
-    Path _rightPath = getDashedPath(
+    Path rightPath = getDashedPath(
       a: math.Point(x, 0),
       b: math.Point(x, y),
       gap: gap,
     );
 
-    Path _bottomPath = getDashedPath(
+    Path bottomPath = getDashedPath(
       a: math.Point(0, y),
       b: math.Point(x, y),
       gap: gap,
     );
 
-    Path _leftPath = getDashedPath(
-      a: math.Point(0, 0),
+    Path leftPath = getDashedPath(
+      a: const math.Point(0, 0),
       b: math.Point(0.001, y),
       gap: gap,
     );
 
-    canvas.drawPath(_topPath, dashedPaint);
-    canvas.drawPath(_rightPath, dashedPaint);
-    canvas.drawPath(_bottomPath, dashedPaint);
-    canvas.drawPath(_leftPath, dashedPaint);
+    canvas.drawPath(topPath, dashedPaint);
+    canvas.drawPath(rightPath, dashedPaint);
+    canvas.drawPath(bottomPath, dashedPaint);
+    canvas.drawPath(leftPath, dashedPaint);
   }
 
   Path getDashedPath({

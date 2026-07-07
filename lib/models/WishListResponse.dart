@@ -42,19 +42,19 @@ class WishListResponse {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['pro_id'] = this.proId;
-    data['name'] = this.name;
-    data['sku'] = this.sku;
-    data['price'] = this.price;
-    data['regular_price'] = this.regularPrice;
-    data['sale_price'] = this.salePrice;
-    data['stock_quantity'] = this.stockQuantity;
-    data['in_stock'] = this.inStock;
-    data['thumbnail'] = this.thumbnail;
-    data['full'] = this.full;
-    data['gallery'] = this.gallery;
-    data['created_at'] = this.createdAt;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['pro_id'] = proId;
+    data['name'] = name;
+    data['sku'] = sku;
+    data['price'] = price;
+    data['regular_price'] = regularPrice;
+    data['sale_price'] = salePrice;
+    data['stock_quantity'] = stockQuantity;
+    data['in_stock'] = inStock;
+    data['thumbnail'] = thumbnail;
+    data['full'] = full;
+    data['gallery'] = gallery;
+    data['created_at'] = createdAt;
     return data;
   }
 }

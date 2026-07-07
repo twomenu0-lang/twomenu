@@ -18,32 +18,32 @@ class SearchRequest {
 
 
     Map<String, dynamic> toJson() {
-        final Map<String, dynamic> data = new Map<String, dynamic>();
+        final Map<String, dynamic> data = <String, dynamic>{};
         if(text!=null && text!.isNotEmpty){
-            data['text'] = this.text;
+            data['text'] = text;
         }
-        if (this.price != null) {
-            data['price'] = this.price;
+        if (price != null) {
+            data['price'] = price;
         }
-        if (this.attribute != null && this.attribute!.isNotEmpty) {
-            data['attribute'] = this.attribute;
+        if (attribute != null && attribute!.isNotEmpty) {
+            data['attribute'] = attribute;
         }
-        if(this.bestSelling!=null && this.bestSelling!.isNotEmpty){
-            data['Optional_selling']=this.bestSelling;
+        if(bestSelling!=null && bestSelling!.isNotEmpty){
+            data['Optional_selling']=bestSelling;
         }
-        if(this.onSale!=null && this.onSale!.isNotEmpty){
-            data['on_sale']=this.onSale;
+        if(onSale!=null && onSale!.isNotEmpty){
+            data['on_sale']=onSale;
         }
-        if(this.featured!=null && this.featured!.isNotEmpty){
-            data['featured']=this.featured;
+        if(featured!=null && featured!.isNotEmpty){
+            data['featured']=featured;
         }
-        if(this.newest!=null && this.newest!.isNotEmpty){
-            data['newest']=this.newest;
+        if(newest!=null && newest!.isNotEmpty){
+            data['newest']=newest;
         }
-        if(this.specialProduct!=null && this.specialProduct!.isNotEmpty){
-            data['special_product']=this.specialProduct;
+        if(specialProduct!=null && specialProduct!.isNotEmpty){
+            data['special_product']=specialProduct;
         }
-        data['page']=this.page;
+        data['page']=page;
         return data;
     }
 }

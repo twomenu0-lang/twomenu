@@ -2,6 +2,24 @@ import 'dart:convert';
 import 'package:nb_utils/nb_utils.dart';
 
 // ─────────────────────────────────────────────────────────────────
+// NOTIFICATION TYPES
+// أنواع الإشعارات القادمة من Backend عبر OneSignal
+// الـ type بيجي في data payload مع كل إشعار
+// ─────────────────────────────────────────────────────────────────
+class NotificationType {
+  // مكافآت
+  static const String newReward        = 'new_reward';        // مكافأة جديدة متاحة
+  static const String rewardExpiry48h  = 'reward_expiry_48h'; // :تنبيه قبل 48 ساعة
+  static const String rewardExpiry24h  = 'reward_expiry_24h'; // تنبيه قبل 24 ساعة
+  static const String rewardRedeemed   = 'reward_redeemed';   // تأكيد استخدام
+
+  // مستويات الإنفاق
+  static const String tierUpgraded     = 'tier_upgraded';     // وصول لمستوى جديد
+  static const String cycleReminder    = 'cycle_reminder';    // تذكير قبل أسبوعين من التصفير
+  static const String cycleReset       = 'cycle_reset';       // بداية دورة سنوية جديدة
+}
+
+// ─────────────────────────────────────────────────────────────────
 // MODEL
 // ─────────────────────────────────────────────────────────────────
 
@@ -10,6 +28,7 @@ class AppNotification {
   final String title;
   final String body;
   final DateTime time;
+  final String type; // ✅ نوع الإشعار من NotificationType
   bool isRead;
 
   AppNotification({
@@ -17,6 +36,7 @@ class AppNotification {
     required this.title,
     required this.body,
     required this.time,
+    this.type = '',   // ✅ القيمة الافتراضية نص فارغ لحماية الكود القديم
     this.isRead = false,
   });
 
@@ -25,6 +45,7 @@ class AppNotification {
     'title': title,
     'body': body,
     'time': time.toIso8601String(),
+    'type': type,     // ✅
     'isRead': isRead,
   };
 
@@ -34,6 +55,7 @@ class AppNotification {
         title: json['title'] ?? '',
         body: json['body'] ?? '',
         time: DateTime.tryParse(json['time'] ?? '') ?? DateTime.now(),
+        type: json['type'] ?? '',  // ✅
         isRead: json['isRead'] ?? false,
       );
 }
@@ -63,6 +85,7 @@ class NotificationService {
     required String id,
     required String title,
     required String body,
+    String type = '',  // ✅ استقبال النوع الجديد
   }) async {
     // تجنب التكرار
     final List<AppNotification> existing = getAll();
@@ -73,6 +96,7 @@ class NotificationService {
       title: title,
       body: body,
       time: DateTime.now(),
+      type: type,  // ✅ تمرير النوع للموديل
       isRead: false,
     );
 
@@ -92,6 +116,7 @@ class NotificationService {
       title: n.title,
       body: n.body,
       time: n.time,
+      type: n.type, // ✅ إضافة مهمة: الحفاظ على نوع الإشعار وعدم تصفيره عند التحديث
       isRead: true,
     )).toList();
     await setValue(_NOTIFICATIONS_KEY, jsonEncode(updated.map((e) => e.toJson()).toList()));

@@ -17,6 +17,8 @@ import '../utils/AppBarWidget.dart';
 class SearchScreen extends StatefulWidget {
   static String tag = '/SearchScreen';
 
+  const SearchScreen({super.key});
+
   @override
   SearchScreenState createState() => SearchScreenState();
 }
@@ -28,7 +30,7 @@ class SearchScreenState extends State<SearchScreen> {
 
   TextEditingController controller = TextEditingController();
   FocusNode focusNode = FocusNode();
-  ScrollController scrollController = new ScrollController();
+  ScrollController scrollController = ScrollController();
 
   bool isLoading = false;
   bool isAttributesLoaded = false;
@@ -129,8 +131,8 @@ class SearchScreenState extends State<SearchScreen> {
 
       mainAxisSpacing: 16,
       crossAxisSpacing: 16,
-      padding: EdgeInsets.only(left: 8, right: 8, top: 16),
-      physics: NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(left: 8, right: 8, top: 16),
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: mProductModel.length,
       itemBuilder: (_, index) {
         return ProductCard(mProductModel: mProductModel[index]);
@@ -140,7 +142,7 @@ class SearchScreenState extends State<SearchScreen> {
     return SafeArea(
       child: Scaffold(
         appBar: PreferredSize(
-          preferredSize: Size.fromHeight(60.0),
+          preferredSize: const Size.fromHeight(60.0),
           child: Stack(
             children: [
               Container(height: 75, color: primaryColor),
@@ -148,7 +150,7 @@ class SearchScreenState extends State<SearchScreen> {
                   elevation: 0,
                   backgroundColor: primaryColor,
                   leading: IconButton(
-                    icon: Icon(Icons.arrow_back, color: white),
+                    icon: const Icon(Icons.arrow_back, color: white),
                     onPressed: () {
                       finish(context);
                     },
@@ -165,11 +167,11 @@ class SearchScreenState extends State<SearchScreen> {
                         hintText: appLocalization.translate('lbl_search'),
                         hintStyle: secondaryTextStyle(color: Colors.white, size: 16),
                         border: OutlineInputBorder(borderRadius: radius(10), borderSide: BorderSide.none),
-                        contentPadding: EdgeInsets.only(left: 0, right: 0)),
+                        contentPadding: const EdgeInsets.only(left: 0, right: 0)),
                   ),
                   actions: [
                     IconButton(
-                        icon: Icon(Icons.clear, color: Colors.white),
+                        icon: const Icon(Icons.clear, color: Colors.white),
                         onPressed: () {
                           setState(() {
                             controller.clear();
@@ -196,7 +198,7 @@ class SearchScreenState extends State<SearchScreen> {
                                 )
                               : toast(appLocalization.translate('lbl_attribute'));
                         },
-                        icon: Icon(Icons.filter_list, size: 24, color: Colors.white))
+                        icon: const Icon(Icons.filter_list, size: 24, color: Colors.white))
                   ],
                   automaticallyImplyLeading: false),
             ],
@@ -216,7 +218,7 @@ class SearchScreenState extends State<SearchScreen> {
                   ),
                 ).visible(mProductModel.isNotEmpty),
                 Center(child: mProgress()).visible(isLoading && page == 1),
-                Center(child: EmptyScreen()).visible(mErrorMsg.isNotEmpty && !isLoading && mProductModel.isEmpty),
+                const Center(child: EmptyScreen()).visible(mErrorMsg.isNotEmpty && !isLoading && mProductModel.isEmpty),
               ],
             ),
           ),
@@ -231,13 +233,13 @@ class SearchScreenState extends State<SearchScreen> {
       ProductAttribute mAttributess = ProductAttribute.fromJson(res);
       List<Terms> list = [];
       List<Attribute> list1 = [];
-      mAttributess.attribute!.forEach((element) {
+      for (var element in mAttributess.attribute!) {
         list1.add(element);
         list.add(Terms(name: element.name, isParent: true, isSelected: false));
-        element.terms!.forEach((term) {
+        for (var term in element.terms!) {
           list.add(term);
-        });
-      });
+        }
+      }
       setState(() {
         isAttributesLoaded = true;
         mTerms.addAll(list);
@@ -260,7 +262,7 @@ class FilterScreen extends StatefulWidget {
   List<Terms> mTerms = [];
   final void Function(List<Map<String, Object>>?) onDataChange;
 
-  FilterScreen(this.mAttributeModel, this.mTerms, this.onDataChange);
+  FilterScreen(this.mAttributeModel, this.mTerms, this.onDataChange, {super.key});
 
   @override
   _FilterScreenState createState() => _FilterScreenState();
@@ -290,7 +292,7 @@ class _FilterScreenState extends State<FilterScreen> {
             ListView(
               children: [
                 50.height,
-                Divider(),
+                const Divider(),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -298,21 +300,21 @@ class _FilterScreenState extends State<FilterScreen> {
                         flex: isMobile ? 3 : 2,
                         child: ListView.separated(
                             separatorBuilder: (context, index) {
-                              return SizedBox();
+                              return const SizedBox();
                             },
                             scrollDirection: Axis.vertical,
                             itemCount: widget.mAttributeModel.length,
                             shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
+                            physics: const NeverScrollableScrollPhysics(),
                             itemBuilder: (context, index) {
                               var selectedCount = 0;
                               widget.mAttributeModel[index].total = selectedCount;
                               return Container(
-                                margin: EdgeInsets.all(8),
+                                margin: const EdgeInsets.all(8),
                                 decoration: boxDecorationWithRoundedCorners(
                                   backgroundColor: selectedIndex == index ? primaryColor!.withOpacity(0.2) : Colors.transparent,
                                 ),
-                                padding: EdgeInsets.fromLTRB(16, 10, 10, 10),
+                                padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
                                 child: Text(
                                   widget.mAttributeModel[index].name!,
                                   style: primaryTextStyle(color: selectedIndex == index ? primaryColor : Theme.of(context).textTheme.titleSmall!.color),
@@ -349,16 +351,16 @@ class _FilterScreenState extends State<FilterScreen> {
                     Text(appLocalization.translate("action_filter")!, style: boldTextStyle()),
                     Text(appLocalization.translate("lbl_clear_all")!.toUpperCase(), style: boldTextStyle(color: primaryColor)).onTap(() {
                       setState(() {
-                        widget.mTerms.forEach((term) {
+                        for (var term in widget.mTerms) {
                           term.isSelected = false;
-                        });
+                        }
                       });
                     }),
                   ],
                 ).paddingOnly(left: 16, right: 16, bottom: 4),
               ),
             ),
-            Container(
+            SizedBox(
               width: double.infinity,
               height: 50,
               child: Row(
@@ -372,7 +374,7 @@ class _FilterScreenState extends State<FilterScreen> {
                         decoration: BoxDecoration(
                           color: Theme.of(context).scaffoldBackgroundColor,
                           boxShadow: <BoxShadow>[
-                            BoxShadow(color: Theme.of(context).hoverColor.withOpacity(0.8), blurRadius: 15.0, offset: Offset(0.0, 0.75)),
+                            BoxShadow(color: Theme.of(context).hoverColor.withOpacity(0.8), blurRadius: 15.0, offset: const Offset(0.0, 0.75)),
                           ],
                         ),
                         child: Text(
@@ -392,9 +394,9 @@ class _FilterScreenState extends State<FilterScreen> {
                     child: Text(appLocalization.translate("lbl_apply")!, style: secondaryTextStyle(size: 18, color: white)),
                   ).onTap(
                     () {
-                      var map = Map<String?, List<int?>>();
-                      widget.mAttributeModel.forEach((storeProductAttribute) {
-                        storeProductAttribute.terms!.forEach((element) {
+                      var map = <String?, List<int?>>{};
+                      for (var storeProductAttribute in widget.mAttributeModel) {
+                        for (var element in storeProductAttribute.terms!) {
                           if (element.isSelected!) {
                             if (map.containsKey(element.taxonomy)) {
                               map[element.taxonomy]?.add(element.termId);
@@ -404,14 +406,14 @@ class _FilterScreenState extends State<FilterScreen> {
                               map[element.taxonomy] = list;
                             }
                           }
-                        });
-                      });
+                        }
+                      }
                       List<Map<String, Object>> list = [];
-                      map.keys.forEach((key) {
-                        Map<String, Object> attribute = Map<String, Object>();
+                      for (var key in map.keys) {
+                        Map<String, Object> attribute = <String, Object>{};
                         attribute[key!] = map[key]!;
                         list.add(attribute);
-                      });
+                      }
                       widget.onDataChange(list);
                       finish(context);
                     },
@@ -427,19 +429,19 @@ class _FilterScreenState extends State<FilterScreen> {
 
   Widget getCurrentList(int index) {
     return AnimatedListView(
-      physics: BouncingScrollPhysics(),
+      physics: const BouncingScrollPhysics(),
       scrollDirection: Axis.vertical,
       shrinkWrap: true,
       itemCount: widget.mAttributeModel[index].terms!.length,
       itemBuilder: (context, i) {
         return Container(
-          padding: EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
+          padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
           child: Row(
             children: <Widget>[
               Container(
                 width: 18,
                 height: 18,
-                padding: EdgeInsets.all(2),
+                padding: const EdgeInsets.all(2),
                 decoration: boxDecorationWithRoundedCorners(
                   borderRadius: radius(10),
                   border: Border.all(

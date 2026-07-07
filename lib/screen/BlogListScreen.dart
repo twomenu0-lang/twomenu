@@ -15,6 +15,8 @@ import '../utils/AppBarWidget.dart';
 class BlogListScreen extends StatefulWidget {
   static String tag = '/BlogListScreen';
 
+  const BlogListScreen({super.key});
+
   @override
   BlogListScreenState createState() => BlogListScreenState();
 }
@@ -22,7 +24,7 @@ class BlogListScreen extends StatefulWidget {
 class BlogListScreenState extends State<BlogListScreen> {
   List<Blog> mBlogList = [];
 
-  ScrollController scrollController = new ScrollController();
+  ScrollController scrollController = ScrollController();
 
   int? page = 1, noPages;
 
@@ -102,7 +104,7 @@ class BlogListScreenState extends State<BlogListScreen> {
                       ],
                     ),
                   ),
-                EmptyScreen().visible(!appStore.isLoading&&mBlogList.isEmpty),
+                const EmptyScreen().visible(!appStore.isLoading&&mBlogList.isEmpty),
                 mProgress().center().visible(appStore.isLoading && page == 1),
               ],
             ),

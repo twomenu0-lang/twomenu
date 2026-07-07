@@ -12,12 +12,13 @@ import 'package:nb_utils/nb_utils.dart';
 import '../AppLocalizations.dart';
 import '../utils/AppBarWidget.dart';
 import '../utils/Common.dart'; // ✅ مطلوب لاستخدام cleanInputText
+import '../component/RewardWelcomeDialog.dart'; // ✅ الدايلوج الموحّد لهدية الترحيب
 
 class SignUpScreen extends StatefulWidget {
   static String tag = '/SignUpScreen';
   final String? userName;
 
-  SignUpScreen({this.userName});
+  const SignUpScreen({super.key, this.userName});
 
   @override
   SignUpScreenState createState() => SignUpScreenState();
@@ -46,30 +47,16 @@ class SignUpScreenState extends State<SignUpScreen> {
       formKey.currentState!.save();
       hideKeyboard(context);
 
-      // ✅ PATCH: تنظيف كل حقل نصي من رموز Unicode الخفية (bidi marks)
-      // قبل إرساله للسيرفر. هذا يحل مشكلة "user email has invalid
-      // email address" التي كانت تحدث رغم أن الإيميل المكتوب يبدو
-      // سليماً بصرياً — السبب كان رموز تحكم خفية تُضاف أحياناً من
-      // بعض لوحات المفاتيح (خصوصاً العربية على أجهزة سامسونج).
-      //
-      // ملحوظة: لم يتم تنظيف passwordCont.text لأن كلمة المرور قد
-      // تحتوي مسافات أو رموز مقصودة من المستخدم، ولا يصح تعديلها.
       var request = {
         'first_name': cleanInputText(fNameCont.text),
         'last_name': cleanInputText(lNameCont.text),
         'user_email': cleanInputText(emailCont.text),
         'user_type': null,
         'user_login': widget.userName ?? cleanInputText(usernameCont.text),
-        // ✅ تصحيح: كان الكود الأصلي يكتب widget.userName هنا حتى لو
-        // كان فارغاً، ما يعني أن كلمة السر الحقيقية (passwordCont.text)
-        // لم تكن تُستخدم أبداً عندما يكون widget.userName غير null.
-        // هذا يحافظ على نفس المنطق الأصلي (?? كان يعمل بشكل صحيح هنا
-        // فقط لأن widget.userName عادة null في حالة التسجيل العادي)
-        // لكن دون تنظيف الباسورد.
         'user_pass': widget.userName ?? passwordCont.text
       };
 
-      log("Request" + request.toString());
+      log("Request$request");
       appStore.setLoading(true);
 
       createCustomer(request).then((res) async {
@@ -81,28 +68,24 @@ class SignUpScreenState extends State<SignUpScreen> {
               "password": widget.userName,
             };
 
-            log("Request" + request.toString());
+            log("Request$request");
             signInApi(request);
           } else {
-            // ✅ الإضافة الجوهرية: بعد التسجيل العادي (widget.userName فاضي)،
-            // بدل ما نقفل الشاشة بس، بنعمل تسجيل دخول تلقائي بنفس اليوزرنيم
-            // والباسورد اللي كتبهم المستخدم، عشان يدخل الداشبورد فعلاً.
             toast(AppLocalizations.of(context)!.translate('lbl_register_success'));
             var loginReq = {
               "username": cleanInputText(usernameCont.text),
               "password": passwordCont.text,
             };
-            log("Request" + loginReq.toString());
+            log("Request$loginReq");
             signInApi(loginReq);
           }
         } else {
-          // ✅ نفس الإضافة: حالة التسجيل العادي تماماً (widget.userName == null)
           toast(AppLocalizations.of(context)!.translate('lbl_register_success'));
           var loginReq = {
             "username": cleanInputText(usernameCont.text),
             "password": passwordCont.text,
           };
-          log("Request" + loginReq.toString());
+          log("Request$loginReq");
           signInApi(loginReq);
         }
 
@@ -131,17 +114,43 @@ class SignUpScreenState extends State<SignUpScreen> {
         await setValue(USERNAME, res['user_nicename']);
         await setValue(TOKEN, res['token']);
         await setValue(USER_DISPLAY_NAME, res['user_display_name']);
-        // ✅ تصحيح جوهري: كان الكود بيكتب setValue(IS_LOGGED_IN, true) مباشرة
-        // في SharedPreferences فقط، وده لا يُحدّث appStore.isLoggedIn (الـ
-        // observable اللي شاشات زي MyCartScreen/NotSignInComponent بترصده
-        // عن طريق Observer()). النتيجة: الواجهة فضلت تعتبر المستخدم "ضيف"
-        // رغم إن بياناته محفوظة بشكل صحيح، إلى أن يتم إغلاق التطبيق بالكامل
-        // وإعادة فتحه (وقتها main.dart بيعيد قراءة القيمة من التخزين).
-        // appStore.setLoggedIn() بتحدّث الـ observable والتخزين مع بعض.
         appStore.setLoggedIn(true);
+
+        // ✅ v1.7.5-fix — نفس التعديل في مسار التسجيل/الدخول بـ Google/Apple
+        // من شاشة SignUpScreen.
+        await savePlayerIdToServer();
+
+        // ✅ توحيد ظهور دايلوج هدية الترحيب: نعتمد على فلاج is_new_user
+        // الراجع من الباك إند (mighty_get_customer_by_social) بدل أي تخمين
+        // في الفرونت. الدايلوج يظهر فقط لو الحساب اتعمل دلوقتي فعلاً —
+        // مش لأي تسجيل دخول عادي بجوجل/أبل لمستخدم موجود من قبل ليه
+        // مكافآت تانية (ترقية مستوى مثلاً) مش لازم تتعرض بنفس الشكل ده.
+        final bool isNewUser = res['is_new_user'] == true;
+
+        if (isNewUser) {
+          log('🎁 [WELCOME] جاري جلب المكافآت بعد تسجيل اشتراك جديد عبر السوشيال...');
+          try {
+            await rewardsStore.fetchRewards();
+            log('🎁 [WELCOME] fetchRewards انتهت بنجاح — error=${rewardsStore.error} | rewards.length=${rewardsStore.rewards.length} | available.length=${rewardsStore.availableRewards.length}');
+          } catch (e, st) {
+            log('🎁 [WELCOME] ❌ fetchRewards رمت Exception: $e');
+            log('🎁 [WELCOME] StackTrace: $st');
+          }
+
+          if (!mounted) {
+            log('🎁 [WELCOME] ❌ الشاشة اتعملها dispose قبل ما نعرض الدايلوج (mounted=false)');
+          } else if (rewardsStore.availableRewards.isNotEmpty) {
+            log('🎁 [WELCOME] ✅ هنعرض الدايلوج دلوقتي — reward: ${rewardsStore.availableRewards.first.rewardTitle}');
+            await RewardWelcomeDialog.show(context, rewardsStore.availableRewards.first);
+            if (!mounted) return;
+          } else {
+            log('🎁 [WELCOME] ⚠️ availableRewards فاضية — مفيش دايلوج هيظهر');
+          }
+        }
+
         appStore.setLoading(false);
 
-        DashBoardScreen().launch(context, isNewTask: true);
+        const DashBoardScreen().launch(context, isNewTask: true);
       }).catchError((error) {
         appStore.setLoading(false);
 
@@ -172,26 +181,49 @@ class SignUpScreenState extends State<SignUpScreen> {
       await setValue(USER_DISPLAY_NAME, res['user_display_name']);
       await setValue(BILLING, jsonEncode(res['billing']));
       await setValue(SHIPPING, jsonEncode(res['shipping']));
-      // ✅ تصحيح جوهري: نفس مشكلة socialLogin بالظبط — كان الكود بيكتب
-      // setValue(IS_LOGGED_IN, true) في SharedPreferences بس، من غير ما
-      // يحدّث appStore.isLoggedIn (الـ observable اللي شاشات السلة/الحساب
-      // بترصده بالـ Observer). ده السبب الحقيقي اللي خلّى شاشة السلة تفضل
-      // تعرض "تسجيل الدخول / إنشاء حساب" رغم نجاح JWT login فعلياً وحفظ
-      // التوكن. appStore.setLoggedIn() بتحدّث الاتنين مع بعض.
       appStore.setLoggedIn(true);
 
-      // ✅ تصحيح ضروري: الكود الأصلي كان يكتب widget.userName!.isNotEmpty
-      // مباشرة، وهذا يرمي Null check operator used on a null value ويكراش
-      // التطبيق في حالة التسجيل العادي (لما widget.userName == null)، لأن
-      // signInApi بقت تُستدعى الآن من هذه الحالة أيضاً بعد إضافة تسجيل
-      // الدخول التلقائي. أضفنا فحص null أولاً لمنع الكراش.
       if (widget.userName != null && widget.userName!.isNotEmpty) {
         await setValue(IS_SOCIAL_LOGIN, true);
       }
+
+      // ✅ v1.7.5-fix — بعد ما التوكن بقى صالح هنا (مسار التسجيل الجديد ثم
+      // اللوجين التلقائي بعده)، نبعت الـ Player ID فوراً عشان أي إشعار بعد
+      // كده (هدية الترحيب، تأكيد الاستخدام...) يوصل من أول استخدام للحساب.
+      await savePlayerIdToServer();
+
+      // ✅ هدية الترحيب: بيتم منحها من الباك إند بشكل متزامن داخل
+      // wp_insert_user وقت createCustomer (قبل ما اللوجين ده يحصل أصلاً).
+      // دلوقتي عندنا توكن صالح (newly set above)، فنقدر نسأل عن المكافآت
+      // فعلياً ونعرض دايلوج ترحيبي لو لقينا حاجة متاحة، قبل ما نروح الداشبورد.
+      log('🎁 [WELCOME] جاري جلب المكافآت بعد التسجيل...');
+      try {
+        await rewardsStore.fetchRewards();
+        log('🎁 [WELCOME] fetchRewards انتهت بنجاح — error=${rewardsStore.error} | rewards.length=${rewardsStore.rewards.length} | available.length=${rewardsStore.availableRewards.length}');
+      } catch (e, st) {
+        log('🎁 [WELCOME] ❌ fetchRewards رمت Exception: $e');
+        log('🎁 [WELCOME] StackTrace: $st');
+      }
+
       appStore.setLoading(false);
-      DashBoardScreen().launch(context, isNewTask: true);
+
+      if (!mounted) {
+        log('🎁 [WELCOME] ❌ الشاشة اتعملها dispose قبل ما نعرض الدايلوج (mounted=false)');
+        return;
+      }
+
+      if (rewardsStore.availableRewards.isNotEmpty) {
+        log('🎁 [WELCOME] ✅ هنعرض الدايلوج دلوقتي — reward: ${rewardsStore.availableRewards.first.rewardTitle}');
+        // ✅ استخدام الكومبوننت الموحّد بدل الكود المحلي المكرر
+        await RewardWelcomeDialog.show(context, rewardsStore.availableRewards.first);
+        if (!mounted) return;
+      } else {
+        log('🎁 [WELCOME] ⚠️ availableRewards فاضية — مفيش دايلوج هيظهر');
+      }
+
+      const DashBoardScreen().launch(context, isNewTask: true);
     }).catchError((error) {
-      print("Error" + error.toString());
+      print("Error$error");
       appStore.setLoading(false);
       toast(error.toString());
     });
@@ -213,7 +245,7 @@ class SignUpScreenState extends State<SignUpScreen> {
           textAlign: TextAlign.center,
           list: [
             TextSpan(text: appLocalization.translate('lbl_already_have_account'), style: primaryTextStyle(size: 14)),
-            TextSpan(text: "  "),
+            const TextSpan(text: "  "),
             TextSpan(text: appLocalization.translate('lbl_sign_in')!, style: primaryTextStyle(color: primaryColor))
           ],
         ).onTap(() {
@@ -226,7 +258,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                 key: formKey,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
@@ -242,7 +274,6 @@ class SignUpScreenState extends State<SignUpScreen> {
                                 mController: fNameCont,
                                 validator: (String? v) {
                                   if (v!.trim().isEmpty) return appLocalization.translate('error_first_name_required');
-                                  // ✅ تعديل: يدعم الحروف العربية والانجليزية والمسافات
                                   if (!RegExp(r'^[\u0600-\u06FFa-zA-Z\s]+$').hasMatch(v.trim())) return appLocalization.translate('error_only_alphabet');
                                   return null;
                                 }),
@@ -255,7 +286,6 @@ class SignUpScreenState extends State<SignUpScreen> {
                                 mController: lNameCont,
                                 validator: (String? v) {
                                   if (v!.trim().isEmpty) return appLocalization.translate('error_last_name_required');
-                                  // ✅ تعديل: يدعم الحروف العربية والانجليزية والمسافات
                                   if (!RegExp(r'^[\u0600-\u06FFa-zA-Z\s]+$').hasMatch(v.trim())) return appLocalization.translate('error_only_alphabet');
                                   return null;
                                 }),
@@ -298,7 +328,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                           isSecure: true,
                           mController: confirmPasswordCont,
                           validator: (v) {
-                            if (v.trim().isEmpty) return appLocalization.translate('error_confirm_pwd_require');
+                            if (v.trim().isEmpty) return appLocalization.translate('error_confirm_pwd_required');
                             if (confirmPasswordCont.text != passwordCont.text) return appLocalization.translate('error_pwd_not_match');
                             return null;
                           }).visible(widget.userName.isEmptyOrNull),

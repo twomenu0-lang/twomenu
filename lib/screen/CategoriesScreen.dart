@@ -14,11 +14,12 @@ import '/../utils/AppImages.dart';
 import 'package:nb_utils/nb_utils.dart';
 import '../AppLocalizations.dart';
 import '../main.dart';
-import 'ViewAllScreen.dart';
 import '/../screen/SmartCategoryScreen.dart'; // ✅ إضافة الـ import الخاص بالشاشة الذكية الجديدة
 
 class CategoriesScreen extends StatefulWidget {
   static String tag = '/CategoriesScreen';
+
+  const CategoriesScreen({super.key});
 
   @override
   CategoriesScreenState createState() => CategoriesScreenState();
@@ -120,7 +121,7 @@ class CategoriesScreenState extends State<CategoriesScreen> {
             onPressed: () {
               layoutSelectionBottomSheet(context);
             },
-            icon: Icon(MaterialCommunityIcons.view_dashboard_outline,
+            icon: const Icon(MaterialCommunityIcons.view_dashboard_outline,
                 color: Colors.white, size: 30),
           )
         ],
@@ -134,7 +135,7 @@ class CategoriesScreenState extends State<CategoriesScreen> {
             if (mCategoryModel.isNotEmpty)
               SingleChildScrollView(
                 controller: scrollController,
-                physics: AlwaysScrollableScrollPhysics(),
+                physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
                   children: [
                     crossAxisCount != 1
@@ -143,9 +144,9 @@ class CategoriesScreenState extends State<CategoriesScreen> {
                         ? AlignedGridView.count(
                       itemCount: mCategoryModel.length,
                       shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
+                      physics: const NeverScrollableScrollPhysics(),
                       crossAxisCount: 2,
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                       itemBuilder: (context, index) {
                         return GestureDetector(
@@ -206,8 +207,8 @@ class CategoriesScreenState extends State<CategoriesScreen> {
                         : AnimatedListView(
                       itemCount: mCategoryModel.length,
                       shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      padding: EdgeInsets.all(16),
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(16),
                       itemBuilder: (context, index) {
                         return GestureDetector(
                           // ✅ تعديل الـ onTap في الـ List لفتح الـ SmartCategoryScreen
@@ -272,7 +273,7 @@ class CategoriesScreenState extends State<CategoriesScreen> {
                 ),
               ),
 
-            EmptyScreen()
+            const EmptyScreen()
                 .center()
                 .visible(!appStore.isLoading &&
                 mCategoryModel.validate().isEmpty),

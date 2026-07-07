@@ -10,7 +10,7 @@ import 'package:nb_utils/nb_utils.dart';
 import 'DashBoard5Product.dart';
 
 class DashboardComponent5 extends StatefulWidget {
-  const DashboardComponent5({Key? key, required this.title, required this.subTitle, required this.product, required this.onTap}) : super(key: key);
+  const DashboardComponent5({super.key, required this.title, required this.subTitle, required this.product, required this.onTap});
 
   final String title, subTitle;
   final List<ProductResponse> product;
@@ -23,11 +23,11 @@ class DashboardComponent5 extends StatefulWidget {
 class _DashboardComponent5State extends State<DashboardComponent5> {
   Widget productList(List<ProductResponse> product) {
     return Container(
-      margin: EdgeInsets.all(8),
+      margin: const EdgeInsets.all(8),
       child: AlignedGridView.count(
         scrollDirection: Axis.vertical,
         itemCount: product.length >= TOTAL_DASHBOARD_ITEM ? TOTAL_DASHBOARD_ITEM : product.length,
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,
         itemBuilder: (context, i) {
           return DashBoard5Product(mProductModel: product[i], width: context.width(), isHorizontal: false).paddingAll(4);
@@ -49,7 +49,7 @@ class _DashboardComponent5State extends State<DashboardComponent5> {
             Stack(
               alignment: Alignment.centerRight,
               children: [
-                Text("#" + widget.title, style: GoogleFonts.pacifico(color: mChristmasColor, fontSize: 28, fontWeight: FontWeight.bold)).paddingOnly(left: 12, right: 26),
+                Text("#${widget.title}", style: GoogleFonts.pacifico(color: mChristmasColor, fontSize: 28, fontWeight: FontWeight.bold)).paddingOnly(left: 12, right: 26),
                 Image.asset(ic_christmas_hat, height: 40, width: 40, fit: BoxFit.cover).paddingTop(12),
               ],
             ),

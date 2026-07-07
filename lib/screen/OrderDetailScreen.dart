@@ -18,7 +18,7 @@ import 'ProductDetail/ProductDetailScreen3.dart';
 class OrderDetailScreen extends StatefulWidget {
   static String tag = '/OrderDetailScreen';
   final OrderResponse? mOrderModel;
-  OrderDetailScreen({this.mOrderModel});
+  const OrderDetailScreen({super.key, this.mOrderModel});
 
   @override
   _OrderDetailScreenState createState() => _OrderDetailScreenState();
@@ -224,7 +224,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Color _statusColor(String? status) {
     switch (status) {
       case 'completed':  return Colors.green;
-      case 'processing': return Color(0xFF3D5AF1);
+      case 'processing': return const Color(0xFF3D5AF1);
       case 'shipped':    return Colors.orange;
       case 'on-hold':    return Colors.orange;
       case 'cancelled':  return Colors.red;
@@ -269,12 +269,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final current = _currentStep(_currentOrder?.status);
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16),
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       decoration: BoxDecoration(
         color: context.cardColor,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
       ),
       child: Row(
         children: List.generate(steps.length, (i) {
@@ -335,7 +335,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   Expanded(
                     child: Container(
                       height: 2,
-                      margin: EdgeInsets.only(bottom: 20),
+                      margin: const EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(
                         color: i < current ? primaryColor : Colors.grey.shade300,
                         borderRadius: BorderRadius.circular(2),
@@ -369,7 +369,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 16.height,
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(6),
                   decoration: boxDecorationWithRoundedCorners(
                     borderRadius: radius(8),
                     backgroundColor: Theme.of(context).colorScheme.surface,
@@ -377,7 +377,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   child: DropdownButton<String>(
                     value: mValue,
                     isExpanded: true,
-                    underline: SizedBox(),
+                    underline: const SizedBox(),
                     dropdownColor: Theme.of(context).cardTheme.color,
                     onChanged: (v) => ss(() => mValue = v),
                     items: cancelReasons
@@ -443,7 +443,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         backgroundColor: primaryColor,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_forward, color: Colors.white),
+          icon: const Icon(Icons.arrow_forward, color: Colors.white),
           onPressed: () => finish(context),
         ),
         title: Text(
@@ -453,7 +453,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         centerTitle: true,
         actions: [
           _isRefreshing
-              ? Padding(
+              ? const Padding(
             padding: EdgeInsets.all(14),
             child: SizedBox(
               width: 20,
@@ -465,12 +465,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
           )
               : IconButton(
-            icon: Icon(Icons.refresh, color: Colors.white),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () => _refreshOrder(showFeedback: true),
             tooltip: loc.translate('lbl_update'), // موجود
           ),
           IconButton(
-            icon: Icon(Icons.share, color: Colors.white),
+            icon: const Icon(Icons.share, color: Colors.white),
             onPressed: _shareOrder,
             tooltip: loc.translate('lbl_share'), // مفتاح جديد (يُضاف لملفات JSON)
           ),
@@ -488,12 +488,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 // بطاقة رقم الطلب + معلوماته
                 // ══════════════════════════════════════════════════════════
                 Container(
-                  margin: EdgeInsets.symmetric(horizontal: 16),
-                  padding: EdgeInsets.all(16),
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: context.cardColor,
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
                     ],
                   ),
@@ -537,7 +537,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                 child: Center(
                                   child: Text(
                                     '$totalItems',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
@@ -590,12 +590,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 // حالة الطلب الحالية
                 // ══════════════════════════════════════════════════════════
                 Container(
-                  margin: EdgeInsets.symmetric(horizontal: 16),
-                  padding: EdgeInsets.all(16),
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: context.cardColor,
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
                     ],
                   ),
@@ -624,7 +624,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         ),
                       ),
                       Container(
-                        padding: EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: primaryColor!.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
@@ -654,12 +654,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
                 // عنوان التوصيل
                 Container(
-                  margin: EdgeInsets.symmetric(horizontal: 16),
-                  padding: EdgeInsets.all(16),
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: context.cardColor,
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
                     ],
                   ),
@@ -685,7 +685,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                               onTap: () {},
                               child: Container(
                                 padding:
-                                EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
                                   border: Border.all(color: Colors.grey.shade300),
                                   borderRadius: BorderRadius.circular(20),
@@ -722,11 +722,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
                 // الأصناف في هذا الطلب
                 Container(
-                  margin: EdgeInsets.symmetric(horizontal: 16),
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
                     color: context.cardColor,
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
                     ],
                   ),
@@ -734,13 +734,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: EdgeInsets.fromLTRB(16, 14, 16, 0),
+                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
                         child: Text(
                           loc.translate('lbl_items_in_order', {'count': lineItems.length.toString()})!, // مفتاح جديد مع placeholder
                           style: boldTextStyle(size: 15, color: primaryColor),
                         ),
                       ),
-                      Divider(height: 16),
+                      const Divider(height: 16),
                       ...lineItems.map((item) {
                         final imgSrc = _getItemImage(item);
                         return GestureDetector(
@@ -759,7 +759,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             }
                           },
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                             child: Row(
                               children: [
                                 Container(
@@ -809,10 +809,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             ),
                           ),
                         );
-                      }).toList(),
-                      Divider(height: 1),
+                      }),
+                      const Divider(height: 1),
                       Padding(
-                        padding: EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(16),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -835,11 +835,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
                 // تفاصيل الطلب (دفع + شحن + إجمالي)
                 Container(
-                  margin: EdgeInsets.symmetric(horizontal: 16),
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
                     color: context.cardColor,
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
                     ],
                   ),
@@ -847,7 +847,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: EdgeInsets.fromLTRB(16, 14, 16, 0),
+                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
                         child: Row(
                           children: [
                             Icon(Icons.receipt_long_outlined,
@@ -860,7 +860,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           ],
                         ),
                       ),
-                      Divider(height: 16),
+                      const Divider(height: 16),
                       _detailRow(
                         loc.translate('lbl_payment_methods')!,
                         _translatePayment(
@@ -873,7 +873,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             ? '${loc.translate('lbl_egp')!} ${order?.shippingTotal}'
                             : loc.translate('lbl_free')!,
                       ),
-                      Divider(height: 16),
+                      const Divider(height: 16),
                       _detailRow(
                         loc.translate('lbl_total_amount')!,
                         '${loc.translate('lbl_egp')!} ${order?.total ?? '0'}',
@@ -890,8 +890,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 GestureDetector(
                   onTap: _openWhatsApp,
                   child: Container(
-                    margin: EdgeInsets.symmetric(horizontal: 16),
-                    padding: EdgeInsets.symmetric(vertical: 16),
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
                       color: primaryColor,
                       borderRadius: BorderRadius.circular(12),
@@ -899,7 +899,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.location_on_outlined,
+                        const Icon(Icons.location_on_outlined,
                             color: Colors.white, size: 20),
                         8.width,
                         Text(
@@ -917,12 +917,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 GestureDetector(
                   onTap: _openWhatsApp,
                   child: Container(
-                    margin: EdgeInsets.symmetric(horizontal: 16),
-                    padding: EdgeInsets.symmetric(vertical: 14),
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
                       color: context.cardColor,
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
                       ],
                     ),
@@ -945,12 +945,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
                 // تحتاج مساعدة؟
                 Container(
-                  margin: EdgeInsets.symmetric(horizontal: 16),
-                  padding: EdgeInsets.all(16),
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: context.cardColor,
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
                     ],
                   ),
@@ -973,7 +973,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             child: GestureDetector(
                               onTap: _launchPhone,
                               child: Container(
-                                padding: EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
                                 decoration: BoxDecoration(
                                   border: Border.all(color: Colors.grey.shade200),
                                   borderRadius: BorderRadius.circular(10),
@@ -1003,7 +1003,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             child: GestureDetector(
                               onTap: _launchEmail,
                               child: Container(
-                                padding: EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
                                 decoration: BoxDecoration(
                                   border: Border.all(color: Colors.grey.shade200),
                                   borderRadius: BorderRadius.circular(10),
@@ -1041,8 +1041,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   GestureDetector(
                     onTap: () => _showCancelDialog(loc),
                     child: Container(
-                      margin: EdgeInsets.symmetric(horizontal: 16),
-                      padding: EdgeInsets.symmetric(vertical: 14),
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       decoration: BoxDecoration(
                         color: Colors.red.shade50,
                         borderRadius: BorderRadius.circular(12),
@@ -1051,7 +1051,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.cancel_outlined, color: Colors.red, size: 20),
+                          const Icon(Icons.cancel_outlined, color: Colors.red, size: 20),
                           8.width,
                           Text(
                             loc.translate('lbl_cancel_order')!, // موجود
@@ -1093,7 +1093,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Widget _detailRow(String label, String value, {bool isBold = false}) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

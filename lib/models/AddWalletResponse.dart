@@ -10,9 +10,9 @@ class AddWalletResponse {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['status'] = this.status;
-    data['woocommerce_redirect'] = this.woocommerceRedirect;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['status'] = status;
+    data['woocommerce_redirect'] = woocommerceRedirect;
     return data;
   }
 }

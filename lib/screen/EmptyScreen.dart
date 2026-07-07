@@ -6,6 +6,8 @@ import 'package:nb_utils/nb_utils.dart';
 class EmptyScreen extends StatefulWidget {
   static String tag = '/EmptyScreen';
 
+  const EmptyScreen({super.key});
+
   @override
   EmptyScreenState createState() => EmptyScreenState();
 }

@@ -8,7 +8,7 @@ import 'package:nb_utils/nb_utils.dart';
 import 'DashBoard2Product.dart';
 
 class DashboardComponent2 extends StatefulWidget {
-  const DashboardComponent2({Key? key, required this.title, required this.subTitle, required this.product, required this.onTap}) : super(key: key);
+  const DashboardComponent2({super.key, required this.title, required this.subTitle, required this.product, required this.onTap});
 
   final String title, subTitle;
   final List<ProductResponse> product;
@@ -21,11 +21,11 @@ class DashboardComponent2 extends StatefulWidget {
 class _DashboardComponent2State extends State<DashboardComponent2> {
   Widget productList(List<ProductResponse> product) {
     return Container(
-      margin: EdgeInsets.all(8),
+      margin: const EdgeInsets.all(8),
       child: AlignedGridView.count(
         scrollDirection: Axis.vertical,
         itemCount: product.length >= TOTAL_DASHBOARD_ITEM ? TOTAL_DASHBOARD_ITEM : product.length,
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,
         itemBuilder: (context, i) {
           return DashBoard2Product(mProductModel: product[i], width: context.width(),isHorizontal: false).paddingAll(4);
@@ -59,6 +59,6 @@ class _DashboardComponent2State extends State<DashboardComponent2> {
 }
 
 Widget viewAll(Function onTap, String subTitle) {
-  return TextIcon(onTap: onTap, prefix: Icon(Icons.add, size: 18), text: subTitle, textStyle: secondaryTextStyle());
+  return TextIcon(onTap: onTap, prefix: const Icon(Icons.add, size: 18), text: subTitle, textStyle: secondaryTextStyle());
 }
 

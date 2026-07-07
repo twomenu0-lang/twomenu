@@ -14,15 +14,15 @@ class AppTheme {
     fontFamily: GoogleFonts.poppins().fontFamily,
     appBarTheme: AppBarTheme(
       backgroundColor: primaryColor,
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
     ),
     cardColor: backgroundColor,
-    cardTheme: CardThemeData(
+    cardTheme: const CardThemeData(
       color: Colors.white,
     ),
     iconTheme: IconThemeData(color: textPrimaryColour),
     textTheme: TextTheme(
-      headlineMedium: TextStyle(color: Color(0xFFF6F8FB)),
+      headlineMedium: const TextStyle(color: Color(0xFFF6F8FB)),
       bodyLarge: TextStyle(color: primaryColor),
       titleMedium: TextStyle(color: textSecondaryColour),
       titleSmall: TextStyle(color: textPrimaryColour),
@@ -35,31 +35,31 @@ class AppTheme {
   );
 
   static final ThemeData darkTheme = ThemeData(
-    scaffoldBackgroundColor: Color(0xFF222222),
+    scaffoldBackgroundColor: const Color(0xFF222222),
     appBarTheme: AppBarTheme(
       backgroundColor: primaryColor,
-      iconTheme: IconThemeData(color: Color(0xFF1D2939)),
+      iconTheme: const IconThemeData(color: Color(0xFF1D2939)),
     ),
-    cardColor: Color(0xFF1D2939),
+    cardColor: const Color(0xFF1D2939),
     primaryColor: isHalloween ? white : primaryColor,
     hoverColor: Colors.black,
     fontFamily: GoogleFonts.poppins().fontFamily,
-    cardTheme: CardThemeData(
+    cardTheme: const CardThemeData(
       color: Color(0xFF2b2b2b),
     ),
-    iconTheme: IconThemeData(color: Colors.white70),
-    textTheme: TextTheme(
+    iconTheme: const IconThemeData(color: Colors.white70),
+    textTheme: const TextTheme(
       headlineMedium: TextStyle(color: Color(0xFF1D2939)),
       bodyLarge: TextStyle(color: Colors.white70),
       titleMedium: TextStyle(color: Colors.white70),
       titleSmall: TextStyle(color: Colors.white54),
-    ), colorScheme: ColorScheme.light(
+    ), colorScheme: const ColorScheme.light(
       primary: Color(0xFF131d25),
       onPrimary: Color(0xFF1D2939),
       surface: Color(0xFF1D2939),
       onSecondary: Colors.white,
       secondary: white,
-    ).copyWith(error: Color(0xFFCF6676)),
+    ).copyWith(error: const Color(0xFFCF6676)),
   );
 }
 

@@ -22,18 +22,18 @@ class TrackingResponse {
     trackingLink = json['tracking_link'];
     trackingNumber = json['tracking_number'];
     dateShipped = json['date_shipped'];
-    lLinks = json['_links'] != null ? new Links.fromJson(json['_links']) : null;
+    lLinks = json['_links'] != null ? Links.fromJson(json['_links']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['tracking_id'] = this.trackingId;
-    data['tracking_provider'] = this.trackingProvider;
-    data['tracking_link'] = this.trackingLink;
-    data['tracking_number'] = this.trackingNumber;
-    data['date_shipped'] = this.dateShipped;
-    if (this.lLinks != null) {
-      data['_links'] = this.lLinks!.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['tracking_id'] = trackingId;
+    data['tracking_provider'] = trackingProvider;
+    data['tracking_link'] = trackingLink;
+    data['tracking_number'] = trackingNumber;
+    data['date_shipped'] = dateShipped;
+    if (lLinks != null) {
+      data['_links'] = lLinks!.toJson();
     }
     return data;
   }
@@ -50,33 +50,33 @@ class Links {
     if (json['self'] != null) {
       self = <Self>[];
       json['self'].forEach((v) {
-        self!.add(new Self.fromJson(v));
+        self!.add(Self.fromJson(v));
       });
     }
     if (json['collection'] != null) {
       collection = <Collection>[];
       json['collection'].forEach((v) {
-        collection!.add(new Collection.fromJson(v));
+        collection!.add(Collection.fromJson(v));
       });
     }
     if (json['up'] != null) {
       up = <Up>[];
       json['up'].forEach((v) {
-        up!.add(new Up.fromJson(v));
+        up!.add(Up.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.self != null) {
-      data['self'] = this.self!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    if (self != null) {
+      data['self'] = self!.map((v) => v.toJson()).toList();
     }
-    if (this.collection != null) {
-      data['collection'] = this.collection!.map((v) => v.toJson()).toList();
+    if (collection != null) {
+      data['collection'] = collection!.map((v) => v.toJson()).toList();
     }
-    if (this.up != null) {
-      data['up'] = this.up!.map((v) => v.toJson()).toList();
+    if (up != null) {
+      data['up'] = up!.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -92,8 +92,8 @@ class Self {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['href'] = this.href;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['href'] = href;
     return data;
   }
 }

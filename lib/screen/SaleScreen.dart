@@ -20,7 +20,7 @@ class SaleScreen extends StatefulWidget {
   String? endDate = "";
   String? title = "";
 
-  SaleScreen({this.startDate, this.endDate, this.title});
+  SaleScreen({super.key, this.startDate, this.endDate, this.title});
 
   @override
   SaleScreenState createState() => SaleScreenState();
@@ -119,7 +119,7 @@ class SaleScreenState extends State<SaleScreen> {
                     scrollDirection: Axis.vertical,
                     itemCount: mProductModel.length,
                     shrinkWrap: true,
-                    padding: EdgeInsets.only(left: 4, right: 4),
+                    padding: const EdgeInsets.only(left: 4, right: 4),
                     itemBuilder: (context, index) {
                       return ProductCard(mProductModel: mProductModel[index], width: context.width());
                     },
@@ -129,7 +129,7 @@ class SaleScreenState extends State<SaleScreen> {
                 ],
               ),
               Center(child: mProgress().paddingAll(24).visible(isLoading)),
-              Center(child: EmptyScreen()).visible(errorMsg.isNotEmpty && !isLoading && mProductModel.isEmpty),
+              const Center(child: EmptyScreen()).visible(errorMsg.isNotEmpty && !isLoading && mProductModel.isEmpty),
             ],
           ),
         ),

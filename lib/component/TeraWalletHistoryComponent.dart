@@ -11,7 +11,7 @@ class TeraWalletHistoryComponent extends StatefulWidget {
   static String tag = '/TeraWalletHistoryComponent';
   final WalletResponse data;
 
-  TeraWalletHistoryComponent(this.data);
+  const TeraWalletHistoryComponent(this.data, {super.key});
 
   @override
   TeraWalletHistoryComponentState createState() => TeraWalletHistoryComponentState();

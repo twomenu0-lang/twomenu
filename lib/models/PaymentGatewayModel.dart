@@ -14,10 +14,10 @@ class PaymentGatewayModel {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['method_description'] = this.methodDescription;
-    data['method_title'] = this.methodTitle;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['method_description'] = methodDescription;
+    data['method_title'] = methodTitle;
     return data;
   }
 }

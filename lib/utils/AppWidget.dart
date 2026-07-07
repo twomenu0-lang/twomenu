@@ -29,7 +29,7 @@ class EditText extends StatefulWidget {
   TextEditingController? mController;
   VoidCallback? onPressed;
 
-  EditText({
+  EditText({super.key, 
     var this.fontSize = 16,
     var this.textColor = textColorSecondary,
     var this.hintText = '',
@@ -62,7 +62,7 @@ class EditTextState extends State<EditText> {
         onChanged: widget.onChanged as void Function(String)?,
         validator: widget.validator as String? Function(String?)?,
         decoration: InputDecoration(
-          contentPadding: EdgeInsets.fromLTRB(20, 12, 4, 12),
+          contentPadding: const EdgeInsets.fromLTRB(20, 12, 4, 12),
           labelText: widget.hintText,
           labelStyle: primaryTextStyle(color: Theme.of(context).textTheme.titleMedium!.color),
           enabledBorder: OutlineInputBorder(
@@ -71,11 +71,11 @@ class EditTextState extends State<EditText> {
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: radius(8),
-            borderSide: BorderSide(color: Colors.red, width: 1.0),
+            borderSide: const BorderSide(color: Colors.red, width: 1.0),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: radius(8),
-            borderSide: BorderSide(color: Colors.red, width: 1.0),
+            borderSide: const BorderSide(color: Colors.red, width: 1.0),
           ),
           errorMaxLines: 2,
           errorStyle: primaryTextStyle(color: Colors.red, size: 12),
@@ -93,18 +93,18 @@ class EditTextState extends State<EditText> {
         validator: widget.validator as String? Function(String?)?,
         style: TextStyle(fontSize: widget.fontSize.toDouble(), color: Theme.of(context).textTheme.titleMedium!.color, fontFamily: widget.fontFamily),
         decoration: InputDecoration(
-          suffixIcon: new GestureDetector(
+          suffixIcon: GestureDetector(
             onTap: () {
               setState(() {
                 widget.isPassword = !widget.isPassword;
               });
             },
-            child: new Icon(
+            child: Icon(
               widget.isPassword ? Icons.visibility_off : Icons.visibility,
               color: Theme.of(context).textTheme.titleMedium!.color,
             ),
           ),
-          contentPadding: EdgeInsets.fromLTRB(20, 14, 4, 14),
+          contentPadding: const EdgeInsets.fromLTRB(20, 14, 4, 14),
           labelText: widget.hintText,
           labelStyle: primaryTextStyle(color: Theme.of(context).textTheme.titleMedium!.color),
           // filled: true,
@@ -115,11 +115,11 @@ class EditTextState extends State<EditText> {
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: radius(8),
-            borderSide: BorderSide(color: Colors.red, width: 1.0),
+            borderSide: const BorderSide(color: Colors.red, width: 1.0),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: radius(8),
-            borderSide: BorderSide(color: Colors.red, width: 1.0),
+            borderSide: const BorderSide(color: Colors.red, width: 1.0),
           ),
           errorMaxLines: 2,
           errorStyle: primaryTextStyle(color: Colors.red, size: 12),
@@ -151,7 +151,7 @@ class SimpleEditText extends StatefulWidget {
   VoidCallback? onPressed;
 
   SimpleEditText(
-      {this.fontSize = 20,
+      {super.key, this.fontSize = 20,
         this.textColor = textColorPrimary,
         this.isPassword = false,
         this.isSecure = true,
@@ -178,15 +178,15 @@ class SimpleEditTextState extends State<SimpleEditText> {
       validator: widget.validator as String? Function(String?)?,
       keyboardType: widget.keyboardType,
       decoration: InputDecoration(
-        contentPadding: EdgeInsets.fromLTRB(20, 14, 4, 14),
+        contentPadding: const EdgeInsets.fromLTRB(20, 14, 4, 14),
         labelText: widget.hintText,
         labelStyle: primaryTextStyle(color: Theme.of(context).textTheme.titleMedium!.color),
         // filled: true,
         // fillColor: Theme.of(context).textTheme.headline4.color,
 
         enabledBorder: OutlineInputBorder(borderRadius: radius(8), borderSide: BorderSide(color: Theme.of(context).textTheme.titleMedium!.color!, width: 0.0)),
-        focusedErrorBorder: OutlineInputBorder(borderRadius: radius(8), borderSide: BorderSide(color: Colors.red, width: 1.0)),
-        errorBorder: OutlineInputBorder(borderRadius: radius(8), borderSide: BorderSide(color: Colors.red, width: 1.0)),
+        focusedErrorBorder: OutlineInputBorder(borderRadius: radius(8), borderSide: const BorderSide(color: Colors.red, width: 1.0)),
+        errorBorder: OutlineInputBorder(borderRadius: radius(8), borderSide: const BorderSide(color: Colors.red, width: 1.0)),
         errorMaxLines: 2,
         errorStyle: primaryTextStyle(color: Colors.red, size: 12),
         focusedBorder: OutlineInputBorder(
@@ -235,7 +235,7 @@ class PriceWidget extends StatefulWidget {
   Color? color;
   var isLineThroughEnabled = false;
 
-  PriceWidget({Key? key, this.price, this.color, this.size, this.isLineThroughEnabled = false}) : super(key: key);
+  PriceWidget({super.key, this.price, this.color, this.size, this.isLineThroughEnabled = false});
 
   @override
   PriceWidgetState createState() => PriceWidgetState();
@@ -262,13 +262,13 @@ class PriceWidgetState extends State<PriceWidget> {
     final displayCurrency = AppLocalizations.of(context)?.translate('lbl_egp') ?? currency;
 
     if (!widget.isLineThroughEnabled) {
-      return Text('$displayCurrency${widget.price.toString().replaceAll(".00", "")}', style: GoogleFonts.robotoSerif(fontSize: widget.size, color: widget.color != null ? widget.color : primaryColor))
+      return Text('$displayCurrency${widget.price.toString().replaceAll(".00", "")}', style: GoogleFonts.robotoSerif(fontSize: widget.size, color: widget.color ?? primaryColor))
           .paddingOnly(right: 4);
     } else {
       return widget.price.toString().isNotEmpty
           ? Text('$displayCurrency${widget.price.toString().replaceAll(".00", "")}',
           style: GoogleFonts.robotoSerif(fontSize: widget.size, color: widget.color ?? textPrimaryColor, decoration: TextDecoration.lineThrough))
-          : Text('');
+          : const Text('');
     }
   }
 }
@@ -277,7 +277,7 @@ Widget mCart(BuildContext context, bool mIsLoggedIn, {Color color = Colors.white
   return Stack(
     alignment: Alignment.center,
     children: [
-      Icon(Icons.shopping_bag_outlined, color: white, size: 26).onTap(() {
+      const Icon(Icons.shopping_bag_outlined, color: white, size: 26).onTap(() {
         checkLoggedIn(context);
       }).paddingRight(14),
       if (appStore.count.toString() != "0")
@@ -302,13 +302,13 @@ Widget mCart(BuildContext context, bool mIsLoggedIn, {Color color = Colors.white
 // ─────────────────────────────────────────────────────────────
 Widget mTop(BuildContext context, var title, {List<Widget>? actions, bool showBack = false, Widget? leadingWidget}) {
   return PreferredSize(
-    preferredSize: Size.fromHeight(60.0),
+    preferredSize: const Size.fromHeight(60.0),
     child: AppBar(
       elevation: 0,
       backgroundColor: isHalloween ? mChristmasColor : primaryColor,
       leading: showBack
           ? IconButton(
-        icon: Icon(Icons.arrow_back, color: white),
+        icon: const Icon(Icons.arrow_back, color: white),
         onPressed: () {
           finish(context, false);
           appStore.setLoading(false);
@@ -328,7 +328,7 @@ Widget mTopNew(BuildContext context, var title, {List<Widget>? actions, bool sho
     backgroundColor: primaryColor,
     leading: showBack
         ? IconButton(
-      icon: Icon(Icons.arrow_back, color: white),
+      icon: const Icon(Icons.arrow_back, color: white),
       onPressed: () {
         finish(context);
       },
@@ -345,26 +345,26 @@ Widget mView(Widget widget, BuildContext context) {
   return Container(
     width: MediaQuery.of(context).size.width,
     decoration:
-    boxDecorationWithRoundedCorners(borderRadius: BorderRadius.only(topRight: Radius.circular(20), topLeft: Radius.circular(20)), backgroundColor: Theme.of(context).scaffoldBackgroundColor),
+    boxDecorationWithRoundedCorners(borderRadius: const BorderRadius.only(topRight: Radius.circular(20), topLeft: Radius.circular(20)), backgroundColor: Theme.of(context).scaffoldBackgroundColor),
     child: widget,
   );
 }
 
 Widget mProgress() {
   return isHalloween
-      ? FestivalProgress()
+      ? const FestivalProgress()
       : Container(
     alignment: Alignment.center,
     child: Card(
       semanticContainer: true,
       clipBehavior: Clip.antiAliasWithSaveLayer,
       elevation: 4,
-      margin: EdgeInsets.all(4),
+      margin: const EdgeInsets.all(4),
       shape: RoundedRectangleBorder(borderRadius: radius(50)),
       child: Container(
         width: 40,
         height: 40,
-        padding: EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(8.0),
         child: CircularProgressIndicator(strokeWidth: 3, color: primaryColor),
       ),
     ),
@@ -378,12 +378,12 @@ Widget mFestivalProgress() {
       semanticContainer: true,
       clipBehavior: Clip.antiAliasWithSaveLayer,
       elevation: 4,
-      margin: EdgeInsets.all(4),
+      margin: const EdgeInsets.all(4),
       shape: RoundedRectangleBorder(borderRadius: radius(50)),
       child: Container(
         width: 45,
         height: 45,
-        padding: EdgeInsets.all(8),
+        padding: const EdgeInsets.all(8),
         child: Image.asset(ic_christmas_tree),
       ),
     ),
@@ -396,8 +396,8 @@ Widget mSale(ProductResponse product) {
     top: 0,
     child: Container(
       decoration: boxDecorationWithRoundedCorners(backgroundColor: Colors.red, borderRadius: radiusOnly(topLeft: 8)),
+      padding: const EdgeInsets.fromLTRB(6, 2, 6, 2),
       child: Text("Sale", style: secondaryTextStyle(color: white, size: 12)),
-      padding: EdgeInsets.fromLTRB(6, 2, 6, 2),
     ),
   ).visible(product.onSale == true && product.type!.contains("grouped") && !product.type!.contains("variation"));
 }
@@ -434,7 +434,7 @@ void openPhotoViewer(context, ImageProvider imageProvider) {
           minScale: PhotoViewComputedScale.contained,
           maxScale: 1.0,
         ),
-        Positioned(top: 35, left: 16, child: BackButton(color: Colors.white)),
+        const Positioned(top: 35, left: 16, child: BackButton(color: Colors.white)),
       ],
     ),
   ).launch(context);

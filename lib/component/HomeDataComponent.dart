@@ -71,7 +71,6 @@ Future<void> fetchDashboardData() async {
     final res = await getDashboardApi();
 
     // ✅ حفظ البيانات الأساسية — كلها في batch واحد بدل await منفصل لكل واحدة
-    // الـ SharedPreferences writes مش محتاجة await واحدة واحدة
     setValue(DEFAULT_CURRENCY, parseHtmlString(res['currency_symbol']['currency_symbol']));
     setValue(CURRENCY_CODE,    res['currency_symbol']['currency']);
     setValue(DASHBOARD_DATA,   jsonEncode(res));
@@ -104,24 +103,22 @@ Future<void> fetchDashboardData() async {
 
 // ─────────────────────────────────────────────────────────────────
 // SET PRODUCT DATA
-// ✅ كل الـ parsing بيحصل هنا مرة واحدة بدون await زيادة
 // ─────────────────────────────────────────────────────────────────
 void setProductData(Map res) {
-  // ✅ Helper محلي — بيتجنب تكرار null check في كل سطر
-  List<ProductResponse> _parseProducts(String key) {
+  List<ProductResponse> parseProducts(String key) {
     final raw = res[key];
     if (raw == null) return [];
     return (raw as Iterable).map((m) => ProductResponse.fromJson(m)).toList();
   }
 
-  mNewestProductModel     = _parseProducts('newest');
-  mFeaturedProductModel   = _parseProducts('featured');
-  mDealProductModel       = _parseProducts('deal_of_the_day');
-  mSellingProductModel    = _parseProducts('best_selling_product');
-  mSaleProductModel       = _parseProducts('sale_product');
-  mOfferProductModel      = _parseProducts('offer');
-  mSuggestedProductModel  = _parseProducts('suggested_for_you');
-  mYouMayLikeProductModel = _parseProducts('you_may_like');
+  mNewestProductModel     = parseProducts('newest');
+  mFeaturedProductModel   = parseProducts('featured');
+  mDealProductModel       = parseProducts('deal_of_the_day');
+  mSellingProductModel    = parseProducts('best_selling_product');
+  mSaleProductModel       = parseProducts('sale_product');
+  mOfferProductModel      = parseProducts('offer');
+  mSuggestedProductModel  = parseProducts('suggested_for_you');
+  mYouMayLikeProductModel = parseProducts('you_may_like');
 
   // Vendors
   if (res['vendors'] != null) {
@@ -134,7 +131,6 @@ void setProductData(Map res) {
     mSaleBannerImages.clear();
     final Iterable bannerList = res['salebanner'];
     mSaleBanner = bannerList.map((m) => Salebanner.fromJson(m)).toList();
-    // ✅ for loop بدل forEach — أسرع في Dart
     for (final s in mSaleBanner) {
       mSaleBannerImages.add(s.image);
     }
@@ -162,12 +158,10 @@ List<T?> map<T>(List list, Function handler) {
 
 // ─────────────────────────────────────────────────────────────────
 // BOTTOM WIDGET — اقتباس عشوائي
-// ✅ mQuotes بتتبنى مرة واحدة بس لو فاضية
 // ─────────────────────────────────────────────────────────────────
 Widget mBottom(BuildContext context) {
   final appLocalization = AppLocalizations.of(context)!;
 
-  // ✅ بنبني القائمة مرة واحدة بس — مش في كل build
   if (mQuotes.isEmpty) {
     mQuotes = [
       appLocalization.translate('msg_quote1'),
@@ -185,7 +179,8 @@ Widget mBottom(BuildContext context) {
     color: appStore.isDarkModeOn
         ? Theme.of(context).dividerColor.withOpacity(0.02)
         : Theme.of(context).cardTheme.color!.withOpacity(0.5),
-    padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+    // ✅ تم تعديل الـ padding وتقليصه ليكون متناسقاً تماماً لمنع حدوث فجوات
+    padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
     child: Column(
       children: [
         Container(width: 40, color: Theme.of(context).dividerColor, height: 4),

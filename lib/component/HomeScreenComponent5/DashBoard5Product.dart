@@ -13,7 +13,7 @@ class DashBoard5Product extends StatefulWidget {
   final ProductResponse? mProductModel;
   final bool? isHorizontal;
 
-  DashBoard5Product({Key? key, this.width, this.mProductModel, this.isHorizontal}) : super(key: key);
+  const DashBoard5Product({super.key, this.width, this.mProductModel, this.isHorizontal});
 
   @override
   ProductState createState() => ProductState();
@@ -51,15 +51,15 @@ class ProductState extends State<DashBoard5Product> {
       child: Container(
         decoration: boxDecorationWithRoundedCorners(
           borderRadius: radius(defaultRadius),
-          decorationImage: DecorationImage(image: AssetImage(ic_christmas_product_bg), fit: BoxFit.cover),
+          decorationImage: const DecorationImage(image: AssetImage(ic_christmas_product_bg), fit: BoxFit.cover),
         ),
-        padding: EdgeInsets.all(3),
+        padding: const EdgeInsets.all(3),
         child: Stack(
           children: [
             Container(
               width: widget.width,
               decoration: boxDecorationWithRoundedCorners(borderRadius: radius(defaultRadius), backgroundColor: context.cardColor),
-              padding: EdgeInsets.all(6),
+              padding: const EdgeInsets.all(6),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

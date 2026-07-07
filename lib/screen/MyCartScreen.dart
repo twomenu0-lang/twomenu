@@ -29,7 +29,7 @@ class MyCartScreen extends StatefulWidget {
 
   bool? isShowBack = false;
 
-  MyCartScreen({this.isShowBack});
+  MyCartScreen({super.key, this.isShowBack});
 
   @override
   MyCartScreenState createState() => MyCartScreenState();
@@ -49,7 +49,7 @@ class MyCartScreenState extends State<MyCartScreen> {
   var selectedShipment = 0;
   var mDiscountInfo;
 
-  ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
   NumberFormat nf = NumberFormat('##.00');
 
   @override
@@ -113,7 +113,7 @@ class MyCartScreenState extends State<MyCartScreen> {
               ],
             ),
             4.height,
-            Divider(),
+            const Divider(),
             4.height,
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -167,8 +167,8 @@ class MyCartScreenState extends State<MyCartScreen> {
                     style: boldTextStyle(color: Colors.green)),
               ],
             )
-                : SizedBox(),
-            Divider(),
+                : const SizedBox(),
+            const Divider(),
             4.height,
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -194,7 +194,7 @@ class MyCartScreenState extends State<MyCartScreen> {
             BoxShadow(
               color: Theme.of(context).hoverColor.withOpacity(0.8),
               blurRadius: 15.0,
-              offset: Offset(0.0, 0.75),
+              offset: const Offset(0.0, 0.75),
             ),
           ],
         ),
@@ -265,8 +265,8 @@ class MyCartScreenState extends State<MyCartScreen> {
                     appStore.setLoading(false);
                     toast(appLocalization
                         .translate('lbl_please_add_shipping_details'));
-                    bool isChanged = await EditProfileScreen().launch(context);
-                    print("testttttt" + isChanged.toString());
+                    bool isChanged = await const EditProfileScreen().launch(context);
+                    print("testttttt$isChanged");
                     if (isChanged == true) {
                       cartStore.countryList.clear();
                       cartStore.shippingMethodResponse = null;
@@ -303,7 +303,7 @@ class MyCartScreenState extends State<MyCartScreen> {
                 child: Column(
                   children: [
                     16.height,
-                    CartListComponent(),
+                    const CartListComponent(),
                     ShippingComponent(
                       onCall: () {
                         init();
@@ -342,7 +342,7 @@ class MyCartScreenState extends State<MyCartScreen> {
       body: Observer(builder: (context) {
         return BodyCornerWidget(
           child: !getBoolAsync(IS_LOGGED_IN)
-              ? WishListNotSignInComponent(isWishlist: false)
+              ? const WishListNotSignInComponent(isWishlist: false)
               .visible(!appStore.isLoading)
               : cartStore.cartList.isNotEmpty
               ? Stack(
@@ -367,7 +367,7 @@ class MyCartScreenState extends State<MyCartScreen> {
                 textAlign: TextAlign.center,
               ),
               30.height,
-              Container(
+              SizedBox(
                 width: context.width(),
                 child: AppButton(
                   width: context.width(),
@@ -375,7 +375,7 @@ class MyCartScreenState extends State<MyCartScreen> {
                   textStyle: primaryTextStyle(color: white),
                   color: isHalloween ? mChristmasColor : primaryColor,
                   onTap: () {
-                    DashBoardScreen()
+                    const DashBoardScreen()
                         .launch(context, isNewTask: true);
                     appStore.setBottomNavigationIndex(0);
                   },

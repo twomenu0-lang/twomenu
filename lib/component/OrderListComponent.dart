@@ -29,7 +29,7 @@ Widget orderListWidget(context, List<OrderResponse> mOrderModel, Function(int in
       scrollDirection: Axis.vertical,
       shrinkWrap: true,
       itemCount: mOrderModel.length,
-      padding: EdgeInsets.only(left: 8, right: 8, top: 8),
+      padding: const EdgeInsets.only(left: 8, right: 8, top: 8),
       itemBuilder: (context, i) {
         final order = mOrderModel[i];
 
@@ -49,7 +49,7 @@ Widget orderListWidget(context, List<OrderResponse> mOrderModel, Function(int in
         final bool hasMultipleItems = (order.lineItems != null && order.lineItems!.length > 1);
 
         return Container(
-          margin: EdgeInsets.all(8),
+          margin: const EdgeInsets.all(8),
           decoration: boxDecorationWithShadow(
               backgroundColor: context.cardColor, borderRadius: radius(12)),
           child: Column(
@@ -73,7 +73,7 @@ Widget orderListWidget(context, List<OrderResponse> mOrderModel, Function(int in
                         color: Colors.grey.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(defaultRadius),
                       ),
-                      child: Icon(Icons.shopping_bag_outlined,
+                      child: const Icon(Icons.shopping_bag_outlined,
                           color: Colors.grey, size: 32),
                     ),
                   10.width,

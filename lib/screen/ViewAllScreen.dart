@@ -10,7 +10,6 @@ import '/../models/ProductResponse.dart';
 import '/../models/SearchRequest.dart';
 import '/../network/rest_apis.dart';
 import '/../utils/AppBarWidget.dart';
-import '/../screen/ProductDetail/ProductDetailScreen2.dart';
 import '/../screen/SubCategoryScreen.dart';
 import '/../utils/AppWidget.dart';
 import '/../utils/Common.dart';
@@ -18,9 +17,6 @@ import '/../utils/Constants.dart';
 import '/../utils/AppImages.dart';
 import 'package:nb_utils/nb_utils.dart';
 
-import 'ProductDetail/ProductDetailScreen1.dart';
-import 'ProductDetail/ProductDetailScreen2.dart';
-import 'ProductDetail/ProductDetailScreen3.dart';
 
 // ─────────────────────────────────────────────────────────────
 // الثوابت الجمالية — نفس نظام ألوان SmartCategoryScreen
@@ -50,7 +46,7 @@ class ViewAllScreen extends StatefulWidget {
   String? headerName     = "";
 
   ViewAllScreen(
-      this.headerName, {
+      this.headerName, {super.key, 
         this.isFeatured,
         this.isSale,
         this.isCategory,
@@ -318,9 +314,9 @@ class ViewAllScreenState extends State<ViewAllScreen> {
                   ),
                 ),
                 8.width,
-                Text(
+                const Text(
                   'الأقسام',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Cairo',
                     fontSize: 12, // تصغير من 13
                     fontWeight: FontWeight.w700,
@@ -498,7 +494,7 @@ class ViewAllScreenState extends State<ViewAllScreen> {
 
   // ─── الشريط القديم: الأقسام الفرعية (children) ──
   Widget mSubCategory(List<Category> category) {
-    return Container(
+    return SizedBox(
       height: 110,
       child: AnimatedListView(
         itemCount: category.length,
@@ -525,7 +521,7 @@ class ViewAllScreenState extends State<ViewAllScreen> {
                       radius: 35)
                       : CircleAvatar(
                       backgroundColor: context.cardColor,
-                      backgroundImage: AssetImage(ic_placeholder_logo),
+                      backgroundImage: const AssetImage(ic_placeholder_logo),
                       radius: 35),
                   2.height,
                   Text(parseHtmlString(category[i].name),
@@ -628,7 +624,7 @@ class ViewAllScreenState extends State<ViewAllScreen> {
   Widget build(BuildContext context) {
     setValue(CARTCOUNT, appStore.count);
 
-    Widget _gridProducts = AlignedGridView.count(
+    Widget gridProducts = AlignedGridView.count(
       scrollDirection: Axis.vertical,
       itemCount: mProductModel.length,
       physics: const NeverScrollableScrollPhysics(),
@@ -643,7 +639,7 @@ class ViewAllScreenState extends State<ViewAllScreen> {
       crossAxisSpacing: 12,
     );
 
-    Widget _listProduct = AnimatedListView(
+    Widget listProduct = AnimatedListView(
       scrollDirection: Axis.vertical,
       itemCount: mProductModel.length,
       physics: const NeverScrollableScrollPhysics(),
@@ -666,7 +662,7 @@ class ViewAllScreenState extends State<ViewAllScreen> {
         actions: [
           IconButton(
             onPressed: () => layoutSelectionBottomSheet(context),
-            icon: Icon(MaterialCommunityIcons.view_dashboard_outline,
+            icon: const Icon(MaterialCommunityIcons.view_dashboard_outline,
                 color: Colors.white, size: 30),
           ),
           mCart(context, getBoolAsync(IS_LOGGED_IN)),
@@ -697,8 +693,8 @@ class ViewAllScreenState extends State<ViewAllScreen> {
                                 mCategoryModel.isNotEmpty,
                           ),
                           crossAxisCount == 1
-                              ? _listProduct.visible(mProductModel.isNotEmpty)
-                              : _gridProducts.visible(mProductModel.isNotEmpty),
+                              ? listProduct.visible(mProductModel.isNotEmpty)
+                              : gridProducts.visible(mProductModel.isNotEmpty),
                           mProgress()
                               .visible(appStore.isLoading && page > 1)
                               .center(),

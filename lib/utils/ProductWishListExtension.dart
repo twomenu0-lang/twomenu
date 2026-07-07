@@ -16,7 +16,7 @@ class ProductWishListExtension extends StatefulWidget {
   static String tag = '/ProductWishListExtension';
   final ProductResponse? mProductModel;
 
-  ProductWishListExtension({Key? key, this.mProductModel}) : super(key: key);
+  const ProductWishListExtension({super.key, this.mProductModel});
 
   @override
   ProductWishListExtensionState createState() => ProductWishListExtensionState();
@@ -42,19 +42,20 @@ class ProductWishListExtensionState extends State<ProductWishListExtension> {
   Widget build(BuildContext context) {
     return Observer(builder: (context) {
       return Container(
-        margin: EdgeInsets.all(6),
-        padding: EdgeInsets.all(4),
+        margin: const EdgeInsets.all(6),
+        padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(shape: BoxShape.rectangle, color: isHalloween ? mHalloweenCard : Theme.of(context).cardTheme.color, borderRadius: BorderRadius.circular(8)),
         child: wishListStore.isItemInWishlist(widget.mProductModel!.id!) == false
             ? Icon(Icons.favorite_border, color: isHalloween ? white : Theme.of(context).textTheme.titleSmall!.color, size: 16)
-            : Icon(Icons.favorite, color: Colors.red, size: 16),
+            : const Icon(Icons.favorite, color: Colors.red, size: 16),
       ).visible(!widget.mProductModel!.type!.contains("grouped") && !widget.mProductModel!.type!.contains("external") && !widget.mProductModel!.type!.contains("variable")).onTap(
         () {
           if (getBoolAsync(IS_LOGGED_IN)) {
             addItemToWishlist(data: widget.mProductModel!);
             setState(() {});
-          } else
-            SignInScreen().launch(context);
+          } else {
+            const SignInScreen().launch(context);
+          }
         },
       );
     });

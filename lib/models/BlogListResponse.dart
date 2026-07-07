@@ -9,14 +9,14 @@ class BlogListResponse {
     if (json['data'] != null) {
       data = <Blog>[];
       json['data'].forEach((v) {
-        data!.add(new Blog.fromJson(v));
+        data!.add(Blog.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['num_of_pages'] = this.numOfPages;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['num_of_pages'] = numOfPages;
     if (this.data != null) {
       data['data'] = this.data!.map((v) => v.toJson()).toList();
     }
@@ -68,19 +68,19 @@ class Blog {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['ID'] = this.iD;
-    data['image'] = this.image;
-    data['post_title'] = this.postTitle;
-    data['post_content'] = this.postContent;
-    data['post_excerpt'] = this.postExcerpt;
-    data['post_date'] = this.postDate;
-    data['post_date_gmt'] = this.postDateGmt;
-    data['readable_date'] = this.readableDate;
-    data['share_url'] = this.shareUrl;
-    data['human_time_diff'] = this.humanTimeDiff;
-    data['no_of_comments'] = this.noOfComments;
-    data['post_author_name'] = this.postAuthorName;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['ID'] = iD;
+    data['image'] = image;
+    data['post_title'] = postTitle;
+    data['post_content'] = postContent;
+    data['post_excerpt'] = postExcerpt;
+    data['post_date'] = postDate;
+    data['post_date_gmt'] = postDateGmt;
+    data['readable_date'] = readableDate;
+    data['share_url'] = shareUrl;
+    data['human_time_diff'] = humanTimeDiff;
+    data['no_of_comments'] = noOfComments;
+    data['post_author_name'] = postAuthorName;
     return data;
   }
 }

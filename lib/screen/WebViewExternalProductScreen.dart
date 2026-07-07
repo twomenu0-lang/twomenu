@@ -13,7 +13,7 @@ class WebViewExternalProductScreen extends StatefulWidget {
   final String? title;
 
   // ignore: non_constant_identifier_names
-  WebViewExternalProductScreen({Key? key, this.mExternal_URL, this.title}) : super(key: key);
+  const WebViewExternalProductScreen({super.key, this.mExternal_URL, this.title});
 
   @override
   _WebViewExternalProductScreenState createState() => _WebViewExternalProductScreenState();

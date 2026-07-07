@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -17,9 +18,12 @@ import 'package:nb_utils/nb_utils.dart';
 import 'package:the_apple_sign_in/the_apple_sign_in.dart';
 
 import '../AppLocalizations.dart';
+import '../component/RewardWelcomeDialog.dart'; // ✅ الدايلوج الموحّد لهدية الترحيب
 
 class SignInScreen extends StatefulWidget {
   static String tag = '/SignInScreen';
+
+  const SignInScreen({super.key});
 
   @override
   SignInScreenState createState() => SignInScreenState();
@@ -70,7 +74,7 @@ class SignInScreenState extends State<SignInScreen> {
 
         // ✅ تحسين الأداء: تنفيذ جميع عمليات التخزين بالتوازي بدلاً من التتابع
         await Future.wait([
-          setValue(USER_ID, res['user_id']),
+          setValue(USER_ID, int.parse(res['user_id'].toString())), // ✅ التعديل A: تحويل المعرّف لرقم صحيح
           setValue(FIRST_NAME, res['first_name']),
           setValue(LAST_NAME, res['last_name']),
           setValue(USER_EMAIL, res['user_email']),
@@ -85,20 +89,25 @@ class SignInScreenState extends State<SignInScreen> {
           setValue(IS_REMEMBERED, getBoolAsync(IS_REMEMBERED)),
         ]);
 
-        // ✅ تصحيح جوهري: كان الكود بيكتب setValue(IS_LOGGED_IN, true) جوه
-        // Future.wait فوق، وده بيحدّث SharedPreferences فقط من غير ما يحدّث
-        // appStore.isLoggedIn (الـ observable اللي شاشات السلة/الحساب
-        // بترصده عن طريق Observer()). دي نفس العلة الموجودة في SignUpScreen
-        // و MobileNumberSignInScreen، وهنا بالذات هي الأهم لأن الشاشة دي
-        // المسار الرئيسي اللي بيدخل منه أي مستخدم عنده حساب شغال فعلاً.
-        // appStore.setLoggedIn() بتحدّث الـ observable والتخزين مع بعض.
+        // ✅ تصحيح جوهري: appStore.setLoggedIn() بتحدّث الـ observable
+        // والتخزين مع بعض، عشان شاشة السلة/الحساب تعرف فعلياً إن
+        // المستخدم بقى Logged in.
         appStore.setLoggedIn(true);
 
+        // ✅ v1.7.6-fix — savePlayerIdToServer() اتشالت من هنا كـ awaited
+        // call. الدالة دي بتعمل POST request لسيرفرنا وكانت بتأخّر ظهور
+        // الـ Dashboard بدون أي داعي فعلي لليوزر (هي أصلاً ملفوفة في
+        // try/catch ومفيش حاجة في الشاشة التالية بتعتمد على نتيجتها).
+        // بقت بتتنفذ في الخلفية (fire-and-forget) بعد ما اليوزر يشوف
+        // الشاشة التالية فعلاً، مش قبلها.
         appStore.setLoading(false);
         appStore.setBottomNavigationIndex(0);
-        DashBoardScreen().launch(context, isNewTask: true);
+        const DashBoardScreen().launch(context, isNewTask: true);
+
+        // Fire-and-forget: مش هيوقف أو يأخّر رحلة الدخول بأي شكل.
+        unawaited(savePlayerIdToServer());
       }).catchError((error) {
-        print("Error" + error.toString());
+        print("Error$error");
         toast(error.toString());
         appStore.setLoading(false);
       });
@@ -106,36 +115,75 @@ class SignInScreenState extends State<SignInScreen> {
 
     void socialLogin(req) async {
       appStore.setLoading(true);
+
       await socialLoginApi(req).then((res) async {
         if (!mounted) return;
-        await getCustomer(res['user_id']).then((response) async {
-          if (!mounted) return;
 
-          // ✅ تحسين إضافي: دمج الـ Future.wait هنا أيضاً لتسريع الدخول عبر حسابات التواصل
-          await Future.wait([
-            setValue(IS_SOCIAL_LOGIN, true),
-            setValue(AVATAR, req['photoURL']),
-            setValue(USER_ID, res['user_id']),
-            setValue(FIRST_NAME, res['first_name']),
-            setValue(LAST_NAME, res['last_name']),
-            setValue(USER_EMAIL, res['user_email']),
-            setValue(USERNAME, res['user_nicename']),
-            setValue(TOKEN, res['token']),
-            setValue(USER_DISPLAY_NAME, res['user_display_name']),
-            setValue(BILLING, jsonEncode(res['billing'])),
-            setValue(SHIPPING, jsonEncode(res['shipping'])),
-          ]);
+        // ✅ v1.7.6-fix — تم حذف استدعاء getCustomer(res['user_id'])
+        // بشكل كامل. تم التأكد من الكود إن الـ response الراجع منه
+        // (response) لم يكن يُستخدم في أي مكان لاحق: لا في التخزين
+        // (كل setValue أسفل كان بيقرأ من res الراجع من socialLoginApi
+        // مش من response)، ولا في تحديد isNewUser (اللي مصدره كان
+        // res['is_new_user'] مش response). كان استدعاء شبكة كامل
+        // (round-trip) بيُنفَّذ وبعدين نتيجته تُرمى بالكامل، وكان
+        // يضيف تأخير حقيقي وغير ضروري على المسار الحرج لتسجيل الدخول
+        // عبر جوجل/أبل.
 
-          // ✅ نفس التصحيح: appStore.setLoggedIn() بدل setValue(IS_LOGGED_IN, true)
-          // المباشر، عشان شاشة السلة/الحساب تعرف فعلياً إن المستخدم بقى Logged in.
-          appStore.setLoggedIn(true);
+        // ✅ تحسين إضافي: دمج الـ Future.wait هنا أيضاً لتسريع الدخول عبر حسابات التواصل
+        await Future.wait([
+          setValue(IS_SOCIAL_LOGIN, true),
+          setValue(AVATAR, req['photoURL']),
+          setValue(USER_ID, int.parse(res['user_id'].toString())), // ✅ التعديل B: تحويل المعرّف لرقم صحيح عند تسجيل الدخول بالسوشيال
+          setValue(FIRST_NAME, res['first_name']),
+          setValue(LAST_NAME, res['last_name']),
+          setValue(USER_EMAIL, res['user_email']),
+          setValue(USERNAME, res['user_nicename']),
+          setValue(TOKEN, res['token']),
+          setValue(USER_DISPLAY_NAME, res['user_display_name']),
+          setValue(BILLING, jsonEncode(res['billing'])),
+          setValue(SHIPPING, jsonEncode(res['shipping'])),
+        ]);
 
-          appStore.setLoading(false);
-          DashBoardScreen().launch(context, isNewTask: true);
-        }).catchError((error) {
-          appStore.setLoading(false);
-          toast(error.toString());
-        });
+        // ✅ appStore.setLoggedIn() بدل setValue(IS_LOGGED_IN, true)
+        // المباشر، عشان شاشة السلة/الحساب تعرف فعلياً إن المستخدم بقى Logged in.
+        appStore.setLoggedIn(true);
+
+        // ✅ توحيد ظهور دايلوج هدية الترحيب: نعتمد على فلاج is_new_user
+        // الراجع من الباك إند (mighty_get_customer_by_social) بدل أي تخمين
+        // في الفرونت. الدايلوج يظهر فقط لو الحساب اتعمل دلوقتي فعلاً —
+        // مش لأي تسجيل دخول عادي بجوجل/أبل لمستخدم موجود من قبل ليه
+        // مكافآت تانية (ترقية مستوى مثلاً) مش لازم تتعرض بنفس الشكل ده.
+        final bool isNewUser = res['is_new_user'] == true;
+
+        if (isNewUser) {
+          log('🎁 [WELCOME] جاري جلب المكافآت بعد تسجيل اشتراك جديد عبر السوشيال...');
+          try {
+            await rewardsStore.fetchRewards();
+            log('🎁 [WELCOME] fetchRewards انتهت بنجاح — error=${rewardsStore.error} | rewards.length=${rewardsStore.rewards.length} | available.length=${rewardsStore.availableRewards.length}');
+          } catch (e, st) {
+            log('🎁 [WELCOME] ❌ fetchRewards رمت Exception: $e');
+            log('🎁 [WELCOME] StackTrace: $st');
+          }
+
+          if (!mounted) {
+            log('🎁 [WELCOME] ❌ الشاشة اتعملها dispose قبل ما نعرض الدايلوج (mounted=false)');
+          } else if (rewardsStore.availableRewards.isNotEmpty) {
+            log('🎁 [WELCOME] ✅ هنعرض الدايلوج دلوقتي — reward: ${rewardsStore.availableRewards.first.rewardTitle}');
+            await RewardWelcomeDialog.show(context, rewardsStore.availableRewards.first);
+            if (!mounted) return;
+          } else {
+            log('🎁 [WELCOME] ⚠️ availableRewards فاضية — مفيش دايلوج هيظهر');
+          }
+        }
+
+        appStore.setLoading(false);
+        const DashBoardScreen().launch(context, isNewTask: true);
+
+        // ✅ v1.7.6-fix — نفس تعديل savePlayerIdToServer(): بقت
+        // fire-and-forget بعد الانتقال للـ Dashboard، مش awaited قبله.
+        // برضه ملفوفة داخلياً في try/catch فمش هتوقف رحلة الدخول لو
+        // فشلت لأي سبب (مفيش إنترنت لحظة الدخول مثلاً).
+        unawaited(savePlayerIdToServer());
       }).catchError((error) {
         appStore.setLoading(false);
         toast(error.toString());
@@ -192,7 +240,7 @@ class SignInScreenState extends State<SignInScreen> {
     void appleLogIn() async {
       if (await TheAppleSignIn.isAvailable()) {
         final AuthorizationResult result = await TheAppleSignIn.performRequests([
-          AppleIdRequest(requestedScopes: [Scope.email, Scope.fullName])
+          const AppleIdRequest(requestedScopes: [Scope.email, Scope.fullName])
         ]);
         switch (result.status) {
           case AuthorizationStatus.authorized:
@@ -218,22 +266,22 @@ class SignInScreenState extends State<SignInScreen> {
     Widget socialButtons = Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        GoogleLogoWidget(size: 28).onTap(() {
+        const GoogleLogoWidget(size: 28).onTap(() {
           onGoogleSignInTap();
         }).visible(enableSignWithGoogle == true),
         8.width,
         IconButton(
           onPressed: () {
-            MobileNumberSignInScreen().launch(context);
+            const MobileNumberSignInScreen().launch(context);
           },
-          icon: Icon(MaterialIcons.phone_android, size: 36),
+          icon: const Icon(MaterialIcons.phone_android, size: 36),
         ).visible(enableSignWithOtp == true),
         8.width,
         IconButton(
           onPressed: () {
             appleLogIn();
           },
-          icon: Icon(Ionicons.ios_logo_apple, size: 36),
+          icon: const Icon(Ionicons.ios_logo_apple, size: 36),
         ).visible(Platform.isIOS && enableSignWithApple == true),
       ],
     );
@@ -244,17 +292,17 @@ class SignInScreenState extends State<SignInScreen> {
         textAlign: TextAlign.center,
         list: [
           TextSpan(text: appLocalization.translate('lbl_dont_t_have_an_account'), style: primaryTextStyle(size: 14)),
-          TextSpan(text: "  "),
+          const TextSpan(text: "  "),
           TextSpan(text: appLocalization.translate('lbl_sign_up_link')!, style: primaryTextStyle(color: primaryColor)),
         ],
       ).onTap(() {
-        SignUpScreen().launch(context);
+        const SignUpScreen().launch(context);
       }).paddingAll(16),
       body: BodyCornerWidget(
         child: Stack(
           children: <Widget>[
             SingleChildScrollView(
-              padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
               child: Form(
                 key: formKey,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -313,7 +361,7 @@ class SignInScreenState extends State<SignInScreen> {
                         ).expand(),
                         TextButton(
                           onPressed: () async {
-                            showDialog(context: context, builder: (BuildContext context) => CustomDialog());
+                            showDialog(context: context, builder: (BuildContext context) => const CustomDialog());
                           },
                           child: Text(appLocalization.translate('lbl_forgot_password')!, style: secondaryTextStyle(color: primaryColor)),
                         ),
@@ -328,7 +376,7 @@ class SignInScreenState extends State<SignInScreen> {
                         hideKeyboard(context);
                         if (formKey.currentState!.validate()) {
                           formKey.currentState!.save();
-                          var request = {"username": "${usernameCont.text}", "password": "${passwordCont.text}"};
+                          var request = {"username": usernameCont.text, "password": passwordCont.text};
                           appStore.setLoading(true);
                           signInApi(request);
                         }
@@ -351,6 +399,8 @@ class SignInScreenState extends State<SignInScreen> {
 
 // ignore: must_be_immutable
 class CustomDialog extends StatefulWidget {
+  const CustomDialog({super.key});
+
   @override
   _CustomDialogState createState() => _CustomDialogState();
 }

@@ -12,7 +12,7 @@ class AddMoneyComponent extends StatefulWidget {
   final Function? onCall;
   final WalletConfigurationResponse? mWalletConfigurationResponse;
 
-  AddMoneyComponent({Key? key, this.onCall, this.mWalletConfigurationResponse}) : super(key: key);
+  const AddMoneyComponent({super.key, this.onCall, this.mWalletConfigurationResponse});
 
   @override
   AddMoneyComponentState createState() => AddMoneyComponentState();
@@ -60,7 +60,7 @@ class AddMoneyComponentState extends State<AddMoneyComponent> {
                 )
               ],
             ),
-            Divider(height: 0),
+            const Divider(height: 0),
             24.height,
             SimpleEditText(
               mController: mPriceCont,

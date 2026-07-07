@@ -12,6 +12,8 @@ import '../utils/AppBarWidget.dart';
 class AboutUsScreen extends StatefulWidget {
   static String tag = '/AboutUsScreen';
 
+  const AboutUsScreen({super.key});
+
   @override
   AboutUsScreenState createState() => AboutUsScreenState();
 }
@@ -42,7 +44,7 @@ class AboutUsScreenState extends State<AboutUsScreen> {
             child: Column(
               children: [
                 16.height,
-                Container(width: 120, height: 120, padding: EdgeInsets.all(8), decoration: boxDecorationRoundedWithShadow(10), child: Image.asset(app_logo)),
+                Container(width: 120, height: 120, padding: const EdgeInsets.all(8), decoration: boxDecorationRoundedWithShadow(10), child: Image.asset(app_logo)),
                 16.height,
                 FutureBuilder<PackageInfo>(
                     future: PackageInfo.fromPlatform(),
@@ -50,13 +52,13 @@ class AboutUsScreenState extends State<AboutUsScreen> {
                       if (snap.hasData) {
                         return Column(
                           children: [
-                            Text('${snap.data!.appName.validate()}', style: boldTextStyle(color: primaryColor, size: 20)),
+                            Text(snap.data!.appName.validate(), style: boldTextStyle(color: primaryColor, size: 20)),
                             8.height,
                             Text('V ${snap.data!.version.validate()}', style: boldTextStyle(color: primaryColor, size: 20)),
                           ],
                         );
                       }
-                      return SizedBox();
+                      return const SizedBox();
                     }),
                 8.height
               ],
@@ -64,12 +66,12 @@ class AboutUsScreenState extends State<AboutUsScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: Container(
+      bottomNavigationBar: SizedBox(
         height: 150, // تم تقليل الارتفاع لأننا حذفنا الإعلان
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Container(
+            SizedBox(
               width: context.width(),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -77,7 +79,7 @@ class AboutUsScreenState extends State<AboutUsScreen> {
                 children: [
                   Text(appLocalization.translate('llb_follow_us')!, style: boldTextStyle()).visible(getStringAsync(WHATSAPP).isNotEmpty),
                   16.height,
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       // ... (بقية أيقونات التواصل الاجتماعي تظل كما هي)
@@ -90,7 +92,7 @@ class AboutUsScreenState extends State<AboutUsScreen> {
                 future: PackageInfo.fromPlatform(),
                 builder: (_, snap) {
                   if (snap.hasData) return Text('V ${snap.data!.version.validate()}', style: secondaryTextStyle());
-                  return SizedBox();
+                  return const SizedBox();
                 }),
             2.height,
             Text(getStringAsync(COPYRIGHT_TEXT), style: secondaryTextStyle()).visible(getStringAsync(COPYRIGHT_TEXT).isNotEmpty),

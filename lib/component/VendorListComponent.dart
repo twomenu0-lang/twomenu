@@ -9,7 +9,7 @@ class VendorListComponent extends StatefulWidget {
   static String tag = '/VendorListComponent';
   List<VendorResponse>? mVendorList = [];
 
-  VendorListComponent({Key? key, this.mVendorList}) : super(key: key);
+  VendorListComponent({super.key, this.mVendorList});
 
   @override
   VendorListComponentState createState() => VendorListComponentState();
@@ -46,7 +46,7 @@ class VendorListComponentState extends State<VendorListComponent> {
           if (addressText!.isEmpty) {
             addressText = vendor.address!.street_2;
           } else {
-            addressText += ", " + vendor.address!.street_2!;
+            addressText += ", ${vendor.address!.street_2!}";
           }
         }
       }
@@ -55,7 +55,7 @@ class VendorListComponentState extends State<VendorListComponent> {
           if (addressText!.isEmpty) {
             addressText = vendor.address!.city;
           } else {
-            addressText += ", " + vendor.address!.city!;
+            addressText += ", ${vendor.address!.city!}";
           }
         }
       }
@@ -65,7 +65,7 @@ class VendorListComponentState extends State<VendorListComponent> {
           if (addressText!.isEmpty) {
             addressText = vendor.address!.zip;
           } else {
-            addressText += " - " + vendor.address!.zip!;
+            addressText += " - ${vendor.address!.zip!}";
           }
         }
       }
@@ -74,7 +74,7 @@ class VendorListComponentState extends State<VendorListComponent> {
           if (addressText!.isEmpty) {
             addressText = vendor.address!.state;
           } else {
-            addressText += ", " + vendor.address!.state!;
+            addressText += ", ${vendor.address!.state!}";
           }
         }
       }
@@ -83,19 +83,20 @@ class VendorListComponentState extends State<VendorListComponent> {
           if (addressText!.isEmpty) {
             addressText = vendor.address!.country;
           } else {
-            addressText += ", " + vendor.address!.country!;
+            addressText += ", ${vendor.address!.country!}";
           }
         }
       }
     }
 
     return Container(
+      margin: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.max,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
             child: commonCacheImageWidget(img, height: 160, width: context.width(), fit: BoxFit.fill),
           ),
           Row(children: [
@@ -110,7 +111,6 @@ class VendorListComponentState extends State<VendorListComponent> {
           ]).paddingAll(8),
         ],
       ),
-      margin: EdgeInsets.only(left: 8, right: 8, bottom: 8),
     );
   }
 
@@ -122,7 +122,7 @@ class VendorListComponentState extends State<VendorListComponent> {
           return Divider(color:context.dividerColor,height: 20,);
         },
         itemCount: mVendorList.length,
-        padding: EdgeInsets.only(left: 4, right: 4,top: 16),
+        padding: const EdgeInsets.only(left: 4, right: 4,top: 16),
         shrinkWrap: true,
         scrollDirection: Axis.vertical,
         itemBuilder: (context, i) {

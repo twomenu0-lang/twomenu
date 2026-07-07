@@ -10,7 +10,7 @@ class BlogListComponent extends StatefulWidget {
   static String tag = '/BlogListComponent';
   final List<Blog> mBlogList;
 
-  BlogListComponent(this.mBlogList);
+  const BlogListComponent(this.mBlogList, {super.key});
 
   @override
   BlogListComponentState createState() => BlogListComponentState();
@@ -67,8 +67,8 @@ class BlogListComponentState extends State<BlogListComponent> {
     return AnimatedListView(
       scrollDirection: Axis.vertical,
       itemCount: mBlogList.length,
-      padding: EdgeInsets.symmetric(horizontal: 16),
-      physics: NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       itemBuilder: (context, index) {
         final blog = mBlogList[index];
@@ -83,7 +83,7 @@ class BlogListComponentState extends State<BlogListComponent> {
             BlogDescriptionScreen(mId: blog.iD).launch(context);
           },
           child: Container(
-            margin: EdgeInsets.only(bottom: 12),
+            margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -91,7 +91,7 @@ class BlogListComponentState extends State<BlogListComponent> {
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 12,
-                  offset: Offset(0, 4),
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -100,7 +100,7 @@ class BlogListComponentState extends State<BlogListComponent> {
               children: [
                 // ── الصورة بنسبة أبعاد الصورة الأصلية 1920×800 ──
                 ClipRRect(
-                  borderRadius: BorderRadius.only(
+                  borderRadius: const BorderRadius.only(
                     topRight: Radius.circular(16),
                     bottomRight: Radius.circular(16),
                   ),
@@ -128,14 +128,14 @@ class BlogListComponentState extends State<BlogListComponent> {
                 Expanded(
                   child: Padding(
                     padding:
-                    EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // العنوان
                         Text(
                           parseHtmlString(blog.postTitle.validate().trim()),
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: _brandBlue,
@@ -157,7 +157,7 @@ class BlogListComponentState extends State<BlogListComponent> {
                                   : blog.postContent.validate()),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12,
                             color: Color(0xFF6C6F8A),
                             fontFamily: 'Cairo',
@@ -171,12 +171,12 @@ class BlogListComponentState extends State<BlogListComponent> {
                         if (_formatDate(blog).isNotEmpty)
                           Row(
                             children: [
-                              Icon(Icons.calendar_today_outlined,
+                              const Icon(Icons.calendar_today_outlined,
                                   size: 12, color: Color(0xFF6C6F8A)),
                               4.width,
                               Text(
                                 _formatDate(blog),
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 11,
                                   color: Color(0xFF6C6F8A),
                                   fontFamily: 'Cairo',

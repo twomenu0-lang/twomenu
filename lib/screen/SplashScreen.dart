@@ -13,6 +13,8 @@ import 'WalkThroughScreen.dart';
 class SplashScreen extends StatefulWidget {
   static String tag = '/SplashScreen';
 
+  const SplashScreen({super.key});
+
   @override
   SplashScreenState createState() => SplashScreenState();
 }
@@ -57,10 +59,10 @@ class SplashScreenState extends State<SplashScreen> {
   Future checkFirstSeen() async {
     bool seen = getBoolAsync('seen');
     if (seen) {
-      DashBoardScreen().launch(context, isNewTask: true);
+      const DashBoardScreen().launch(context, isNewTask: true);
     } else {
       await setValue('seen', true);
-      WalkThroughScreen().launch(context, isNewTask: true);
+      const WalkThroughScreen().launch(context, isNewTask: true);
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '/../component/HomeScreenComponent/ProductCard.dart';
@@ -23,6 +24,8 @@ import '/../utils/Constants.dart';
 import '/../utils/AppImages.dart';
 import 'package:nb_utils/nb_utils.dart';
 import '../../AppLocalizations.dart';
+import '../../screen/rewards_wallet_screen.dart';
+import '../../component/BottomNav/FloatingBottomNavigation.dart';
 
 // ─────────────────────────────────────────────────────────────
 // ثوابت الـ Grid
@@ -31,6 +34,8 @@ const int _kMaxVisibleCategories = 11;
 
 class HomeScreen1 extends StatefulWidget {
   static String tag = '/HomeScreen1';
+
+  const HomeScreen1({super.key});
 
   @override
   HomeScreen1State createState() => HomeScreen1State();
@@ -72,6 +77,15 @@ class HomeScreen1State extends State<HomeScreen1> {
   void dispose() {
     salePageController.dispose();
     super.dispose();
+  }
+
+  void _openRewards() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const RewardsWalletScreen(),
+      ),
+    );
   }
 
   Future<void> _openWhatsApp() async {
@@ -152,14 +166,11 @@ class HomeScreen1State extends State<HomeScreen1> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // CATEGORY — Grid ذكي ومكبر مع زر المزيد الذي يعرض كل الأقسام
-  // ─────────────────────────────────────────────────────────────
   Widget _category(BuildContext context) {
     if (mCategoryModel.isEmpty) return const SizedBox.shrink();
 
     final List<Category> categories =
-    mCategoryModel.map((e) => e as Category).toList();
+    mCategoryModel.map((e) => e).toList();
 
     final bool needsMore = categories.length > _kMaxVisibleCategories;
     final List<Category> visible = needsMore
@@ -191,7 +202,6 @@ class HomeScreen1State extends State<HomeScreen1> {
     );
   }
 
-  // ─── بطاقة التصنيف الواحدة المكبرة ───────────────────────────
   Widget _buildCategoryItem(BuildContext context, Category cat) {
     final bool hasImg =
         cat.image?.src != null && (cat.image?.src ?? '').isNotEmpty;
@@ -244,7 +254,6 @@ class HomeScreen1State extends State<HomeScreen1> {
     );
   }
 
-  // ─── زر "المزيد +" المطور والمصقول بالهوية البصرية والحدود الثابتة ───
   Widget _buildMoreButton(BuildContext context, List<Category> allCategories) {
     return GestureDetector(
       onTap: () => _showMoreBottomSheet(context, allCategories),
@@ -284,7 +293,6 @@ class HomeScreen1State extends State<HomeScreen1> {
     );
   }
 
-  // ─── Bottom Sheet لعرض جميع الأقسام بالكامل ─────────────────
   void _showMoreBottomSheet(BuildContext context, List<Category> allCategories) {
     showModalBottomSheet(
       context: context,
@@ -386,9 +394,6 @@ class HomeScreen1State extends State<HomeScreen1> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // CAROUSEL
-  // ─────────────────────────────────────────────────────────────
   Widget _carousel(BuildContext context) {
     if (mSliderModel.isEmpty) return const SizedBox.shrink();
     return HeroBannerSlider(
@@ -469,10 +474,6 @@ class HomeScreen1State extends State<HomeScreen1> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // DASHBOARD SECTIONS
-  // ─────────────────────────────────────────────────────────────
-
   Widget _newProduct(BuildContext context) => DashboardComponent(
     title: AppLocalizations.of(context)!.translate('lbl_new_collections') ?? builderResponse.dashboard!.newProduct!.title!,
     subTitle: AppLocalizations.of(context)!.translate('lbl_see_all') ?? builderResponse.dashboard!.newProduct!.viewAll!,
@@ -536,10 +537,6 @@ class HomeScreen1State extends State<HomeScreen1> {
         .launch(context),
   );
 
-  // ─────────────────────────────────────────────────────────────
-  // BUILD
-  // ─────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     final appLocalization = AppLocalizations.of(context)!;
@@ -550,118 +547,140 @@ class HomeScreen1State extends State<HomeScreen1> {
           body: Center(child: CircularProgressIndicator()));
     }
 
-    final Widget body = ListView(
-      shrinkWrap: true,
-      children: [
-        AnimatedListView(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: dashboard.sorting?.length ?? 0,
-          itemBuilder: (_, index) {
-            final section = dashboard.sorting![index];
-            switch (section) {
-              case 'slider':
-                return _carousel(context)
-                    .paddingTop(8)
-                    .visible(dashboard.sliderView!.enable!);
-              case 'categories':
-                return _category(context)
-                    .paddingTop(8)
-                    .visible(dashboard.category!.enable!);
-              case 'Sale_Banner':
-                return _saleBannerWidget(context, appLocalization)
-                    .paddingTop(8)
-                    .visible(dashboard.saleBanner!.enable!);
-              case 'newest_product':
-                return _newProduct(context)
-                    .paddingTop(8)
-                    .visible(dashboard.newProduct!.enable!);
-              case 'vendor':
-                return mVendorWidget(
-                    context,
-                    mVendorModel,
-                    dashboard.vendor!.title,
-                    dashboard.vendor!.viewAll)
-                    .paddingOnly(top: 8, bottom: 8)
-                    .visible(dashboard.vendor!.enable!);
-              case 'feature_products':
-                return _featureProduct(context)
-                    .paddingTop(8)
-                    .visible(dashboard.featureProduct!.enable!);
-              case 'deal_of_the_day':
-                return _availableOfferAndDeal(
+    // ✅ الحل النهائي والجذري: استخدام Collection-If الصريحة مع مسافة سفلية 16 بكسل فقط
+    final Widget body = SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (dashboard.sliderView?.enable ?? false)
+                _carousel(context).paddingTop(8),
+
+              if (dashboard.category?.enable ?? false)
+                _category(context).paddingTop(8),
+
+              if (dashboard.saleBanner?.enable ?? false)
+                _saleBannerWidget(context, appLocalization).paddingTop(8),
+
+              if (dashboard.newProduct?.enable ?? false)
+                _newProduct(context).paddingTop(8),
+
+              if (dashboard.vendor?.enable ?? false)
+                mVendorWidget(
+                  context,
+                  mVendorModel,
+                  dashboard.vendor!.title,
+                  dashboard.vendor!.viewAll,
+                ).paddingOnly(top: 8, bottom: 8),
+
+              if (dashboard.featureProduct?.enable ?? false)
+                _featureProduct(context).paddingTop(8),
+
+              if ((dashboard.dealOfTheDay?.enable ?? false) && mDealProductModel.isNotEmpty)
+                _availableOfferAndDeal(
                   appLocalization.translate('lbl_deal_of_the_day') ?? dashboard.dealOfTheDay!.title!,
                   mDealProductModel,
                   appLocalization.translate('lbl_see_all') ?? dashboard.dealOfTheDay!.viewAll!,
                   context,
                   appLocalization,
                   badgeText: appLocalization.translate('lbl_deal_badge') ?? 'عرض اليوم',
-                )
-                    .paddingTop(8)
-                    .visible(dashboard.dealOfTheDay!.enable! &&
-                    mDealProductModel.isNotEmpty);
-              case 'best_selling_product':
-                return _bestSelling(context)
-                    .paddingTop(8)
-                    .visible(dashboard.bestSaleProduct!.enable!);
-              case 'sale_product':
-                return _saleProduct(context)
-                    .paddingTop(8)
-                    .visible(dashboard.saleProduct!.enable!);
-              case 'offer':
-                return _availableOfferAndDeal(
+                ).paddingTop(8),
+
+              if (dashboard.bestSaleProduct?.enable ?? false)
+                _bestSelling(context).paddingTop(8),
+
+              if (dashboard.saleProduct?.enable ?? false)
+                _saleProduct(context).paddingTop(8),
+
+              if ((dashboard.offerProduct?.enable ?? false) && mOfferProductModel.isNotEmpty)
+                _availableOfferAndDeal(
                   appLocalization.translate('lbl_available_offers') ?? dashboard.offerProduct!.title!,
                   mOfferProductModel,
                   appLocalization.translate('lbl_see_all') ?? dashboard.dealOfTheDay!.viewAll!,
                   context,
                   appLocalization,
                   badgeText: appLocalization.translate('lbl_discount_badge') ?? 'خصم',
-                )
-                    .paddingTop(8)
-                    .visible(dashboard.offerProduct!.enable! &&
-                    mOfferProductModel.isNotEmpty);
-              case 'suggested_for_you':
-                return _suggested(context)
-                    .paddingTop(8)
-                    .visible(dashboard.suggestionProduct!.enable!);
-              case 'you_may_like':
-                return _youMayLike(context)
-                    .paddingTop(8)
-                    .visible(dashboard.youMayLikeProduct!.enable!);
-              default:
-                return const SizedBox.shrink();
-            }
-          },
-        ),
-        mBottom(context)
-            .visible(!appStore.isLoading && isDone == true),
-        100.height,
-      ],
+                ).paddingTop(8),
+
+              if (dashboard.suggestionProduct?.enable ?? false)
+                _suggested(context).paddingTop(8),
+
+              if (dashboard.youMayLikeProduct?.enable ?? false)
+                _youMayLike(context).paddingTop(8),
+            ],
+          ),
+
+          if (!appStore.isLoading && isDone == true)
+            mBottom(context),
+
+          // المسافة السفلية المصغرة والمحكمة
+          const SizedBox(height: 16),
+        ],
+      ),
     );
 
     return Scaffold(
       backgroundColor: kBrandBackground,
       appBar: FloatingAppBar(
         title: AppName,
-        onSearchTap: () => SearchScreen().launch(context),
+        onSearchTap: () => const SearchScreen().launch(context),
         onChatTap: _openWhatsApp,
-        onNotificationTap: () => NotificationScreen().launch(context),
+        onNotificationTap: () => const NotificationScreen().launch(context),
         hasNotification: true,
       ),
       key: scaffoldKey,
-      body: RefreshIndicator(
-        color: primaryColor,
-        backgroundColor: context.cardColor,
-        onRefresh: () => fetchDashboardData(),
-        child: Observer(
-          builder: (context) => Stack(
-            alignment: Alignment.center,
-            children: [
-              body.visible(!appStore.isLoading),
-              mProgress().center().visible(appStore.isLoading),
-            ],
+      body: Column(
+        children: [
+          if (getBoolAsync(IS_LOGGED_IN) && !getBoolAsync(IS_GUEST_USER))
+            InkWell(
+              onTap: _openRewards,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [kBrandPrimary, kBrandPrimary.withOpacity(0.8)],
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.card_giftcard_rounded, color: Colors.white, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      AppLocalizations.of(context)!.translate('lbl_my_rewards') ?? 'اكتشف مكافآتك',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 14),
+                  ],
+                ),
+              ),
+            ),
+          Expanded(
+            child: RefreshIndicator(
+              color: primaryColor,
+              backgroundColor: context.cardColor,
+              onRefresh: () => fetchDashboardData(),
+              child: Observer(
+                builder: (context) => Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    body.visible(!appStore.isLoading),
+                    mProgress().center().visible(appStore.isLoading),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

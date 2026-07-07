@@ -14,6 +14,8 @@ import 'HalloweenWalkThroughScreen.dart';
 class HalloweenSplashScreen extends StatefulWidget {
   static String tag = '/HalloweenSplashScreen';
 
+  const HalloweenSplashScreen({super.key});
+
   @override
   HalloweenSplashScreenState createState() => HalloweenSplashScreenState();
 }
@@ -27,7 +29,7 @@ class HalloweenSplashScreenState extends State<HalloweenSplashScreen> {
 
   init() async {
     setStatusBarColor(primaryColor!, statusBarIconBrightness: Brightness.light, statusBarBrightness: Brightness.dark);
-    await Future.delayed(Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 2));
 
     String productId = await getProductIdFromNative();
     print(productId);
@@ -40,12 +42,12 @@ class HalloweenSplashScreenState extends State<HalloweenSplashScreen> {
   }
 
   Future checkFirstSeen() async {
-    bool _seen = (getBoolAsync('seen'));
-    if (_seen) {
-      DashBoardScreen().launch(context, isNewTask: true);
+    bool seen = (getBoolAsync('seen'));
+    if (seen) {
+      const DashBoardScreen().launch(context, isNewTask: true);
     } else {
       await setValue('seen', true);
-      HalloweenWalkThroughScreen().launch(context, isNewTask: true);
+      const HalloweenWalkThroughScreen().launch(context, isNewTask: true);
     }
   }
 

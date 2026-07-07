@@ -12,6 +12,8 @@ import '../component/BottomNav/FloatingBottomNavigation.dart';
 class DashBoardScreen extends StatefulWidget {
   static String tag = '/DashBoardScreen1';
 
+  const DashBoardScreen({super.key});
+
   @override
   DashBoardScreenState createState() => DashBoardScreenState();
 }

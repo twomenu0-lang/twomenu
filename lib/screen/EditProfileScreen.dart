@@ -22,13 +22,15 @@ import '../AppLocalizations.dart';
 class EditProfileScreen extends StatefulWidget {
   static String tag = '/EditProfileScreen';
 
+  const EditProfileScreen({super.key});
+
   @override
   EditProfileScreenState createState() => EditProfileScreenState();
 }
 
 class EditProfileScreenState extends State<EditProfileScreen> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  ScrollController _controller = ScrollController();
+  final ScrollController _controller = ScrollController();
 
   TextEditingController txtFirstName = TextEditingController();
   TextEditingController txtLastName = TextEditingController();
@@ -99,7 +101,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       getCustomerInfo();
     }
     Timer(
-      Duration(milliseconds: 300),
+      const Duration(milliseconds: 300),
           () => _controller.jumpTo(_controller.position.minScrollExtent),
     );
   }
@@ -289,7 +291,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
     }).catchError((error) {
       if (!mounted) return;
       appStore.setLoading(false);
-      log("Error1: " + error.toString());
+      log("Error1: $error");
     });
   }
 
@@ -484,7 +486,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
         child: Stack(
           children: [
             SingleChildScrollView(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               controller: _controller,
               child: Form(
                 key: formKey,
@@ -586,7 +588,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                             dropdownColor: context.cardColor,
                             value: selectedBillingCountry,
                             isExpanded: true,
-                            underline: SizedBox(),
+                            underline: const SizedBox(),
                             onChanged: (dynamic value) {
                               setState(() {
                                 selectedBillingCountry = value;
@@ -623,7 +625,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                             dropdownColor: context.cardColor,
                             value: selectedBillingState,
                             isExpanded: true,
-                            underline: SizedBox(),
+                            underline: const SizedBox(),
                             onChanged: (dynamic value) {
                               setState(() {
                                 selectedBillingState = value;
@@ -718,7 +720,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                               value: selectedShippingCountry,
                               isExpanded: true,
                               dropdownColor: context.cardColor,
-                              underline: SizedBox(),
+                              underline: const SizedBox(),
                               onChanged: (dynamic value) {
                                 setState(() {
                                   selectedShippingCountry = value;
@@ -749,7 +751,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                               dropdownColor: context.cardColor,
                               value: selectedShippingState,
                               isExpanded: true,
-                              underline: SizedBox(),
+                              underline: const SizedBox(),
                               onChanged: (dynamic value) {
                                 setState(() { selectedShippingState = value; });
                               },

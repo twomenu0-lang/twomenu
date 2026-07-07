@@ -27,6 +27,8 @@ import '/../screen/NotificationScreen.dart';
 class HomeScreen2 extends StatefulWidget {
   static String tag = '/HomeScreen2';
 
+  const HomeScreen2({super.key});
+
   @override
   HomeScreenState createState() => HomeScreenState();
 }
@@ -178,7 +180,7 @@ class HomeScreenState extends State<HomeScreen2> {
                     ),
                   ),
                 )
-                    : CircleAvatar(
+                    : const CircleAvatar(
                   backgroundColor: Colors.transparent,
                   backgroundImage: AssetImage(ic_placeholder_logo),
                   radius: 36,
@@ -380,7 +382,7 @@ class HomeScreenState extends State<HomeScreen2> {
         AppName,
         leadingWidget: IconButton(
           icon: const Icon(Icons.search_sharp, color: white),
-          onPressed: () => SearchScreen().launch(context),
+          onPressed: () => const SearchScreen().launch(context),
         ),
         actions: [
           IconButton(
@@ -399,7 +401,7 @@ class HomeScreenState extends State<HomeScreen2> {
             children: [
               IconButton(
                 icon: const Icon(Icons.notifications_outlined, color: white),
-                onPressed: () => NotificationScreen().launch(context),
+                onPressed: () => const NotificationScreen().launch(context),
               ),
               Positioned(
                 top: 10,

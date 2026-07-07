@@ -39,12 +39,12 @@ class HeroBannerSlider extends StatefulWidget {
   final Duration autoPlayInterval;
 
   const HeroBannerSlider({
-    Key? key,
+    super.key,
     required this.items,
     this.height,
     this.autoPlay = true,
     this.autoPlayInterval = const Duration(seconds: 5),
-  }) : super(key: key);
+  });
 
   @override
   State<HeroBannerSlider> createState() => _HeroBannerSliderState();

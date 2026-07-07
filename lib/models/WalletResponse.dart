@@ -39,18 +39,18 @@ class WalletResponse {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['transaction_id'] = this.transactionId;
-    data['blog_id'] = this.blogId;
-    data['user_id'] = this.userId;
-    data['type'] = this.type;
-    data['amount'] = this.amount;
-    data['balance'] = this.balance;
-    data['currency'] = this.currency;
-    data['details'] = this.details;
-    data['created_by'] = this.createdBy;
-    data['deleted'] = this.deleted;
-    data['date'] = this.date;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['transaction_id'] = transactionId;
+    data['blog_id'] = blogId;
+    data['user_id'] = userId;
+    data['type'] = type;
+    data['amount'] = amount;
+    data['balance'] = balance;
+    data['currency'] = currency;
+    data['details'] = details;
+    data['created_by'] = createdBy;
+    data['deleted'] = deleted;
+    data['date'] = date;
     return data;
   }
 }

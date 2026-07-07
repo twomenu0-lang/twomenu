@@ -17,6 +17,8 @@ import 'WebViewPaymentScreen.dart';
 class TeraWalletScreen extends StatefulWidget {
   static String tag = '/TeraWalletScreen';
 
+  const TeraWalletScreen({super.key});
+
   get mCartProduct => null;
 
   @override
@@ -117,7 +119,7 @@ class TeraWalletScreenState extends State<TeraWalletScreen> {
                       arcType: ArcType.CONVEX,
                       edge: Edge.BOTTOM,
                       height: 30,
-                      clipShadows: [],
+                      clipShadows: const [],
                       child: Container(
                         height: context.height() * 0.15,
                         width: context.width(),
@@ -163,7 +165,7 @@ class TeraWalletScreenState extends State<TeraWalletScreen> {
                     ),
                     16.height,
                     FutureBuilder<List<WalletResponse>>(
-                      future: getBalanceHistory != null ? getBalanceHistory! : null,
+                      future: getBalanceHistory,
                       builder: (_, snap) {
                         if (snap.data.validate().isNotEmpty) {
                           return Column(
@@ -172,21 +174,21 @@ class TeraWalletScreenState extends State<TeraWalletScreen> {
                               Text(appLocalization.translate("lbl_history")!, style: boldTextStyle()).paddingSymmetric(horizontal: 16),
                               Container(
                                 decoration: boxDecorationRoundedWithShadow(12, backgroundColor: context.scaffoldBackgroundColor),
-                                padding: EdgeInsets.all(16),
-                                margin: EdgeInsets.all(12),
+                                padding: const EdgeInsets.all(16),
+                                margin: const EdgeInsets.all(12),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     ListView.separated(
                                       shrinkWrap: true,
-                                      padding: EdgeInsets.all(8),
+                                      padding: const EdgeInsets.all(8),
                                       itemCount: snap.data!.length,
-                                      physics: NeverScrollableScrollPhysics(),
+                                      physics: const NeverScrollableScrollPhysics(),
                                       itemBuilder: (context, i) {
                                         return TeraWalletHistoryComponent(snap.data![i]);
                                       },
                                       separatorBuilder: (BuildContext context, int index) {
-                                        return Divider();
+                                        return const Divider();
                                       },
                                     ),
                                   ],

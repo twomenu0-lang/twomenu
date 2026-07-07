@@ -9,6 +9,8 @@ import '../DashBoardScreen.dart';
 class ChristmasWalkThroughScreen extends StatefulWidget {
   static String tag = '/HalloweenWalkThroughScreen';
 
+  const ChristmasWalkThroughScreen({super.key});
+
   @override
   ChristmasWalkThroughScreenState createState() => ChristmasWalkThroughScreenState();
 }
@@ -39,7 +41,7 @@ class ChristmasWalkThroughScreenState extends State<ChristmasWalkThroughScreen> 
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Container(
+            SizedBox(
               height: context.height() * 0.7,
               width: context.width(),
               child: PageView.builder(
@@ -72,37 +74,37 @@ class ChristmasWalkThroughScreenState extends State<ChristmasWalkThroughScreen> 
                 ),
                 16.height,
                 AnimatedCrossFade(
-                  duration: Duration(milliseconds: 300),
+                  duration: const Duration(milliseconds: 300),
                   firstChild: AppButton(
                     height: 20,
-                    padding: EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(8),
                     text: "Get Started",
                     textStyle: boldTextStyle(color: white),
                     color: mChristmasColor,
                     shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     onTap: () {
-                      DashBoardScreen().launch(context, isNewTask: true);
+                      const DashBoardScreen().launch(context, isNewTask: true);
                     },
                   ),
                   firstCurve: Curves.easeIn,
                   secondCurve: Curves.easeOut,
                   crossFadeState: position == (mWalkList.length - 1) ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-                  secondChild: SizedBox(),
+                  secondChild: const SizedBox(),
                 ),
                 AnimatedCrossFade(
                     firstChild: AppButton(
                       height: 20,
-                      padding: EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(8),
                       text: "Skip",
                       textStyle: boldTextStyle(color: white),
                       color: mChristmasColor,
                       shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       onTap: () {
-                        DashBoardScreen().launch(context, isNewTask: true);
+                        const DashBoardScreen().launch(context, isNewTask: true);
                       },
                     ),
-                    secondChild: SizedBox(),
-                    duration: Duration(milliseconds: 300),
+                    secondChild: const SizedBox(),
+                    duration: const Duration(milliseconds: 300),
                     firstCurve: Curves.easeIn,
                     secondCurve: Curves.easeOut,
                     crossFadeState: position == (mWalkList.length - 1) ? CrossFadeState.showSecond : CrossFadeState.showFirst),

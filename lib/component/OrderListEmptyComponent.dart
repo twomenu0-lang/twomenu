@@ -7,7 +7,7 @@ import '../AppLocalizations.dart';
 import '../main.dart';
 
 class OrderListEmptyComponent extends StatelessWidget {
-  const OrderListEmptyComponent({Key? key}) : super(key: key);
+  const OrderListEmptyComponent({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,7 @@ class OrderListEmptyComponent extends StatelessWidget {
             text: appLocalization.translate('lbl_start_shopping'),
             color: primaryColor,
             onTap: () {
-              DashBoardScreen().launch(context);
+              const DashBoardScreen().launch(context);
             }).paddingOnly(left: 20, right: 20),
       ],
     );

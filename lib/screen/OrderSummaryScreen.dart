@@ -20,6 +20,9 @@ import '../AppLocalizations.dart';
 import 'DashBoardScreen.dart';
 import 'PlaceOrderScreen.dart';
 import 'WebViewPaymentScreen.dart';
+import 'WalletMobileInputScreen.dart'; // ✅ الانتقال لشاشة المحفظة
+import 'CardPaymentSheet.dart'; // ✅ Bottom Sheet الدفع بالكارت
+// import 'EditProfileScreen.dart'; // ✅ قم بإلغاء التعليق عن هذا السطر واستيراد الشاشة إذا لم تكن مستوردة تلقائياً
 
 class OrderSummaryScreen extends StatefulWidget {
   static String tag = '/OrderSummaryScreen';
@@ -34,7 +37,7 @@ class OrderSummaryScreen extends StatefulWidget {
   final double? mRPDiscount;
   final double? discount;
 
-  OrderSummaryScreen({Key? key, this.mCartProduct, this.mCouponData, this.mPrice, this.shippingLines, this.method, this.subtotal, this.mRPDiscount, this.discount}) : super(key: key);
+  const OrderSummaryScreen({super.key, this.mCartProduct, this.mCouponData, this.mPrice, this.shippingLines, this.method, this.subtotal, this.mRPDiscount, this.discount});
 
   @override
   OrderSummaryScreenState createState() => OrderSummaryScreenState();
@@ -52,8 +55,10 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
   String? mTotalBalance;
   bool isNativePayment = false;
 
-  var mUserId, mCurrency;
-  int? paymentIndex = 0;
+  int? mUserId;
+  String? mCurrency;
+
+  int? paymentIndex = 0; // 0 = كاش عند الاستلام، 1 = المحفظة الإلكترونية، 2 = الكارت
   int? currentTimeValue = 0;
   bool? isSelected = false;
   num mAmount = 0;
@@ -61,10 +66,12 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
   @override
   void initState() {
     super.initState();
-    // ✅ تم حذف استدعاء addList() من هنا لعدم توفر الـ Context في هذه المرحلة
     init();
   }
 
+  // ───────────────────────────────────────────────────────────────
+  // التعديل 1 — حماية دالة init من قراءة الـ null أو النصوص الفارغة
+  // ───────────────────────────────────────────────────────────────
   init() async {
     setState(() {});
     fetchTotalBalance();
@@ -73,8 +80,16 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
     } else {
       isNativePayment = false;
     }
-    shipping = Shipping.fromJson(jsonDecode(getStringAsync(SHIPPING)));
-    billing = Billing.fromJson(jsonDecode(getStringAsync(BILLING)));
+
+    final shippingRaw = getStringAsync(SHIPPING);
+    final billingRaw = getStringAsync(BILLING);
+
+    if (shippingRaw.isNotEmpty && shippingRaw != 'null') {
+      shipping = Shipping.fromJson(jsonDecode(shippingRaw));
+    }
+    if (billingRaw.isNotEmpty && billingRaw != 'null') {
+      billing = Billing.fromJson(jsonDecode(billingRaw));
+    }
 
     mUserId = getIntAsync(USER_ID);
     mCurrency = getStringAsync(DEFAULT_CURRENCY);
@@ -94,20 +109,18 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
     mAmount = double.parse(widget.mPrice);
   }
 
-  // ✅ تم حذف دالة addList() القديمة بالكامل لبنائها ديناميكياً داخل الـ build
-
   void createNativeOrder(String mPayMethod, String? mPayTitle) async {
     hideKeyboard(context);
 
     List<LineItemsRequest> lineItems = [];
     List<ShippingLines?> shippingLines = [];
-    widget.mCartProduct!.forEach((item) {
+    for (var item in widget.mCartProduct!) {
       var lineItem = LineItemsRequest();
       lineItem.productId = item.proId;
       lineItem.quantity = item.quantity;
       lineItem.variationId = item.proId;
       lineItems.add(lineItem);
-    });
+    }
 
     var couponCode = widget.mCouponData;
     List<CouponLines> mCouponItems = [];
@@ -121,6 +134,11 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
     if (widget.shippingLines != null) {
       shippingLines.add(widget.shippingLines);
     }
+
+    // كاش عند الاستلام = processing، أما المحفظة أو الكارت = pending لحين إتمام السداد فعليًا
+    final bool requiresOnlinePayment = (mPayMethod == PAYMENT_METHOD_KASHIER_WALLET || mPayMethod == PAYMENT_METHOD_KASHIER_CARD);
+    String targetStatus = requiresOnlinePayment ? "pending" : "processing";
+
     var request = {
       'billing': billing,
       'shipping': shipping,
@@ -130,31 +148,78 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
       'transaction_id': "",
       'customer_id': getIntAsync(USER_ID),
       'coupon_lines': couponCode.isNotEmpty ? mCouponItems : '',
-      'status': "processing",
+      'status': targetStatus,
       'set_paid': false,
       'shipping_lines': shippingLines
     };
     appStore.setLoading(true);
 
-    createOrderApi(request).then((response) async {
-      if (!mounted) return;
+    try {
+      final response = await createOrderApi(request);
       appStore.setLoading(false);
-      await PlaceOrderScreen(
-        mOrderID: response['id'],
-        total: widget.mPrice,
-        transactionId: response['transaction_id'],
-        orderKey: response['order_key'],
-        paymentMethod: response['payment_method'],
-        dateCreated: response['date_created'],
-      ).launch(context, pageRouteAnimation: PageRouteAnimation.Scale);
-    }).catchError((error) {
+
+      if (!context.mounted) return;
+
+      if (mPayMethod == PAYMENT_METHOD_KASHIER_WALLET) {
+        // ✅ محفظة إلكترونية: ننتقل لشاشة إدخال رقم الموبايل لطلب الدفع
+        WalletMobileInputScreen(
+          orderId: response['id'],
+          amount: widget.mPrice,
+        ).launch(context, pageRouteAnimation: PageRouteAnimation.Scale);
+      } else if (mPayMethod == PAYMENT_METHOD_KASHIER_CARD) {
+        // ✅ الدفع بالكارت: نعرض صفحة كاشير المستضافة داخل Bottom Sheet
+        final bool? isPaymentDone = await showModalBottomSheet<bool>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => CardPaymentSheet(orderId: response['id'], amount: widget.mPrice),
+        );
+
+        if (!context.mounted) return;
+
+        if (isPaymentDone == true) {
+          await PlaceOrderScreen(
+            mOrderID: response['id'],
+            total: widget.mPrice,
+            transactionId: response['transaction_id'],
+            orderKey: response['order_key'],
+            paymentMethod: response['payment_method'],
+            dateCreated: response['date_created'],
+          ).launch(context, pageRouteAnimation: PageRouteAnimation.Scale);
+        } else {
+          toast('لم تكتمل عملية الدفع، حاول مرة أخرى');
+        }
+      } else {
+        // الدفع الافتراضي كاش عند الاستلام
+        await PlaceOrderScreen(
+          mOrderID: response['id'],
+          total: widget.mPrice,
+          transactionId: response['transaction_id'],
+          orderKey: response['order_key'],
+          paymentMethod: response['payment_method'],
+          dateCreated: response['date_created'],
+        ).launch(context, pageRouteAnimation: PageRouteAnimation.Scale);
+      }
+    } catch (error) {
       appStore.setLoading(false);
+      if (!context.mounted) return;
       toast(error.toString());
-    });
+    }
   }
 
+  // ───────────────────────────────────────────────────────────────
+  // التعديل 3 — فحص الحماية داخل دالة createWebViewOrder مع توجيه ذكي
+  // ───────────────────────────────────────────────────────────────
   Future createWebViewOrder() async {
     if (!accessAllowed) return;
+
+    // ✅ منع الاستمرار وتوجيه المستخدم لتعديل الملف الشخصي إذا كانت البيانات ناقصة
+    if (shipping == null || billing == null) {
+      toast('من فضلك أكمل بيانات العنوان في الملف الشخصي أولاً');
+      // const EditProfileScreen().launch(context); // 👈 تفعيل التوجيه المباشر هنا
+      return;
+    }
+
     var request = CreateOrderRequestModel();
     if (widget.shippingLines != null) {
       List<ShippingLines?> shippingLines = [];
@@ -162,13 +227,13 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
       request.shippingLines = shippingLines;
     }
     List<LineItemsRequest> lineItems = [];
-    widget.mCartProduct!.forEach((item) {
+    for (var item in widget.mCartProduct!) {
       var lineItem = LineItemsRequest();
       lineItem.productId = item.proId;
       lineItem.quantity = item.quantity;
       lineItem.variationId = item.proId;
       lineItems.add(lineItem);
-    });
+    }
 
     request.paymentMethod = "webview";
     request.customerId = await isGuestUser() ? 0 : getIntAsync(USER_ID);
@@ -190,34 +255,56 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
 
   processPaymentApi(var mOrderId) async {
     var request = {"order_id": mOrderId};
-    getCheckOutUrl(request).then((res) async {
-      if (!mounted) return;
+    try {
+      final res = await getCheckOutUrl(request);
+      if (!context.mounted) return;
       appStore.setLoading(false);
+
       bool isPaymentDone = await Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => WebViewPaymentScreen(checkoutUrl: res['checkout_url'])),
       ) ?? false;
+
+      if (!context.mounted) return;
+
       if (isPaymentDone) {
         appStore.setLoading(true);
         if (!await isGuestUser()) {
-          clearCartItems().then((response) {
-            appStore.setLoading(false);
-            appStore.setCount(0);
-            DashBoardScreen().launch(context, isNewTask: true);
-          });
+          await clearCartItems();
+          if (!context.mounted) return;
+          appStore.setLoading(false);
+          appStore.setCount(0);
+          const DashBoardScreen().launch(context, isNewTask: true);
         } else {
           appStore.setCount(0);
           removeKey(CART_DATA);
-          DashBoardScreen().launch(context, isNewTask: true);
+          const DashBoardScreen().launch(context, isNewTask: true);
         }
       }
-    }).catchError((error) { appStore.setLoading(false); });
+    } catch (error) {
+      appStore.setLoading(false);
+    }
   }
 
+  // ───────────────────────────────────────────────────────────────
+  // التعديل 2 — فحص الحماية داخل دالة payments مع توجيه ذكي
+  // ───────────────────────────────────────────────────────────────
   void payments() {
+    var appLocalization = AppLocalizations.of(context)!;
+
+    // ✅ منع الاستمرار وتوجيه المستخدم لتعديل الملف الشخصي إذا كانت البيانات ناقصة
+    if (shipping == null || billing == null) {
+      toast('من فضلك أكمل بيانات العنوان في الملف الشخصي أولاً');
+      // const EditProfileScreen().launch(context); // 👈 تفعيل التوجيه المباشر هنا
+      return;
+    }
+
     if (paymentIndex == 0) {
-      // ✅ تعديل إرسال العنوان ليصبح مترجماً بدلاً من النص الثابت القديم
-      createNativeOrder('cod', AppLocalizations.of(context)!.translate('lbl_cash_on_delivery'));
+      createNativeOrder('cod', appLocalization.translate('lbl_cash_on_delivery'));
+    } else if (paymentIndex == 1) {
+      createNativeOrder(PAYMENT_METHOD_KASHIER_WALLET, appLocalization.translate('lbl_wallet_payment') ?? 'الدفع بالمحفظة');
+    } else if (paymentIndex == 2) {
+      createNativeOrder(PAYMENT_METHOD_KASHIER_CARD, appLocalization.translate('lbl_card_payment') ?? 'الدفع بالكارت');
     }
   }
 
@@ -225,11 +312,19 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
   Widget build(BuildContext context) {
     var appLocalization = AppLocalizations.of(context)!;
 
-    // ✅ بناء وتصفير مصفوفة طرق الدفع هنا بشكل ديناميكي ومترجم لالتقاط الـ context الحالي
+    // بناء وتصفير مصفوفة طرق الدفع ديناميكياً لتشمل المحفظة والكارت
     paymentList!.clear();
     paymentList!.add(PaymentClass(
       paymentIndex: 0,
       paymentMethod: appLocalization.translate('lbl_cash_on_delivery'),
+    ));
+    paymentList!.add(PaymentClass(
+      paymentIndex: 1,
+      paymentMethod: appLocalization.translate('lbl_wallet_payment') ?? 'الدفع بالمحفظة الإلكترونية',
+    ));
+    paymentList!.add(PaymentClass(
+      paymentIndex: 2,
+      paymentMethod: appLocalization.translate('lbl_card_payment') ?? 'الدفع بالكارت (فيزا/ماستركارد)',
     ));
 
     return Scaffold(
@@ -263,26 +358,34 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
                         Text(appLocalization.translate('lbl_payment_methods')!, style: boldTextStyle()).paddingLeft(16),
                         8.height,
                         AnimatedListView(
-                          physics: NeverScrollableScrollPhysics(),
+                          physics: const NeverScrollableScrollPhysics(),
                           shrinkWrap: true,
                           itemCount: paymentList!.length,
                           itemBuilder: (context, index) {
+                            bool isSelectedMethod = paymentIndex == index;
                             return Container(
-                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 20, height: 20,
-                                    decoration: boxDecorationWithRoundedCorners(
-                                      borderRadius: radius(4),
-                                      backgroundColor: context.cardColor,
-                                      border: Border.all(color: primaryColor!),
-                                    ),
-                                    child: Icon(Icons.done, color: primaryColor, size: 14),
+                              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                              decoration: boxDecorationWithRoundedCorners(
+                                borderRadius: radius(8),
+                                backgroundColor: context.cardColor,
+                                border: Border.all(color: isSelectedMethod ? primaryColor! : context.dividerColor),
+                              ),
+                              child: ListTile(
+                                leading: Container(
+                                  width: 20, height: 20,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isSelectedMethod ? primaryColor : Colors.transparent,
+                                    border: Border.all(color: primaryColor!),
                                   ),
-                                  12.width,
-                                  Text(paymentList![index].paymentMethod!, style: boldTextStyle(color: primaryColor)),
-                                ],
+                                  child: isSelectedMethod ? const Icon(Icons.done, color: Colors.white, size: 14) : const SizedBox(),
+                                ),
+                                title: Text(paymentList![index].paymentMethod!, style: boldTextStyle(color: isSelectedMethod ? primaryColor : null)),
+                                onTap: () {
+                                  setState(() {
+                                    paymentIndex = index;
+                                  });
+                                },
                               ),
                             );
                           },
@@ -295,7 +398,7 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
                     children: [
                       Text(appLocalization.translate("lbl_price_detail")!, style: boldTextStyle()),
                       8.height,
-                      Divider(),
+                      const Divider(),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -303,7 +406,7 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
                           PriceWidget(price: nf.format(widget.subtotal.validate()), size: 16)
                         ],
                       ),
-                      Divider(),
+                      const Divider(),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -321,7 +424,7 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
         ),
       ),
       bottomNavigationBar: Container(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(color: context.cardColor),
         child: Row(
           children: [

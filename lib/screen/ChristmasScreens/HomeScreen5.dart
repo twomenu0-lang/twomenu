@@ -22,6 +22,8 @@ import '../../AppLocalizations.dart';
 class HomeScreen5 extends StatefulWidget {
   static String tag = '/HomeScreen5';
 
+  const HomeScreen5({super.key});
+
   @override
   HomeScreen5State createState() => HomeScreen5State();
 }
@@ -170,7 +172,7 @@ class HomeScreen5State extends State<HomeScreen5> {
                       width: context.width() * .24,
                       height: 95,
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         image: DecorationImage(image: AssetImage(ic_christmas_categories)),
                       ),
                       child: cat.image != null
@@ -188,7 +190,7 @@ class HomeScreen5State extends State<HomeScreen5> {
                       )
                           : CircleAvatar(
                         backgroundColor: context.cardColor,
-                        backgroundImage: AssetImage(ic_placeholder_logo),
+                        backgroundImage: const AssetImage(ic_placeholder_logo),
                         maxRadius: 60,
                       ),
                     ),
@@ -404,7 +406,7 @@ class HomeScreen5State extends State<HomeScreen5> {
         actions: [
           IconButton(
             icon: const Icon(Icons.search_sharp, color: white),
-            onPressed: () => SearchScreen().launch(context),
+            onPressed: () => const SearchScreen().launch(context),
           ),
         ],
         title: Text(AppName, style: boldTextStyle(size: 18, color: white)),

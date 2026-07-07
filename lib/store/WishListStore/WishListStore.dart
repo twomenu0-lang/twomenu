@@ -86,7 +86,7 @@ abstract class _WishListStore with Store {
       wishList = ObservableList.of(value);
       appStore.setLoading(false);
     }).catchError((e) {
-      log("Error" + e.toString());
+      log("Error$e");
     });
   }
 

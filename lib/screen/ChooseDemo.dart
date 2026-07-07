@@ -13,6 +13,8 @@ import 'package:nb_utils/nb_utils.dart';
 class ChooseDemo extends StatefulWidget {
   static String tag = '/ChooseDemo';
 
+  const ChooseDemo({super.key});
+
   @override
   ChooseDemoState createState() => ChooseDemoState();
 }
@@ -52,7 +54,7 @@ class ChooseDemoState extends State<ChooseDemo> {
     return Scaffold(
       appBar: mTop(context, appLocalization.translate('lbl_multiple_demo'), showBack: true, actions: [
         IconButton(
-            icon: Icon(Icons.check, color: Colors.white),
+            icon: const Icon(Icons.check, color: Colors.white),
             onPressed: () async {
               if (mPrimaryColor.isEmpty) {
                 mExampleList.forEachIndexed((element, index) async {
@@ -88,7 +90,7 @@ class ChooseDemoState extends State<ChooseDemo> {
           scrollDirection: Axis.vertical,
           itemCount: mExampleList.length,
           shrinkWrap: true,
-          padding: EdgeInsets.only(left: 8, right: 8,bottom: 8),
+          padding: const EdgeInsets.only(left: 8, right: 8,bottom: 8),
           itemBuilder: (context, i) {
             return itemWidget(
                 code: i,
@@ -115,7 +117,7 @@ class ChooseDemoState extends State<ChooseDemo> {
     return Container(
       width: context.width(),
       height: context.height() * 0.4,
-      margin: EdgeInsets.all(8),
+      margin: const EdgeInsets.all(8),
       decoration: boxDecorationWithRoundedCorners(borderRadius: radius(10)),
       child: Stack(
         fit: StackFit.expand,
@@ -127,23 +129,23 @@ class ChooseDemoState extends State<ChooseDemo> {
             height: 50,
           ).cornerRadiusWithClipRRect(10),
           AnimatedContainer(
-            duration: Duration(milliseconds: 800),
+            duration: const Duration(milliseconds: 800),
             color: getIntAsync(DETAIL_PAGE_VARIANT, defaultValue: 0) == code ? Colors.black12 : Colors.black45,
           ),
           AnimatedContainer(
-            duration: Duration(milliseconds: 800),
-            child: Text(title.validate(), style: boldTextStyle(color: textPrimaryColor), textAlign: TextAlign.center),
+            duration: const Duration(milliseconds: 800),
             decoration: BoxDecoration(color: getIntAsync(DETAIL_PAGE_VARIANT, defaultValue: 0) == code ? Colors.white : Colors.white54, borderRadius: radius(defaultRadius)),
-            padding: EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
+            padding: const EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
+            child: Text(title.validate(), style: boldTextStyle(color: textPrimaryColor), textAlign: TextAlign.center),
           ).center(),
           Positioned(
             bottom: 8,
             right: 8,
             child: AnimatedContainer(
-              duration: Duration(milliseconds: 800),
-              padding: EdgeInsets.all(4),
-              child: Icon(Icons.check, size: 18, color: primaryColor),
+              duration: const Duration(milliseconds: 800),
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: defaultBoxShadow()),
+              child: Icon(Icons.check, size: 18, color: primaryColor),
             ).visible(getIntAsync(DETAIL_PAGE_VARIANT, defaultValue: 0) == code),
           ),
         ],

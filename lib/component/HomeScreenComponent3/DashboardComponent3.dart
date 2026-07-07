@@ -10,7 +10,7 @@ import 'DashBoard3AppWidget.dart';
 import 'DashBoard3Product.dart';
 
 class DashboardComponent3 extends StatefulWidget {
-  const DashboardComponent3({Key? key, required this.title, required this.subTitle, required this.product, required this.onTap}) : super(key: key);
+  const DashboardComponent3({super.key, required this.title, required this.subTitle, required this.product, required this.onTap});
 
   final String title, subTitle;
   final List<ProductResponse> product;
@@ -23,11 +23,11 @@ class DashboardComponent3 extends StatefulWidget {
 class _DashboardComponent3State extends State<DashboardComponent3> {
   Widget productList(List<ProductResponse> product) {
     return Container(
-      margin: EdgeInsets.only(left: 8, right: 8, top: 8),
+      margin: const EdgeInsets.only(left: 8, right: 8, top: 8),
       child: AlignedGridView.count(
         scrollDirection: Axis.vertical,
         itemCount: product.length >= TOTAL_DASHBOARD_ITEM ? TOTAL_DASHBOARD_ITEM : product.length,
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,
         itemBuilder: (context, i) {
           return DashBoard3Product(mProductModel: product[i], width: context.width());

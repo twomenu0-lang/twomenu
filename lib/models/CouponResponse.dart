@@ -123,24 +123,24 @@ class CouponResponse {
 //        metaData.add(new Null.fromJson(v));
 //      });
 //    }
-    lLinks = json['_links'] != null ? new Links.fromJson(json['_links']) : null;
+    lLinks = json['_links'] != null ? Links.fromJson(json['_links']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['code'] = this.code;
-    data['amount'] = this.amount;
-    data['date_created'] = this.dateCreated;
-    data['date_created_gmt'] = this.dateCreatedGmt;
-    data['date_modified'] = this.dateModified;
-    data['date_modified_gmt'] = this.dateModifiedGmt;
-    data['discount_type'] = this.discountType;
-    data['description'] = this.description;
-    data['date_expires'] = this.dateExpires;
-    data['date_expires_gmt'] = this.dateExpiresGmt;
-    data['usage_count'] = this.usageCount;
-    data['individual_use'] = this.individualUse;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['code'] = code;
+    data['amount'] = amount;
+    data['date_created'] = dateCreated;
+    data['date_created_gmt'] = dateCreatedGmt;
+    data['date_modified'] = dateModified;
+    data['date_modified_gmt'] = dateModifiedGmt;
+    data['discount_type'] = discountType;
+    data['description'] = description;
+    data['date_expires'] = dateExpires;
+    data['date_expires_gmt'] = dateExpiresGmt;
+    data['usage_count'] = usageCount;
+    data['individual_use'] = individualUse;
 //    if (this.productIds != null) {
 //      data['product_ids'] = this.productIds.map((v) => v.toJson()).toList();
 //    }
@@ -148,10 +148,10 @@ class CouponResponse {
 //      data['excluded_product_ids'] =
 //          this.excludedProductIds.map((v) => v.toJson()).toList();
 //    }
-    data['usage_limit'] = this.usageLimit;
-    data['usage_limit_per_user'] = this.usageLimitPerUser;
-    data['limit_usage_to_x_items'] = this.limitUsageToXItems;
-    data['free_shipping'] = this.freeShipping;
+    data['usage_limit'] = usageLimit;
+    data['usage_limit_per_user'] = usageLimitPerUser;
+    data['limit_usage_to_x_items'] = limitUsageToXItems;
+    data['free_shipping'] = freeShipping;
 //    if (this.productCategories != null) {
 //      data['product_categories'] =
 //          this.productCategories.map((v) => v.toJson()).toList();
@@ -160,9 +160,9 @@ class CouponResponse {
 //      data['excluded_product_categories'] =
 //          this.excludedProductCategories.map((v) => v.toJson()).toList();
 //    }
-    data['exclude_sale_items'] = this.excludeSaleItems;
-    data['minimum_amount'] = this.minimumAmount;
-    data['maximum_amount'] = this.maximumAmount;
+    data['exclude_sale_items'] = excludeSaleItems;
+    data['minimum_amount'] = minimumAmount;
+    data['maximum_amount'] = maximumAmount;
 //    if (this.emailRestrictions != null) {
 //      data['email_restrictions'] =
 //          this.emailRestrictions.map((v) => v.toJson()).toList();
@@ -173,8 +173,8 @@ class CouponResponse {
 //    if (this.metaData != null) {
 //      data['meta_data'] = this.metaData.map((v) => v.toJson()).toList();
 //    }
-    if (this.lLinks != null) {
-      data['_links'] = this.lLinks!.toJson();
+    if (lLinks != null) {
+      data['_links'] = lLinks!.toJson();
     }
     return data;
   }
@@ -192,8 +192,8 @@ class Self {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['href'] = this.href;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['href'] = href;
     return data;
   }
 }

@@ -1,9 +1,6 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:nb_utils/nb_utils.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart'; // 👈 استيراد المكتبة الحالية في مشروعك
 import '../../utils/AppColors.dart';
-import '../../utils/AppImages.dart';
 
 /// ─────────────────────────────────────────────────────────────
 /// SupportNotificationGroup — كبسولة (جرس الإشعارات | واتساب)
@@ -14,11 +11,11 @@ class SupportNotificationGroup extends StatelessWidget {
   final bool hasNotification;
 
   const SupportNotificationGroup({
-    Key? key,
+    super.key,
     this.onChatTap,
     this.onNotificationTap,
     this.hasNotification = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +52,7 @@ class SupportNotificationGroup extends StatelessWidget {
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.notifications_none_rounded,
                       color: kBrandPrimary,
                       size: 23, // حجم متناسق ومطابق للتصميم
@@ -96,8 +93,8 @@ class SupportNotificationGroup extends StatelessWidget {
               borderRadius: const BorderRadius.horizontal(
                 left: Radius.circular(50),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 // ✅ استخدام الأيقونة الرسمية المفرغة مباشرة من مكتبتك الحالية بدون أي خلفيات دائرية مشوهة
                 child: Icon(
                   FontAwesome.whatsapp,
@@ -126,7 +123,7 @@ class FloatingAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isScrolled;
 
   const FloatingAppBar({
-    Key? key,
+    super.key,
     required this.title,
     this.onSearchTap,
     this.onChatTap,
@@ -134,7 +131,7 @@ class FloatingAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.hasNotification = false,
     this.showAccentLine = true,
     this.isScrolled = false,
-  }) : super(key: key);
+  });
 
   @override
   Size get preferredSize => const Size.fromHeight(110);
@@ -179,15 +176,16 @@ class FloatingAppBar extends StatelessWidget implements PreferredSizeWidget {
                       onNotificationTap: onNotificationTap,
                       hasNotification: hasNotification,
                     ),
+
+                    // ✅ التعديل: تم تصحيح المسار إلى أيقونة اللانشر المطلوبة ليعمل اللوجو مباشرة وبدون مشاكل
                     Expanded(
-                      child: Text(
-                        title,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: boldTextStyle(size: 22, color: kBrandPrimary),
+                      child: Image.asset(
+                        'assets/mipmap-xxxhdpi/ic_launcher.png',
+                        height: 48,
+                        fit: BoxFit.contain,
                       ),
                     ),
+
                     // زر البحث الدائري على اليمين
                     Semantics(
                       label: 'بحث',
@@ -204,7 +202,7 @@ class FloatingAppBar extends StatelessWidget implements PreferredSizeWidget {
                               width: 1,
                             ),
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.search_rounded,
                             color: kBrandPrimary,
                             size: 22,

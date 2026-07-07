@@ -5,7 +5,7 @@ class ShippingMethodResponse {
   ShippingMethodResponse({this.data, this.status});
 
   ShippingMethodResponse.fromJson(Map<String, dynamic> json) {
-    data = json['data'] != null ? new Data.fromJson(json['data']) : null;
+    data = json['data'] != null ? Data.fromJson(json['data']) : null;
     status = json['status'];
   }
 }
@@ -21,7 +21,7 @@ class Data {
     if (json['methods'] != null) {
       methods = <Method>[];
       json['methods'].forEach((v) {
-        methods!.add(new Method.fromJson(v));
+        methods!.add(Method.fromJson(v));
       });
     }
   }
@@ -78,11 +78,11 @@ class InstanceSettings {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['title'] = this.title;
-    data['requires'] = this.requires;
-    data['min_amount'] = this.minAmount;
-    data['ignore_discounts'] = this.ignoreDiscounts;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['title'] = title;
+    data['requires'] = requires;
+    data['min_amount'] = minAmount;
+    data['ignore_discounts'] = ignoreDiscounts;
     return data;
   }
 }

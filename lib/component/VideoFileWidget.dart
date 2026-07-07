@@ -9,7 +9,7 @@ class VideoFileWidget extends StatefulWidget {
   static String tag = '/VideoFileWidget';
   final String url;
 
-  VideoFileWidget(this.url);
+  const VideoFileWidget(this.url, {super.key});
 
   @override
   VideoFileWidgetState createState() => VideoFileWidgetState();
@@ -55,7 +55,7 @@ class VideoFileWidgetState extends State<VideoFileWidget> {
         isVideoCompleted = false;
       }
 
-      this.setState(() {});
+      setState(() {});
     });
     controller!.setLooping(false);
 
@@ -108,8 +108,8 @@ class VideoFileWidgetState extends State<VideoFileWidget> {
             },
           ),
           AnimatedSwitcher(
-            duration: Duration(milliseconds: 50),
-            reverseDuration: Duration(milliseconds: 200),
+            duration: const Duration(milliseconds: 50),
+            reverseDuration: const Duration(milliseconds: 200),
             child: showOverLay
                 ? Container(
                     color: Colors.black38,
@@ -123,7 +123,7 @@ class VideoFileWidgetState extends State<VideoFileWidget> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: <Widget>[
-                                Text(durationFormatter(currentPosition) + " / " + durationFormatter(duration)).paddingLeft(8),
+                                Text("${durationFormatter(currentPosition)} / ${durationFormatter(duration)}").paddingLeft(8),
                                 IconButton(
                                   icon: Icon(isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen),
                                   onPressed: () {
@@ -150,9 +150,9 @@ class VideoFileWidgetState extends State<VideoFileWidget> {
                   ).onTap(() {
                     handlePlayPauseVideo();
                   })
-                : SizedBox.shrink(),
+                : const SizedBox.shrink(),
           ),
-          Loader().visible(isBuffering)
+          const Loader().visible(isBuffering)
         ],
       ),
     );

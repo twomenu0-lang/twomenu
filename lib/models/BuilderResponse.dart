@@ -5,14 +5,14 @@ class BuilderResponse {
   BuilderResponse({this.dashboard, this.appsetup});
 
   BuilderResponse.fromJson(Map<String, dynamic> json) {
-    dashboard = json['dashboard'] != null ? new Dashboard.fromJson(json['dashboard']) : null;
-    appsetup = json['appsetup'] != null ? new Appsetup.fromJson(json['appsetup']) : null;
+    dashboard = json['dashboard'] != null ? Dashboard.fromJson(json['dashboard']) : null;
+    appsetup = json['appsetup'] != null ? Appsetup.fromJson(json['appsetup']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.dashboard != null) { data['dashboard'] = this.dashboard!.toJson(); }
-    if (this.appsetup != null) { data['appsetup'] = this.appsetup!.toJson(); }
+    final Map<String, dynamic> data = <String, dynamic>{};
+    if (dashboard != null) { data['dashboard'] = dashboard!.toJson(); }
+    if (appsetup != null) { data['appsetup'] = appsetup!.toJson(); }
     return data;
   }
 }
@@ -40,39 +40,39 @@ class Dashboard {
   Dashboard.fromJson(Map<String, dynamic> json) {
     sorting = json['sorting'].cast<String>();
     layout = json['layout'];
-    appBar = json['appBar'] != null ? new AppBar.fromJson(json['appBar']) : null;
-    sliderView = json['sliderView'] != null ? new SliderView.fromJson(json['sliderView']) : null;
-    category = json['category'] != null ? new SliderView.fromJson(json['category']) : null;
-    newProduct = json['newProduct'] != null ? new NewProduct.fromJson(json['newProduct']) : null;
-    featureProduct = json['feature'] != null ? new NewProduct.fromJson(json['feature']) : null;
-    saleProduct = json['saleProduct'] != null ? new NewProduct.fromJson(json['saleProduct']) : null;
-    dealOfTheDay = json['dealOfTheDay'] != null ? new NewProduct.fromJson(json['dealOfTheDay']) : null;
-    bestSaleProduct = json['bestSaleProduct'] != null ? new NewProduct.fromJson(json['bestSaleProduct']) : null;
-    offerProduct = json['offerProduct'] != null ? new NewProduct.fromJson(json['offerProduct']) : null;
-    suggestionProduct = json['suggestionProduct'] != null ? new NewProduct.fromJson(json['suggestionProduct']) : null;
-    vendor = json['vendor'] != null ? new NewProduct.fromJson(json['vendor']) : null;
-    youMayLikeProduct = json['youMayLikeProduct'] != null ? new NewProduct.fromJson(json['youMayLikeProduct']) : null;
-    blog = json['blog'] != null ? new NewProduct.fromJson(json['blog']) : null;
-    saleBanner = json['saleBanner'] != null ? new SliderView.fromJson(json['saleBanner']) : null;
+    appBar = json['appBar'] != null ? AppBar.fromJson(json['appBar']) : null;
+    sliderView = json['sliderView'] != null ? SliderView.fromJson(json['sliderView']) : null;
+    category = json['category'] != null ? SliderView.fromJson(json['category']) : null;
+    newProduct = json['newProduct'] != null ? NewProduct.fromJson(json['newProduct']) : null;
+    featureProduct = json['feature'] != null ? NewProduct.fromJson(json['feature']) : null;
+    saleProduct = json['saleProduct'] != null ? NewProduct.fromJson(json['saleProduct']) : null;
+    dealOfTheDay = json['dealOfTheDay'] != null ? NewProduct.fromJson(json['dealOfTheDay']) : null;
+    bestSaleProduct = json['bestSaleProduct'] != null ? NewProduct.fromJson(json['bestSaleProduct']) : null;
+    offerProduct = json['offerProduct'] != null ? NewProduct.fromJson(json['offerProduct']) : null;
+    suggestionProduct = json['suggestionProduct'] != null ? NewProduct.fromJson(json['suggestionProduct']) : null;
+    vendor = json['vendor'] != null ? NewProduct.fromJson(json['vendor']) : null;
+    youMayLikeProduct = json['youMayLikeProduct'] != null ? NewProduct.fromJson(json['youMayLikeProduct']) : null;
+    blog = json['blog'] != null ? NewProduct.fromJson(json['blog']) : null;
+    saleBanner = json['saleBanner'] != null ? SliderView.fromJson(json['saleBanner']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['sorting'] = this.sorting;
-    data['layout'] = this.layout;
-    if (this.appBar != null) { data['appBar'] = this.appBar!.toJson(); }
-    if (this.sliderView != null) { data['sliderView'] = this.sliderView!.toJson(); }
-    if (this.category != null) { data['category'] = this.category!.toJson(); }
-    if (this.newProduct != null) { data['newProduct'] = this.newProduct!.toJson(); }
-    if (this.featureProduct != null) { data['feature'] = this.featureProduct!.toJson(); }
-    if (this.saleProduct != null) { data['saleProduct'] = this.saleProduct!.toJson(); }
-    if (this.dealOfTheDay != null) { data['dealOfTheDay'] = this.dealOfTheDay!.toJson(); }
-    if (this.bestSaleProduct != null) { data['bestSaleProduct'] = this.bestSaleProduct!.toJson(); }
-    if (this.offerProduct != null) { data['offerProduct'] = this.offerProduct!.toJson(); }
-    if (this.suggestionProduct != null) { data['suggestionProduct'] = this.suggestionProduct!.toJson(); }
-    if (this.vendor != null) { data['vendor'] = this.vendor!.toJson(); }
-    if (this.youMayLikeProduct != null) { data['youMayLikeProduct'] = this.youMayLikeProduct!.toJson(); }
-    if (this.blog != null) { data['blog'] = this.blog!.toJson(); }
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['sorting'] = sorting;
+    data['layout'] = layout;
+    if (appBar != null) { data['appBar'] = appBar!.toJson(); }
+    if (sliderView != null) { data['sliderView'] = sliderView!.toJson(); }
+    if (category != null) { data['category'] = category!.toJson(); }
+    if (newProduct != null) { data['newProduct'] = newProduct!.toJson(); }
+    if (featureProduct != null) { data['feature'] = featureProduct!.toJson(); }
+    if (saleProduct != null) { data['saleProduct'] = saleProduct!.toJson(); }
+    if (dealOfTheDay != null) { data['dealOfTheDay'] = dealOfTheDay!.toJson(); }
+    if (bestSaleProduct != null) { data['bestSaleProduct'] = bestSaleProduct!.toJson(); }
+    if (offerProduct != null) { data['offerProduct'] = offerProduct!.toJson(); }
+    if (suggestionProduct != null) { data['suggestionProduct'] = suggestionProduct!.toJson(); }
+    if (vendor != null) { data['vendor'] = vendor!.toJson(); }
+    if (youMayLikeProduct != null) { data['youMayLikeProduct'] = youMayLikeProduct!.toJson(); }
+    if (blog != null) { data['blog'] = blog!.toJson(); }
     return data;
   }
 }
@@ -91,10 +91,10 @@ class AppBar {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['title'] = this.title;
-    data['appBarIcon'] = this.appBarIcon;
-    data['appBarLayout'] = this.appBarLayout;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['title'] = title;
+    data['appBarIcon'] = appBarIcon;
+    data['appBarLayout'] = appBarLayout;
     return data;
   }
 }
@@ -109,8 +109,8 @@ class SliderView {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['enable'] = this.enable;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['enable'] = enable;
     return data;
   }
 }
@@ -129,10 +129,10 @@ class NewProduct {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['enable'] = this.enable;
-    data['title'] = this.title;
-    data['viewAll'] = this.viewAll;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['enable'] = enable;
+    data['title'] = title;
+    data['viewAll'] = viewAll;
     return data;
   }
 }
@@ -147,8 +147,8 @@ class Productdetailview {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['layout'] = this.layout;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['layout'] = layout;
     return data;
   }
 }
@@ -179,16 +179,16 @@ class Appsetup {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['appName'] = this.appName;
-    data['primaryColor'] = this.primaryColor;
-    data['secondaryColor'] = this.secondaryColor;
-    data['backgroundColor'] = this.backgroundColor;
-    data['textPrimaryColor'] = this.textPrimaryColor;
-    data['textSecondaryColor'] = this.textSecondaryColor;
-    data['consumerKey'] = this.consumerKey;
-    data['consumerSecret'] = this.consumerSecret;
-    data['appUrl'] = this.appUrl;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['appName'] = appName;
+    data['primaryColor'] = primaryColor;
+    data['secondaryColor'] = secondaryColor;
+    data['backgroundColor'] = backgroundColor;
+    data['textPrimaryColor'] = textPrimaryColor;
+    data['textSecondaryColor'] = textSecondaryColor;
+    data['consumerKey'] = consumerKey;
+    data['consumerSecret'] = consumerSecret;
+    data['appUrl'] = appUrl;
     return data;
   }
 }

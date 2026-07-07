@@ -9,7 +9,7 @@ class VideoPlayDialog extends StatefulWidget {
   static String tag = '/VideoPlayDialog';
   final VideoData? data;
 
-  VideoPlayDialog({this.data});
+  const VideoPlayDialog({super.key, this.data});
 
   @override
   VideoPlayDialogState createState() => VideoPlayDialogState();
@@ -26,10 +26,11 @@ class VideoPlayDialogState extends State<VideoPlayDialog> {
 
   Future<void> init() async {
     log(widget.data!.url.validate());
-    if (widget.data!.url.validate().contains(VideoTypeYouTube))
+    if (widget.data!.url.validate().contains(VideoTypeYouTube)) {
       videoType = VideoTypeYouTube;
-    else
+    } else {
       videoType = VideoTypeCustom;
+    }
 
   }
 
@@ -65,7 +66,7 @@ class VideoPlayDialogState extends State<VideoPlayDialog> {
                   ? YouTubeEmbedWidget(widget.data!.url.validate(), fullIFrame: true).center()
                   : videoType.validate() == VideoTypeCustom
                       ? VideoFileWidget(widget.data!.url.validate()).center()
-                      : Container(child: Text('Invalid video').center()),
+                      : Container(child: const Text('Invalid video').center()),
         ],
       ),
     );

@@ -8,13 +8,15 @@ import 'package:nb_utils/nb_utils.dart';
 class WalkThroughScreen extends StatefulWidget {
   static String tag = '/WalkThroughScreen';
 
+  const WalkThroughScreen({super.key});
+
   @override
   WalkThroughScreenState createState() => WalkThroughScreenState();
 }
 
 class WalkThroughScreenState extends State<WalkThroughScreen> {
   var selectedIndex = 0;
-  PageController _pageController = PageController();
+  final PageController _pageController = PageController();
 
   @override
   void initState() {
@@ -84,42 +86,43 @@ class WalkThroughScreenState extends State<WalkThroughScreen> {
           child: Stack(
             children: [
               PageView(
-                  children: pages,
                   controller: _pageController,
                   onPageChanged: (index) {
                     selectedIndex = index;
                     setState(() {});
-                  }),
-              AnimatedPositioned(duration: Duration(seconds: 1), bottom: 70, left: 0, right: 0, child: DotIndicator(pages: pages, indicatorColor: primaryColor, pageController: _pageController)),
+                  },
+                  children: pages),
+              AnimatedPositioned(duration: const Duration(seconds: 1), bottom: 70, left: 0, right: 0, child: DotIndicator(pages: pages, indicatorColor: primaryColor, pageController: _pageController)),
               Positioned(
+                  bottom: 20,
+                  right: 20,
                   child: AnimatedCrossFade(
                       firstChild:
                       Container(
                         // ✅ تعديل نص زر ابدأ الآن ليدعم الترجمة الديناميكية بناءً على لغة التطبيق
-                          child: Text(AppLocalizations.of(context)!.translate('lbl_get_started') ?? 'Get Started', style: boldTextStyle(color: white)),
-                          padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-                          decoration: BoxDecoration(color: primaryColor, borderRadius: radius(8))
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                          decoration: BoxDecoration(color: primaryColor, borderRadius: radius(8)),
+                        // ✅ تعديل نص زر ابدأ الآن ليدعم الترجمة الديناميكية بناءً على لغة التطبيق
+                          child: Text(AppLocalizations.of(context)!.translate('lbl_get_started') ?? 'Get Started', style: boldTextStyle(color: white))
                       ).onTap(() {
-                        DashBoardScreen().launch(context, isNewTask: true);
+                        const DashBoardScreen().launch(context, isNewTask: true);
                       }),
-                      secondChild: SizedBox(),
-                      duration: Duration(milliseconds: 300),
+                      secondChild: const SizedBox(),
+                      duration: const Duration(milliseconds: 300),
                       firstCurve: Curves.easeIn,
                       secondCurve: Curves.easeOut,
-                      crossFadeState: selectedIndex == (pages.length - 1) ? CrossFadeState.showFirst : CrossFadeState.showSecond),
-                  bottom: 20,
-                  right: 20),
+                      crossFadeState: selectedIndex == (pages.length - 1) ? CrossFadeState.showFirst : CrossFadeState.showSecond)),
               Positioned(
-                  child: AnimatedContainer(
-                      duration: Duration(seconds: 1),
-                      // ✅ تعديل نص زر تخطي ليدعم الترجمة الديناميكية بناءً على لغة التطبيق
-                      child: Text(AppLocalizations.of(context)!.translate('lbl_skip') ?? 'Skip', style: boldTextStyle(color: primaryColor)),
-                      padding: EdgeInsets.fromLTRB(16, 8, 16, 8)
-                  ).onTap(() {
-                    DashBoardScreen().launch(context, isNewTask: true);
-                  }),
                   right: 8,
-                  top: 8)
+                  top: 8,
+                  child: AnimatedContainer(
+                      duration: const Duration(seconds: 1),
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      // ✅ تعديل نص زر تخطي ليدعم الترجمة الديناميكية بناءً على لغة التطبيق
+                      child: Text(AppLocalizations.of(context)!.translate('lbl_skip') ?? 'Skip', style: boldTextStyle(color: primaryColor))
+                  ).onTap(() {
+                    const DashBoardScreen().launch(context, isNewTask: true);
+                  }))
             ],
           ),
         ),

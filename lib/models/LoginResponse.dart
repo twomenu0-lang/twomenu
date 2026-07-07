@@ -34,9 +34,9 @@ class LoginResponse {
     firstName = json['first_name'];
     lastName = json['last_name'];
     billing =
-    json['billing'] != null ? new Billing.fromJson(json['billing']) : null;
+    json['billing'] != null ? Billing.fromJson(json['billing']) : null;
     shipping = json['shipping'] != null
-        ? new Shipping.fromJson(json['shipping'])
+        ? Shipping.fromJson(json['shipping'])
         : null;
     userRole = json['user_role'].cast<String>();
     userId = json['user_id'];
@@ -45,23 +45,23 @@ class LoginResponse {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['token'] = this.token;
-    data['user_email'] = this.userEmail;
-    data['user_nicename'] = this.userNicename;
-    data['user_display_name'] = this.userDisplayName;
-    data['first_name'] = this.firstName;
-    data['last_name'] = this.lastName;
-    if (this.billing != null) {
-      data['billing'] = this.billing!.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['token'] = token;
+    data['user_email'] = userEmail;
+    data['user_nicename'] = userNicename;
+    data['user_display_name'] = userDisplayName;
+    data['first_name'] = firstName;
+    data['last_name'] = lastName;
+    if (billing != null) {
+      data['billing'] = billing!.toJson();
     }
-    if (this.shipping != null) {
-      data['shipping'] = this.shipping!.toJson();
+    if (shipping != null) {
+      data['shipping'] = shipping!.toJson();
     }
-    data['user_role'] = this.userRole;
-    data['user_id'] = this.userId;
-    data['avatar'] = this.avatar;
-    data['profile_image'] = this.profileImage;
+    data['user_role'] = userRole;
+    data['user_id'] = userId;
+    data['avatar'] = avatar;
+    data['profile_image'] = profileImage;
     return data;
   }
 }
@@ -107,18 +107,18 @@ class Billing {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['first_name'] = this.firstName;
-    data['last_name'] = this.lastName;
-    data['company'] = this.company;
-    data['address_1'] = this.address1;
-    data['address_2'] = this.address2;
-    data['city'] = this.city;
-    data['postcode'] = this.postcode;
-    data['country'] = this.country;
-    data['state'] = this.state;
-    data['email'] = this.email;
-    data['phone'] = this.phone;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['first_name'] = firstName;
+    data['last_name'] = lastName;
+    data['company'] = company;
+    data['address_1'] = address1;
+    data['address_2'] = address2;
+    data['city'] = city;
+    data['postcode'] = postcode;
+    data['country'] = country;
+    data['state'] = state;
+    data['email'] = email;
+    data['phone'] = phone;
     return data;
   }
 }
@@ -158,16 +158,16 @@ class Shipping {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['first_name'] = this.firstName;
-    data['last_name'] = this.lastName;
-    data['company'] = this.company;
-    data['address_1'] = this.address1;
-    data['address_2'] = this.address2;
-    data['city'] = this.city;
-    data['postcode'] = this.postcode;
-    data['country'] = this.country;
-    data['state'] = this.state;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['first_name'] = firstName;
+    data['last_name'] = lastName;
+    data['company'] = company;
+    data['address_1'] = address1;
+    data['address_2'] = address2;
+    data['city'] = city;
+    data['postcode'] = postcode;
+    data['country'] = country;
+    data['state'] = state;
     return data;
   }
 }

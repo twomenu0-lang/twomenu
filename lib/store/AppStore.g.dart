@@ -170,6 +170,22 @@ mixin _$AppStore on AppStoreBase, Store {
     });
   }
 
+  late final _$tierUpgradedAtom =
+      Atom(name: 'AppStoreBase.tierUpgraded', context: context);
+
+  @override
+  bool get tierUpgraded {
+    _$tierUpgradedAtom.reportRead();
+    return super.tierUpgraded;
+  }
+
+  @override
+  set tierUpgraded(bool value) {
+    _$tierUpgradedAtom.reportWrite(value, super.tierUpgraded, () {
+      super.tierUpgraded = value;
+    });
+  }
+
   late final _$selectedLanguageCodeAtom =
       Atom(name: 'AppStoreBase.selectedLanguageCode', context: context);
 
@@ -359,6 +375,17 @@ mixin _$AppStore on AppStoreBase, Store {
   }
 
   @override
+  void setTierUpgraded(bool val) {
+    final _$actionInfo = _$AppStoreBaseActionController.startAction(
+        name: 'AppStoreBase.setTierUpgraded');
+    try {
+      return super.setTierUpgraded(val);
+    } finally {
+      _$AppStoreBaseActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   String toString() {
     return '''
 isLoading: ${isLoading},
@@ -371,6 +398,7 @@ mIsUserExistInReview: ${mIsUserExistInReview},
 isNotificationOn: ${isNotificationOn},
 isDarkMode: ${isDarkMode},
 unreadNotificationCount: ${unreadNotificationCount},
+tierUpgraded: ${tierUpgraded},
 selectedLanguageCode: ${selectedLanguageCode},
 index: ${index},
 dashboardScreeList: ${dashboardScreeList}

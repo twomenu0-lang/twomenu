@@ -27,7 +27,7 @@ import 'ProductDetailScreen3.dart';
 
 class ProductDetailScreen1 extends StatefulWidget {
   final int? mProId;
-  const ProductDetailScreen1({Key? key, this.mProId}) : super(key: key);
+  const ProductDetailScreen1({super.key, this.mProId});
 
   @override
   _ProductDetailScreen1State createState() => _ProductDetailScreen1State();
@@ -121,7 +121,9 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
       rating = double.tryParse(mProducts[0].averageRating ?? '0') ?? 0.0;
 
       // Variations IDs
-      productDetailNew!.variations!.forEach((e) => mProductVariationsIds.add(e));
+      for (var e in productDetailNew!.variations!) {
+        mProductVariationsIds.add(e);
+      }
 
       // Related products (index > 0)
       mProductsList
@@ -470,8 +472,9 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
                   ),
                 ).onTap(() {
                   final variant = getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1);
-                  if (variant == 2) ProductDetailScreen2(mProId: ups[i].id).launch(context);
-                  else if (variant == 3) ProductDetailScreen3(mProId: ups[i].id).launch(context);
+                  if (variant == 2) {
+                    ProductDetailScreen2(mProId: ups[i].id).launch(context);
+                  } else if (variant == 3) ProductDetailScreen3(mProId: ups[i].id).launch(context);
                   else ProductDetailScreen1(mProId: ups[i].id).launch(context);
                 });
               },
@@ -499,8 +502,9 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
                 return GestureDetector(
                   onTap: () {
                     final v = getIntAsync(PRODUCT_DETAIL_VARIANT, defaultValue: 1);
-                    if (v == 2) ProductDetailScreen2(mProId: grp[i].id).launch(context);
-                    else if (v == 3) ProductDetailScreen3(mProId: grp[i].id).launch(context);
+                    if (v == 2) {
+                      ProductDetailScreen2(mProId: grp[i].id).launch(context);
+                    } else if (v == 3) ProductDetailScreen3(mProId: grp[i].id).launch(context);
                     else ProductDetailScreen1(mProId: grp[i].id).launch(context);
                   },
                   child: Container(
@@ -540,7 +544,7 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
                                     if (grp[i].type == 'external') {
                                       WebViewExternalProductScreen(mExternal_URL: mExternalUrl, title: appLocalization.translate('lbl_external_product')).launch(context);
                                     } else if (!getBoolAsync(IS_LOGGED_IN)) {
-                                      SignInScreen().launch(context, pageRouteAnimation: PageRouteAnimation.Slide);
+                                      const SignInScreen().launch(context, pageRouteAnimation: PageRouteAnimation.Slide);
                                     } else {
                                       addCart(data: grp[i]);
                                       init();
@@ -650,7 +654,7 @@ class _ProductDetailScreen1State extends State<ProductDetailScreen1> {
             if (mIsExternalProduct) {
               WebViewExternalProductScreen(mExternal_URL: mExternalUrl, title: appLocalization.translate('lbl_external_product')).launch(context);
             } else if (!getBoolAsync(IS_LOGGED_IN)) {
-              SignInScreen().launch(context, pageRouteAnimation: PageRouteAnimation.Slide);
+              const SignInScreen().launch(context, pageRouteAnimation: PageRouteAnimation.Slide);
             } else {
               addCart(data: productDetailNew!);
               init();

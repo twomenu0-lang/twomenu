@@ -95,44 +95,44 @@ class BlogResponse {
     if (json['category'] != null) {
       category = <Category>[];
       json['category'].forEach((v) {
-        category!.add(new Category.fromJson(v));
+        category!.add(Category.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['ID'] = this.iD;
-    data['post_author'] = this.postAuthor;
-    data['post_date'] = this.postDate;
-    data['post_date_gmt'] = this.postDateGmt;
-    data['post_content'] = this.postContent;
-    data['post_title'] = this.postTitle;
-    data['post_excerpt'] = this.postExcerpt;
-    data['post_status'] = this.postStatus;
-    data['comment_status'] = this.commentStatus;
-    data['ping_status'] = this.pingStatus;
-    data['post_password'] = this.postPassword;
-    data['post_name'] = this.postName;
-    data['to_ping'] = this.toPing;
-    data['pinged'] = this.pinged;
-    data['post_modified'] = this.postModified;
-    data['post_modified_gmt'] = this.postModifiedGmt;
-    data['post_content_filtered'] = this.postContentFiltered;
-    data['post_parent'] = this.postParent;
-    data['guid'] = this.guid;
-    data['menu_order'] = this.menuOrder;
-    data['post_type'] = this.postType;
-    data['post_mime_type'] = this.postMimeType;
-    data['comment_count'] = this.commentCount;
-    data['filter'] = this.filter;
-    data['post_author_name'] = this.postAuthorName;
-    data['image'] = this.image;
-    data['readable_date'] = this.readableDate;
-    data['no_of_comments'] = this.noOfComments;
-    data['share_url'] = this.shareUrl;
-    if (this.category != null) {
-      data['category'] = this.category!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['ID'] = iD;
+    data['post_author'] = postAuthor;
+    data['post_date'] = postDate;
+    data['post_date_gmt'] = postDateGmt;
+    data['post_content'] = postContent;
+    data['post_title'] = postTitle;
+    data['post_excerpt'] = postExcerpt;
+    data['post_status'] = postStatus;
+    data['comment_status'] = commentStatus;
+    data['ping_status'] = pingStatus;
+    data['post_password'] = postPassword;
+    data['post_name'] = postName;
+    data['to_ping'] = toPing;
+    data['pinged'] = pinged;
+    data['post_modified'] = postModified;
+    data['post_modified_gmt'] = postModifiedGmt;
+    data['post_content_filtered'] = postContentFiltered;
+    data['post_parent'] = postParent;
+    data['guid'] = guid;
+    data['menu_order'] = menuOrder;
+    data['post_type'] = postType;
+    data['post_mime_type'] = postMimeType;
+    data['comment_count'] = commentCount;
+    data['filter'] = filter;
+    data['post_author_name'] = postAuthorName;
+    data['image'] = image;
+    data['readable_date'] = readableDate;
+    data['no_of_comments'] = noOfComments;
+    data['share_url'] = shareUrl;
+    if (category != null) {
+      data['category'] = category!.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -194,23 +194,23 @@ class Category {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['term_id'] = this.termId;
-    data['name'] = this.name;
-    data['slug'] = this.slug;
-    data['term_group'] = this.termGroup;
-    data['term_taxonomy_id'] = this.termTaxonomyId;
-    data['taxonomy'] = this.taxonomy;
-    data['description'] = this.description;
-    data['parent'] = this.parent;
-    data['count'] = this.count;
-    data['filter'] = this.filter;
-    data['cat_ID'] = this.catID;
-    data['category_count'] = this.categoryCount;
-    data['category_description'] = this.categoryDescription;
-    data['cat_name'] = this.catName;
-    data['category_nicename'] = this.categoryNicename;
-    data['category_parent'] = this.categoryParent;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['term_id'] = termId;
+    data['name'] = name;
+    data['slug'] = slug;
+    data['term_group'] = termGroup;
+    data['term_taxonomy_id'] = termTaxonomyId;
+    data['taxonomy'] = taxonomy;
+    data['description'] = description;
+    data['parent'] = parent;
+    data['count'] = count;
+    data['filter'] = filter;
+    data['cat_ID'] = catID;
+    data['category_count'] = categoryCount;
+    data['category_description'] = categoryDescription;
+    data['cat_name'] = catName;
+    data['category_nicename'] = categoryNicename;
+    data['category_parent'] = categoryParent;
     return data;
   }
 }

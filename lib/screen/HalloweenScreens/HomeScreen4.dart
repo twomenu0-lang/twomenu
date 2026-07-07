@@ -22,6 +22,8 @@ import '../VendorListScreen.dart';
 class HomeScreen4 extends StatefulWidget {
   static String tag = '/HomeScreen4';
 
+  const HomeScreen4({super.key});
+
   @override
   HomeScreen4State createState() => HomeScreen4State();
 }
@@ -135,7 +137,7 @@ class HomeScreen4State extends State<HomeScreen4> {
                 Stack(
                   alignment: Alignment.center,
                   children: [
-                    CircleAvatar(
+                    const CircleAvatar(
                       backgroundColor: Colors.transparent,
                       backgroundImage: AssetImage(ic_halloween_category),
                       radius: 36,
@@ -153,7 +155,7 @@ class HomeScreen4State extends State<HomeScreen4> {
                         ),
                       ),
                     )
-                        : CircleAvatar(
+                        : const CircleAvatar(
                       backgroundColor: Colors.transparent,
                       backgroundImage: AssetImage(ic_placeholder_logo),
                       radius: 36,
@@ -325,7 +327,7 @@ class HomeScreen4State extends State<HomeScreen4> {
               ],
             ).paddingOnly(left: 16, right: 16),
           ],
-        ).onTap(() => VendorListScreen().launch(context)),
+        ).onTap(() => const VendorListScreen().launch(context)),
         8.height,
         DashBoard4VendorComponent(vendorList),
       ],
@@ -418,7 +420,7 @@ class HomeScreen4State extends State<HomeScreen4> {
           actions: [
             IconButton(
               icon: const Icon(Icons.search_sharp, color: white),
-              onPressed: () => SearchScreen().launch(context),
+              onPressed: () => const SearchScreen().launch(context),
             ),
           ],
           title: Text(AppName, style: boldTextStyle(size: 18, color: white)),

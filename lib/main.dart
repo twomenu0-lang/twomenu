@@ -1,3 +1,4 @@
+// lib/main.dart
 import 'dart:async';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
@@ -7,10 +8,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
-import 'package:intl/date_symbol_data_local.dart'; // ✅ إضافة الـ import المطلوب لتهيئة التواريخ المحلية
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:Twomenu/store/AppStore.dart';
 import 'package:Twomenu/store/CartStore/CartStore.dart';
 import 'package:Twomenu/store/WishListStore/WishListStore.dart';
+import 'package:Twomenu/store/RewardsStore/rewards_store.dart';
+import 'package:Twomenu/store/SpendingStore/spending_store.dart';
 import 'package:Twomenu/utils/firebase_options.dart';
 import '/../AppTheme.dart';
 import '/../AppLocalizations.dart';
@@ -23,7 +26,8 @@ import '/../screen/NoInternetScreen.dart';
 import '/../screen/SplashScreen.dart';
 import '/../utils/Colors.dart';
 import '/../utils/Constants.dart';
-import '/../service/NotificationService.dart'; // 💡 ✅ إضافة الـ import الخاص بـ NotificationService
+import '/../service/NotificationService.dart';
+import '/../network/rest_apis.dart'; // ✅ v1.7.5-fix — لازم نستورده عشان نقدر ننادي savePlayerIdToServer()
 import 'package:nb_utils/nb_utils.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
@@ -36,11 +40,14 @@ Color? textPrimaryColour;
 Color? textSecondaryColour;
 Color? backgroundColor;
 String? baseUrl;
-String? ConsumerKey;
-String? ConsumerSecret;
+String? consumerKey;
+String? consumerSecret;
 AppStore appStore = AppStore();
 WishListStore wishListStore = WishListStore();
 CartStore cartStore = CartStore();
+RewardsStore rewardsStore = RewardsStore();
+SpendingStore spendingStore = SpendingStore();
+
 Language? language;
 List<Language> languages = Language.getLanguages();
 
@@ -54,55 +61,89 @@ Future<BuilderResponse> loadContent() async {
   return BuilderResponse.fromJson(jsonResponse);
 }
 
-/// قراءة آمنة من SharedPreferences — تتعامل مع القيم المحفوظة بنوع خاطئ
 String _safeGetString(String key, {String defaultValue = ''}) {
   try {
     return getStringAsync(key, defaultValue: defaultValue);
   } catch (e) {
-    removeKey(key); // ✅ الاسم الصحيح في nb_utils
+    removeKey(key);
     return defaultValue;
   }
 }
 
-// 💡 ✅ استبدال دالة _initOneSignal القديمة بالدالة الجديدة المطورة لتخزين الإشعارات
 void _initOneSignal() {
   if (!isMobile) return;
 
   OneSignal.initialize(mOneSignalAPPKey);
   OneSignal.Notifications.requestPermission(false);
 
-  // ✅ استقبال وحفظ كل إشعار بيوصل (سواء التطبيق شغال أو في الخلفية)
   OneSignal.Notifications.addForegroundWillDisplayListener((event) {
     final notification = event.notification;
+    final String type = notification.additionalData?['type'] ?? '';
+
+    // ✅ v1.7.4 — لما الكاشير يعمل redeem، الـ plugin بيبعت reward_redeemed
+    // نحدّث الـ store فوراً عشان RedemptionScreen يستجيب
+    if (type == NotificationType.rewardRedeemed) {
+      final dynamic rawId = notification.additionalData?['reward_id'];
+      final int rewardId = rawId is int
+          ? rawId
+          : int.tryParse(rawId?.toString() ?? '') ?? 0;
+      if (rewardId > 0) {
+        rewardsStore.markRedeemed(rewardId);
+      }
+    }
+
     NotificationService.save(
       id: notification.notificationId,
       title: notification.title ?? '',
       body: notification.body ?? '',
+      type: type,
     ).then((_) {
-      // تحديث العداد في الـ AppStore
       appStore.setUnreadNotificationCount(NotificationService.unreadCount());
+      if (type == NotificationType.tierUpgraded) {
+        appStore.setTierUpgraded(true);
+        spendingStore.fetchWallet(); // ✅ تم التعديل: نحدّث الـ store فوراً وبشكل مسبق للتخلص من الـ race condition
+      }
     });
-    event.preventDefault(); // ✅ عشان تتحكم في العرض بنفسك
-    event.notification.display(); // ✅ عرض الإشعار زي الأول
+
+    event.preventDefault();
+    event.notification.display();
   });
 
-  // ✅ استقبال الإشعارات اللي المستخدم ضغط عليها (من الخلفية)
   OneSignal.Notifications.addClickListener((event) {
     final notification = event.notification;
+    final String type = notification.additionalData?['type'] ?? '';
+
+    // ✅ v1.7.4 — نفس المعالجة لو الإشعار وصل وهو في الـ background
+    if (type == NotificationType.rewardRedeemed) {
+      final dynamic rawId = notification.additionalData?['reward_id'];
+      final int rewardId = rawId is int
+          ? rawId
+          : int.tryParse(rawId?.toString() ?? '') ?? 0;
+      if (rewardId > 0) {
+        rewardsStore.markRedeemed(rewardId);
+      }
+    }
+
     NotificationService.save(
       id: notification.notificationId,
       title: notification.title ?? '',
       body: notification.body ?? '',
+      type: type,
     ).then((_) {
       appStore.setUnreadNotificationCount(NotificationService.unreadCount());
+      if (type == NotificationType.tierUpgraded) {
+        appStore.setTierUpgraded(true);
+        spendingStore.fetchWallet(); // ✅ تم التعديل: نحدّث الـ store فوراً عند النقر على الإشعار لتهيئة الـ cache
+      }
     });
   });
 
-  // ✅ حفظ الـ Player ID
+  // ✅ v1.7.5-fix — حفظ الـ Player ID محلياً وإرساله فوراً للسيرفر
   OneSignal.User.pushSubscription.addObserver((state) async {
     final playerId = state.current.id;
     if (playerId != null && playerId.isNotEmpty) {
       await setValue(PLAYER_ID, playerId);
+      await savePlayerIdToServer();
     }
   });
 
@@ -143,7 +184,7 @@ void _initLocalData() {
           .map<CartModel>((e) => CartModel.fromJson(e))
           .toList());
     } catch (e) {
-      removeKey(CART_ITEM_LIST); // ✅
+      removeKey(CART_ITEM_LIST);
     }
   }
 
@@ -154,7 +195,7 @@ void _initLocalData() {
           .map<WishListResponse>((e) => WishListResponse.fromJson(e))
           .toList());
     } catch (e) {
-      removeKey(WISHLIST_ITEM_LIST); // ✅
+      removeKey(WISHLIST_ITEM_LIST);
     }
   }
 }
@@ -162,23 +203,16 @@ void _initLocalData() {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // STEP 1: Firebase Core
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   ).then((value) {
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
   });
 
-  // STEP 2: nb_utils initialize
   await initialize();
-
-  // ✅ تم إضافة سطر التهيئة هنا فوراً بعد جاهزية الـ SharedPreferences والأدوات الأساسية
   await initializeDateFormatting();
 
-  // STEP 3: تحميل builder.json
   builderResponse = await loadContent();
-
-  // STEP 4: حفظ إعدادات المتجر (أول تشغيل فقط)
   final bool isFirstRun = _safeGetString(APP_URL).isEmpty;
 
   if (isFirstRun) {
@@ -190,8 +224,8 @@ void main() async {
         await setValue(CONSUMER_SECRET, builderResponse.appsetup!.consumerSecret);
       } else {
         await setValue(APP_URL, base_URL);
-        await setValue(CONSUMER_KEY, consumerKey);
-        await setValue(CONSUMER_SECRET, consumerSecret);
+        await setValue(CONSUMER_KEY, consumerKey ?? '');
+        await setValue(CONSUMER_SECRET, consumerSecret ?? '');
       }
     } else {
       await setValue(PRIMARY_COLOR, builderResponse.appsetup!.primaryColor);
@@ -206,7 +240,6 @@ void main() async {
     await setValue(TEXT_SECONDARY_COLOR, builderResponse.appsetup!.textSecondaryColor);
   }
 
-  // STEP 5: قراءة الإعدادات
   appStore.setCount(getIntAsync(CARTCOUNT, defaultValue: 0));
   appStore.setNotification(getBoolAsync(IS_NOTIFICATION_ON, defaultValue: true));
 
@@ -218,21 +251,24 @@ void main() async {
   }
 
   baseUrl = _safeGetString(APP_URL);
-  ConsumerKey = _safeGetString(CONSUMER_KEY);
-  ConsumerSecret = _safeGetString(CONSUMER_SECRET);
+  consumerKey = _safeGetString(CONSUMER_KEY);
+  consumerSecret = _safeGetString(CONSUMER_SECRET);
 
-  // 💡 ✅ تحديث عداد الإشعارات في الـ AppStore فوراً بعد الانتهاء من STEP 5 مباشرةً
   appStore.setUnreadNotificationCount(NotificationService.unreadCount());
 
-  // STEP 6: إعداد الثيم
-  int themeModeIndex = getIntAsync(THEME_MODE_INDEX);
-  if (themeModeIndex == ThemeModeLight) {
+  try {
+    int themeModeIndex = getIntAsync(THEME_MODE_INDEX, defaultValue: ThemeModeLight);
+    if (themeModeIndex == ThemeModeLight) {
+      appStore.setDarkMode(aIsDarkMode: false);
+    } else if (themeModeIndex == ThemeModeDark) {
+      appStore.setDarkMode(aIsDarkMode: true);
+    } else {
+      appStore.setDarkMode(aIsDarkMode: false);
+    }
+  } catch (e) {
     appStore.setDarkMode(aIsDarkMode: false);
-  } else if (themeModeIndex == ThemeModeDark) {
-    appStore.setDarkMode(aIsDarkMode: true);
   }
 
-  // STEP 7: إعداد اللغة
   String savedLanguage = _safeGetString(LANGUAGE);
   if (savedLanguage.isEmpty) {
     appStore.setLanguage(defaultLanguage);
@@ -240,18 +276,20 @@ void main() async {
     appStore.setLanguage(savedLanguage);
   }
 
-  // STEP 8: الألوان والبيانات المحلية
   _initColors();
   _initLocalData();
 
-  // STEP 9: runApp
-  runApp(MyApp());
+  runApp(const MyApp());
 
-  // STEP 10: Firebase و OneSignal في الخلفية
   _initFirebaseBackground();
+
+  // تأمين إرسال الـ Player ID عند تشغيل التطبيق للمستخدمين المسجلين مسبقاً
+  await savePlayerIdToServer();
 }
 
 class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
   @override
   MyAppState createState() => MyAppState();
 }
@@ -265,12 +303,13 @@ class MyAppState extends State<MyApp> {
     afterBuildCreated(() async {
       await 1.seconds.delay;
       if (!await isNetworkAvailable()) {
-        push(NoInternetScreen());
+        push(const NoInternetScreen());
       }
+
       _connectivitySubscription =
-          Connectivity().onConnectivityChanged.listen((e) {
-            if (e == ConnectivityResult.none) {
-              push(NoInternetScreen());
+          Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+            if (results.contains(ConnectivityResult.none)) {
+              push(const NoInternetScreen());
             } else {
               pop();
             }
@@ -280,8 +319,8 @@ class MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
-    super.dispose();
     _connectivitySubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -293,9 +332,9 @@ class MyAppState extends State<MyApp> {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           navigatorKey: navigatorKey,
-          themeMode: appStore.isDarkMode! ? ThemeMode.dark : ThemeMode.light,
+          themeMode: (appStore.isDarkMode ?? false) ? ThemeMode.dark : ThemeMode.light,
           supportedLocales: Language.languagesLocale(),
-          localizationsDelegates: [
+          localizationsDelegates: const [
             CountryLocalizations.delegate,
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -304,7 +343,7 @@ class MyAppState extends State<MyApp> {
           ],
           localeResolutionCallback: (locale, supportedLocales) => locale,
           locale: Locale(appStore.selectedLanguageCode),
-          home: isHalloween ? ChristmasSplashScreen() : SplashScreen(),
+          home: isHalloween ? const ChristmasSplashScreen() : const SplashScreen(),
           builder: scrollBehaviour(),
         );
       },

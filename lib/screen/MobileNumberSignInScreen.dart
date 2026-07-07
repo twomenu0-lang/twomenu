@@ -17,7 +17,7 @@ import 'package:nb_utils/nb_utils.dart';
 import 'DashBoardScreen.dart';
 
 class MobileNumberSignInScreen extends StatefulWidget {
-  MobileNumberSignInScreen({Key? key, this.title}) : super(key: key);
+  const MobileNumberSignInScreen({super.key, this.title});
   final String? title;
 
   @override
@@ -55,22 +55,20 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
       }
     });
 
-    PhoneVerificationCompleted verificationCompleted =
-        (AuthCredential phoneAuthCredential) async {
+    void verificationCompleted(AuthCredential phoneAuthCredential) async {
       loadingTimeout.cancel();
       await _auth
           .signInWithCredential(phoneAuthCredential)
           .then((result) async {
-        var request = {"username": this.data, "password": this.data};
+        var request = {"username": data, "password": data};
         signInApi(request);
       }).catchError((e) {
         toast(e.toString());
         appStore.setLoading(false);
       });
-    };
+    }
 
-    PhoneVerificationFailed verificationFailed =
-        (FirebaseAuthException authException) {
+    void verificationFailed(FirebaseAuthException authException) {
       loadingTimeout.cancel();
       appStore.setLoading(false);
       switch (authException.code) {
@@ -90,10 +88,9 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
         default:
           toast('خطأ: ${authException.code}');
       }
-    };
+    }
 
-    PhoneCodeSent codeSent =
-        (String verificationId, [int? forceResendingToken]) async {
+    void codeSent(String verificationId, [int? forceResendingToken]) async {
       loadingTimeout.cancel();
       appStore.setLoading(false);
       _verificationId = verificationId;
@@ -107,16 +104,15 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
           smsOTPDialog(context);
         }
       }
-    };
+    }
 
-    PhoneCodeAutoRetrievalTimeout codeAutoRetrievalTimeout =
-        (String verificationId) {
+    void codeAutoRetrievalTimeout(String verificationId) {
       _verificationId = verificationId;
-    };
+    }
 
     try {
       await _auth.verifyPhoneNumber(
-        phoneNumber: this.phoneNo,
+        phoneNumber: phoneNo,
         timeout: const Duration(seconds: 120),
         forceResendingToken: isResend ? _forceResendingToken : null,
         verificationCompleted: verificationCompleted,
@@ -137,7 +133,7 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
         verificationId: _verificationId, smsCode: smsOTP.validate());
 
     await _auth.signInWithCredential(credential).then((result) async {
-      var request = {"username": this.data, "password": this.data};
+      var request = {"username": data, "password": data};
       signInApi(request);
     }).catchError((e) {
       toast("كود التحقق خاطئ أو منتهي");
@@ -170,13 +166,18 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
       // إلى أن يتم إغلاق التطبيق بالكامل وإعادة فتحه من جديد.
       // appStore.setLoggedIn() بتحدّث الـ observable والتخزين مع بعض.
       appStore.setLoggedIn(true);
+
+      // ✅ v1.7.5-fix — نفس التعديل في مسار الدخول برقم الموبايل، عشان
+      // الإشعارات توصل لأي مستخدم بيدخل من هنا برضه.
+      await savePlayerIdToServer();
+
       appStore.setLoading(false);
-      DashBoardScreen().launch(context, isNewTask: true);
+      const DashBoardScreen().launch(context, isNewTask: true);
     }).catchError((error) {
-      log("Error: " + error.toString());
+      log("Error: $error");
       appStore.setLoading(false);
       finish(context);
-      SignUpScreen(userName: this.data.toString()).launch(context);
+      SignUpScreen(userName: data.toString()).launch(context);
     });
   }
 
@@ -188,7 +189,7 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
         phoneNumber: passwordCont.text,
         countryCode: code,
         onCompleted: (pin) {
-          this.smsOTP = pin;
+          smsOTP = pin;
         },
         onConfirm: () {
           if (smsOTP != null && smsOTP!.length == 6) {
@@ -229,7 +230,7 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
                     height: 150,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) =>
-                        SizedBox(height: 150),
+                    const SizedBox(height: 150),
                   ),
                   24.height,
                   Container(
@@ -240,17 +241,17 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
                         color: Theme.of(context).textTheme.titleMedium!.color!,
                       ),
                     ),
-                    padding: EdgeInsets.only(left: 8),
+                    padding: const EdgeInsets.only(left: 8),
                     child: Row(
                       children: <Widget>[
                         CountryCodePicker(
                           initialSelection: 'EG',
                           onChanged: (value) {
-                            this.code = value.dialCode.toString();
+                            code = value.dialCode.toString();
                           },
                           backgroundColor: Colors.transparent,
                           showFlag: true,
-                          padding: EdgeInsets.all(4),
+                          padding: const EdgeInsets.all(4),
                           dialogTextStyle: secondaryTextStyle(),
                           searchStyle: secondaryTextStyle(),
                           searchDecoration: InputDecoration(
@@ -267,7 +268,7 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
                           height: 30.0,
                           width: 1.0,
                           color: primaryColor,
-                          margin: EdgeInsets.only(left: 10.0, right: 10.0),
+                          margin: const EdgeInsets.only(left: 10.0, right: 10.0),
                         ),
                         Expanded(
                           child: TextFormField(
@@ -279,7 +280,7 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
                             decoration: InputDecoration(
                               counterText: "",
                               contentPadding:
-                              EdgeInsets.fromLTRB(16, 0, 16, 0),
+                              const EdgeInsets.fromLTRB(16, 0, 16, 0),
                               hintText: appLocalization
                                   .translate('lbl_enter_mobile_number'),
                               hintStyle: secondaryTextStyle(size: 18),
@@ -300,13 +301,13 @@ class _MobileNumberSignInScreenState extends State<MobileNumberSignInScreen> {
                         return;
                       }
                       hideKeyboard(context);
-                      this.phoneNo = cleanPhoneNumber(
-                          passwordCont.text.toString(), this.code);
+                      phoneNo = cleanPhoneNumber(
+                          passwordCont.text.toString(), code);
                       String cleaned = passwordCont.text.trim();
                       if (cleaned.startsWith('0')) {
                         cleaned = cleaned.substring(1);
                       }
-                      this.data = cleaned;
+                      data = cleaned;
                       verifyPhoneNumber();
                     },
                     textStyle: primaryTextStyle(color: white),
@@ -394,13 +395,19 @@ class _OtpDialogState extends State<_OtpDialog> {
   @override
   void dispose() {
     _timer?.cancel();
-    for (var c in _controllers) c.dispose();
-    for (var f in _focusNodes) f.dispose();
+    for (var c in _controllers) {
+      c.dispose();
+    }
+    for (var f in _focusNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
   void _clearAll() {
-    for (var c in _controllers) c.clear();
+    for (var c in _controllers) {
+      c.clear();
+    }
     _focusNodes[0].requestFocus();
   }
 

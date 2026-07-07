@@ -7,7 +7,7 @@ class YouTubeEmbedWidget extends StatelessWidget {
   final String videoId;
   final bool? fullIFrame;
 
-  YouTubeEmbedWidget(this.videoId, {this.fullIFrame});
+  const YouTubeEmbedWidget(this.videoId, {super.key, this.fullIFrame});
 
   @override
   Widget build(BuildContext context) {

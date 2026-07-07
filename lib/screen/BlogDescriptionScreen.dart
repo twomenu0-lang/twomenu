@@ -15,7 +15,7 @@ class BlogDescriptionScreen extends StatefulWidget {
   static String tag = '/BlogDescriptionScreen';
   final int? mId;
 
-  BlogDescriptionScreen({Key? key, this.mId}) : super(key: key);
+  const BlogDescriptionScreen({super.key, this.mId});
 
   @override
   BlogDescriptionScreenState createState() => BlogDescriptionScreenState();
@@ -191,14 +191,14 @@ class BlogDescriptionScreenState extends State<BlogDescriptionScreen> {
         actions: [
           post != null
               ? IconButton(
-              icon: Icon(Icons.share_rounded, color: white),
+              icon: const Icon(Icons.share_rounded, color: white),
               onPressed: () {
                 _openUrl(
                   post!.shareUrl ?? '',
                   title: post!.postTitle.validate(),
                 );
               })
-              : SizedBox()
+              : const SizedBox()
         ],
       ) as PreferredSizeWidget?,
       body: Observer(
@@ -215,7 +215,7 @@ class BlogDescriptionScreenState extends State<BlogDescriptionScreen> {
                     // ── العنوان ──────────────────────────────
                     Text(
                       post!.postTitle.validate(),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
                         color: _textPrimary,
@@ -236,18 +236,18 @@ class BlogDescriptionScreenState extends State<BlogDescriptionScreen> {
                           BoxShadow(
                             color: Colors.black.withOpacity(0.04),
                             blurRadius: 20,
-                            offset: Offset(0, 8),
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
-                      padding: EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(20),
                       child: Html(
                         data: _cleanContent(
                             post!.postContent.validate()),
                         style: {
                           "body": Style(
                             fontSize: FontSize(15.5),
-                            lineHeight: LineHeight(1.75),
+                            lineHeight: const LineHeight(1.75),
                             color: _textPrimary,
                             fontFamily: 'Cairo',
                             textAlign: TextAlign.right,
@@ -260,8 +260,8 @@ class BlogDescriptionScreenState extends State<BlogDescriptionScreen> {
                             fontWeight: FontWeight.bold,
                             color: _brandBlue,
                             margin: Margins.only(top: 28, bottom: 10),
-                            lineHeight: LineHeight(1.4),
-                            border: Border(
+                            lineHeight: const LineHeight(1.4),
+                            border: const Border(
                               right: BorderSide(
                                   color: _brandBlue, width: 4),
                             ),
@@ -272,18 +272,18 @@ class BlogDescriptionScreenState extends State<BlogDescriptionScreen> {
                             fontWeight: FontWeight.bold,
                             color: _brandBlue,
                             margin: Margins.only(top: 20, bottom: 6),
-                            lineHeight: LineHeight(1.4),
+                            lineHeight: const LineHeight(1.4),
                           ),
                           "h1": Style(
                             fontSize: FontSize(22),
                             fontWeight: FontWeight.w800,
                             color: _textPrimary,
                             margin: Margins.only(top: 24, bottom: 10),
-                            lineHeight: LineHeight(1.4),
+                            lineHeight: const LineHeight(1.4),
                           ),
                           "p": Style(
                             margin: Margins.only(bottom: 16),
-                            lineHeight: LineHeight(1.75),
+                            lineHeight: const LineHeight(1.75),
                             fontSize: FontSize(15.5),
                           ),
                           "strong": Style(
@@ -303,14 +303,14 @@ class BlogDescriptionScreenState extends State<BlogDescriptionScreen> {
                               bottom: 14,
                             ),
                             backgroundColor: _brandBlueBg,
-                            border: Border(
+                            border: const Border(
                               right: BorderSide(
                                   color: _brandBlue, width: 4),
                             ),
                             fontStyle: FontStyle.italic,
                             fontSize: FontSize(15),
                             color: _textPrimary,
-                            lineHeight: LineHeight(1.8),
+                            lineHeight: const LineHeight(1.8),
                           ),
                           "ol": Style(
                             margin: Margins.only(
@@ -324,12 +324,12 @@ class BlogDescriptionScreenState extends State<BlogDescriptionScreen> {
                           ),
                           "ol li": Style(
                             margin: Margins.only(bottom: 4, top: 4),
-                            lineHeight: LineHeight(1.6),
+                            lineHeight: const LineHeight(1.6),
                             fontSize: FontSize(15),
                           ),
                           "li": Style(
                             margin: Margins.only(bottom: 8),
-                            lineHeight: LineHeight(1.7),
+                            lineHeight: const LineHeight(1.7),
                             fontSize: FontSize(15),
                           ),
                           "a": Style(
@@ -338,7 +338,7 @@ class BlogDescriptionScreenState extends State<BlogDescriptionScreen> {
                           ),
                           "hr": Style(
                             margin: Margins.symmetric(vertical: 20),
-                            border: Border(
+                            border: const Border(
                               bottom: BorderSide(
                                 color: Color(0xFFE9ECF5),
                                 width: 1,
@@ -369,8 +369,9 @@ class BlogDescriptionScreenState extends State<BlogDescriptionScreen> {
                                     fit: BoxFit.cover,
                                     loadingBuilder: (context, child,
                                         loadingProgress) {
-                                      if (loadingProgress == null)
+                                      if (loadingProgress == null) {
                                         return child;
+                                      }
                                       return Container(
                                         height: 180,
                                         decoration: BoxDecoration(
@@ -378,7 +379,7 @@ class BlogDescriptionScreenState extends State<BlogDescriptionScreen> {
                                           borderRadius:
                                           BorderRadius.circular(16),
                                         ),
-                                        child: Center(
+                                        child: const Center(
                                           child:
                                           CircularProgressIndicator(
                                               color: _brandBlue),
@@ -425,7 +426,7 @@ class BlogDescriptionScreenState extends State<BlogDescriptionScreen> {
                                   onTap: () => _openUrl(href),
                                   child: Container(
                                     width: double.infinity,
-                                    padding: EdgeInsets.symmetric(
+                                    padding: const EdgeInsets.symmetric(
                                         horizontal: 20, vertical: 14),
                                     decoration: BoxDecoration(
                                       color: _brandBlue,
@@ -435,7 +436,7 @@ class BlogDescriptionScreenState extends State<BlogDescriptionScreen> {
                                     child: Text(
                                       text,
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.w700,
                                         fontSize: 15,
@@ -461,7 +462,7 @@ class BlogDescriptionScreenState extends State<BlogDescriptionScreen> {
                   ],
                 ).paddingOnly(left: 16, right: 16, bottom: 16),
               ).visible(!appStore.isLoading)
-                  : SizedBox(),
+                  : const SizedBox(),
               mProgress().center().visible(appStore.isLoading),
             ],
           ),

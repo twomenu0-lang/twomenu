@@ -8,24 +8,24 @@ class ProductAttribute {
     if (json['attribute'] != null) {
       attribute = <Attribute>[];
       json['attribute'].forEach((v) {
-        attribute!.add(new Attribute.fromJson(v));
+        attribute!.add(Attribute.fromJson(v));
       });
     }
     if (json['categories'] != null) {
       categories = <Categories>[];
       json['categories'].forEach((v) {
-        categories!.add(new Categories.fromJson(v));
+        categories!.add(Categories.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.attribute != null) {
-      data['attribute'] = this.attribute!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    if (attribute != null) {
+      data['attribute'] = attribute!.map((v) => v.toJson()).toList();
     }
-    if (this.categories != null) {
-      data['categories'] = this.categories!.map((v) => v.toJson()).toList();
+    if (categories != null) {
+      data['categories'] = categories!.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -54,22 +54,22 @@ class Attribute {
     if (json['terms'] != null) {
       terms = <Terms>[];
       json['terms'].forEach((v) {
-        terms!.add(new Terms.fromJson(v));
+        terms!.add(Terms.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['slug'] = this.slug;
-    data['type'] = this.type;
-    data['order_by'] = this.orderBy;
-    data['has_archives'] = this.hasArchives;
-    data['total'] = this.total;
-    if (this.terms != null) {
-      data['terms'] = this.terms!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['slug'] = slug;
+    data['type'] = type;
+    data['order_by'] = orderBy;
+    data['has_archives'] = hasArchives;
+    data['total'] = total;
+    if (terms != null) {
+      data['terms'] = terms!.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -105,17 +105,17 @@ class Terms {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['term_id'] = this.termId;
-    data['name'] = this.name;
-    data['slug'] = this.slug;
-    data['term_group'] = this.termGroup;
-    data['term_taxonomy_id'] = this.termTaxonomyId;
-    data['taxonomy'] = this.taxonomy;
-    data['description'] = this.description;
-    data['parent'] = this.parent;
-    data['count'] = this.count;
-    data['filter'] = this.filter;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['term_id'] = termId;
+    data['name'] = name;
+    data['slug'] = slug;
+    data['term_group'] = termGroup;
+    data['term_taxonomy_id'] = termTaxonomyId;
+    data['taxonomy'] = taxonomy;
+    data['description'] = description;
+    data['parent'] = parent;
+    data['count'] = count;
+    data['filter'] = filter;
     return data;
   }
 }
@@ -178,31 +178,31 @@ class Categories {
     if (json['sub_categories'] != null) {
       subCategories = <SubCategories>[];
       json['sub_categories'].forEach((v) {
-        subCategories!.add(new SubCategories.fromJson(v));
+        subCategories!.add(SubCategories.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['term_id'] = this.termId;
-    data['name'] = this.name;
-    data['slug'] = this.slug;
-    data['term_group'] = this.termGroup;
-    data['term_taxonomy_id'] = this.termTaxonomyId;
-    data['taxonomy'] = this.taxonomy;
-    data['description'] = this.description;
-    data['parent'] = this.parent;
-    data['count'] = this.count;
-    data['filter'] = this.filter;
-    data['cat_ID'] = this.catID;
-    data['category_count'] = this.categoryCount;
-    data['category_description'] = this.categoryDescription;
-    data['cat_name'] = this.catName;
-    data['category_nicename'] = this.categoryNicename;
-    data['category_parent'] = this.categoryParent;
-    if (this.subCategories != null) {
-      data['sub_categories'] = this.subCategories!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['term_id'] = termId;
+    data['name'] = name;
+    data['slug'] = slug;
+    data['term_group'] = termGroup;
+    data['term_taxonomy_id'] = termTaxonomyId;
+    data['taxonomy'] = taxonomy;
+    data['description'] = description;
+    data['parent'] = parent;
+    data['count'] = count;
+    data['filter'] = filter;
+    data['cat_ID'] = catID;
+    data['category_count'] = categoryCount;
+    data['category_description'] = categoryDescription;
+    data['cat_name'] = catName;
+    data['category_nicename'] = categoryNicename;
+    data['category_parent'] = categoryParent;
+    if (subCategories != null) {
+      data['sub_categories'] = subCategories!.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -264,23 +264,23 @@ class SubCategories {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['term_id'] = this.termId;
-    data['name'] = this.name;
-    data['slug'] = this.slug;
-    data['term_group'] = this.termGroup;
-    data['term_taxonomy_id'] = this.termTaxonomyId;
-    data['taxonomy'] = this.taxonomy;
-    data['description'] = this.description;
-    data['parent'] = this.parent;
-    data['count'] = this.count;
-    data['filter'] = this.filter;
-    data['cat_ID'] = this.catID;
-    data['category_count'] = this.categoryCount;
-    data['category_description'] = this.categoryDescription;
-    data['cat_name'] = this.catName;
-    data['category_nicename'] = this.categoryNicename;
-    data['category_parent'] = this.categoryParent;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['term_id'] = termId;
+    data['name'] = name;
+    data['slug'] = slug;
+    data['term_group'] = termGroup;
+    data['term_taxonomy_id'] = termTaxonomyId;
+    data['taxonomy'] = taxonomy;
+    data['description'] = description;
+    data['parent'] = parent;
+    data['count'] = count;
+    data['filter'] = filter;
+    data['cat_ID'] = catID;
+    data['category_count'] = categoryCount;
+    data['category_description'] = categoryDescription;
+    data['cat_name'] = catName;
+    data['category_nicename'] = categoryNicename;
+    data['category_parent'] = categoryParent;
     return data;
   }
 }

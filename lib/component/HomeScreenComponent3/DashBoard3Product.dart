@@ -11,7 +11,7 @@ class DashBoard3Product extends StatefulWidget {
   final double? width;
   final ProductResponse? mProductModel;
 
-  DashBoard3Product({Key? key, this.width, this.mProductModel}) : super(key: key);
+  const DashBoard3Product({super.key, this.width, this.mProductModel});
 
   @override
   DashBoard3ProductState createState() => DashBoard3ProductState();
@@ -47,7 +47,7 @@ class DashBoard3ProductState extends State<DashBoard3Product> {
       },
       child: Container(
         width: widget.width,
-        margin: EdgeInsets.all(4),
+        margin: const EdgeInsets.all(4),
         decoration: boxDecorationWithShadow(boxShadow: [BoxShadow(blurRadius: 0.3, spreadRadius: 0.2, color: gray.withOpacity(0.3))], backgroundColor: Theme.of(context).cardTheme.color!),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,7 +64,7 @@ class DashBoard3ProductState extends State<DashBoard3Product> {
               ),
             ),
             Container(
-              padding: EdgeInsets.only(left: 8),
+              padding: const EdgeInsets.only(left: 8),
               width: productWidth,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

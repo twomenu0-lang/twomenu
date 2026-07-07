@@ -66,10 +66,10 @@ class MightyAPI {
   bool? isHttps;
 
   MightyAPI() {
-    this.url           = getStringAsync(APP_URL);
-    this.consumerKey   = getStringAsync(CONSUMER_KEY);
-    this.consumerSecret = getStringAsync(CONSUMER_SECRET);
-    this.isHttps       = this.url.startsWith("https");
+    url           = getStringAsync(APP_URL);
+    consumerKey   = getStringAsync(CONSUMER_KEY);
+    consumerSecret = getStringAsync(CONSUMER_SECRET);
+    isHttps       = url.startsWith("https");
   }
 
   // ───────────────────────────────────────────────────────────────
@@ -83,7 +83,7 @@ class MightyAPI {
     final url            = this.url + endpoint;
     final containsQueryParams = url.contains("?");
 
-    if (this.isHttps == true) {
+    if (isHttps == true) {
       final separator = containsQueryParams ? "&" : "?";
       return "$url${separator}consumer_key=${this.consumerKey!}&consumer_secret=${this.consumerSecret!}";
     }
@@ -134,7 +134,7 @@ class MightyAPI {
   // JWT POST — للـ auth endpoints
   // ───────────────────────────────────────────────────────────────
   Future<http.Response> postJwtAsync(String endPoint, Map data) async {
-    final fullUrl = this.url + endPoint;
+    final fullUrl = url + endPoint;
     log('JWT POST: $fullUrl');
     final headers = _baseHeaders();
 
@@ -264,7 +264,8 @@ class MightyAPI {
   // PUT
   // ───────────────────────────────────────────────────────────────
   Future<http.Response> putAsync(String endPoint, Map data, {requireToken = false}) async {
-    final url     = _getOAuthURL("POST", endPoint);
+    // ✅ التعديل هنا: تم تغيير "POST" إلى "PUT" لإنشاء توقيع OAuth صحيح يتوافق مع الطلب
+    final url     = _getOAuthURL("PUT", endPoint);
     final headers = _baseHeaders();
 
     if (requireToken) {

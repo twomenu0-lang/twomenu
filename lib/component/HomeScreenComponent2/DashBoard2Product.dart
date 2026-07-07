@@ -12,7 +12,7 @@ class DashBoard2Product extends StatefulWidget {
   final ProductResponse? mProductModel;
   final bool? isHorizontal;
 
-  DashBoard2Product({this.width, this.mProductModel, this.isHorizontal});
+  const DashBoard2Product({super.key, this.width, this.mProductModel, this.isHorizontal});
 
   @override
   ProductState createState() => ProductState();
@@ -48,13 +48,13 @@ class ProductState extends State<DashBoard2Product> {
       },
       child: Container(
         width: widget.width,
-        padding: EdgeInsets.all(1.2),
-        margin: EdgeInsets.all(4),
+        padding: const EdgeInsets.all(1.2),
+        margin: const EdgeInsets.all(4),
         decoration: widget.isHorizontal == true
-            ? BoxDecoration()
+            ? const BoxDecoration()
             : BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             colors: [mDashboardGradient1, mDashboardGradient2],
           ),
         ),
@@ -75,7 +75,7 @@ class ProductState extends State<DashBoard2Product> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(8, 2, 8, 8),
+                padding: const EdgeInsets.fromLTRB(8, 2, 8, 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

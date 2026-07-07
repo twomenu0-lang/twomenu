@@ -11,7 +11,7 @@ class WishListNotSignInComponent extends StatefulWidget {
   static String tag = '/WishListNotSignInComponent';
   final bool? isWishlist;
 
-  WishListNotSignInComponent({this.isWishlist});
+  const WishListNotSignInComponent({super.key, this.isWishlist});
 
   @override
   WishListNotSignInComponentState createState() => WishListNotSignInComponentState();
@@ -52,7 +52,7 @@ class WishListNotSignInComponentState extends State<WishListNotSignInComponent> 
                 textStyle: primaryTextStyle(color: white),
                 text: appLocalization.translate('lbl_sign_in'),
                 onTap: () {
-                  SignInScreen().launch(context);
+                  const SignInScreen().launch(context);
                 },
                 color: primaryColor)
             .paddingOnly(left: 16, right: 16),
@@ -62,11 +62,11 @@ class WishListNotSignInComponentState extends State<WishListNotSignInComponent> 
           children: <Widget>[
             Text(appLocalization.translate('lbl_dont_t_have_an_account')!, style: primaryTextStyle(size: 18, color: Theme.of(context).textTheme.titleMedium!.color)),
             Container(
-              margin: EdgeInsets.only(left: 4),
+              margin: const EdgeInsets.only(left: 4),
               child: GestureDetector(
                 child: Text(appLocalization.translate('lbl_sign_up_link')!, style: TextStyle(fontSize: 18, color: primaryColor)),
                 onTap: () {
-                  SignUpScreen().launch(context);
+                  const SignUpScreen().launch(context);
                 },
               ),
             )

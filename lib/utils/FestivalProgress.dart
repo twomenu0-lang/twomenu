@@ -5,6 +5,8 @@ import 'AppImages.dart';
 class FestivalProgress extends StatefulWidget {
   static String tag = '/FestivalProgress';
 
+  const FestivalProgress({super.key});
+
   @override
   FestivalProgressState createState() => FestivalProgressState();
 }
@@ -50,7 +52,7 @@ class FestivalProgressState extends State<FestivalProgress> with SingleTickerPro
         child: Container(
           width: 65,
           height: 65,
-          padding: EdgeInsets.all(8),
+          padding: const EdgeInsets.all(8),
           child: Image.asset(ic_christmas_categories),
         ),
       ),

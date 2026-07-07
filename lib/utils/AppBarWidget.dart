@@ -7,7 +7,7 @@ import 'package:nb_utils/nb_utils.dart';
 class AppBarWidget extends StatelessWidget {
   final Widget? child;
 
-  AppBarWidget({this.child});
+  const AppBarWidget({super.key, this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +22,7 @@ class BodyCornerWidget extends StatelessWidget {
   final Widget child;
   final Color? color;
 
-  BodyCornerWidget({required this.child, this.color});
+  const BodyCornerWidget({super.key, required this.child, this.color});
 
   @override
   Widget build(BuildContext context) {

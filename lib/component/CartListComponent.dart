@@ -13,6 +13,8 @@ import '../AppLocalizations.dart';
 import '../main.dart';
 
 class CartListComponent extends StatefulWidget {
+  const CartListComponent({super.key});
+
   @override
   CartListComponentState createState() => CartListComponentState();
 }
@@ -59,9 +61,9 @@ class CartListComponentState extends State<CartListComponent> {
 
     return ListView.separated(
       separatorBuilder: (context, index) {
-        return Divider();
+        return const Divider();
       },
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       scrollDirection: Axis.vertical,
       shrinkWrap: true,
       itemCount: cartStore.cartList.length,
@@ -149,10 +151,10 @@ class CartListComponentState extends State<CartListComponent> {
                                 }
                               },
                               child: Container(
-                                padding: EdgeInsets.all(2),
-                                margin: EdgeInsets.only(left: 8, right: 10),
+                                padding: const EdgeInsets.all(2),
+                                margin: const EdgeInsets.only(left: 8, right: 10),
                                 decoration: BoxDecoration(color: isHalloween ? mChristmasColor : primaryColor, shape: BoxShape.circle),
-                                child: Icon(Icons.remove, color: white, size: 16),
+                                child: const Icon(Icons.remove, color: white, size: 16),
                               ),
                             ),
                             Text(cartStore.cartList[i].quantity, style: boldTextStyle()),
@@ -189,10 +191,10 @@ class CartListComponentState extends State<CartListComponent> {
                                 setState(() {});
                               },
                               child: Container(
-                                padding: EdgeInsets.all(2),
-                                margin: EdgeInsets.only(left: 10, right: 10),
+                                padding: const EdgeInsets.all(2),
+                                margin: const EdgeInsets.only(left: 10, right: 10),
                                 decoration: BoxDecoration(color: isHalloween ? mChristmasColor : primaryColor, shape: BoxShape.circle),
-                                child: Icon(Icons.add, size: 16, color: white),
+                                child: const Icon(Icons.add, size: 16, color: white),
                               ),
                             ),
                           ],
@@ -206,7 +208,7 @@ class CartListComponentState extends State<CartListComponent> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.delete, size: 20, color: lightGrey),
+                        const Icon(Icons.delete, size: 20, color: lightGrey),
                         8.width,
                         Text(appLocalization.translate('lbl_remove')!, style: secondaryTextStyle(size: 16)),
                       ],

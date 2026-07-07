@@ -8,7 +8,7 @@ import 'package:nb_utils/nb_utils.dart';
 import 'DashBoard4Product.dart';
 
 class DashboardComponent4 extends StatefulWidget {
-  const DashboardComponent4({Key? key, required this.title, required this.subTitle, required this.product, required this.onTap}) : super(key: key);
+  const DashboardComponent4({super.key, required this.title, required this.subTitle, required this.product, required this.onTap});
 
   final String title, subTitle;
   final List<ProductResponse> product;
@@ -21,11 +21,11 @@ class DashboardComponent4 extends StatefulWidget {
 class _DashboardComponent4State extends State<DashboardComponent4> {
   Widget productList(List<ProductResponse> product) {
     return Container(
-      margin: EdgeInsets.all(8),
+      margin: const EdgeInsets.all(8),
       child: AlignedGridView.count(
         scrollDirection: Axis.vertical,
         itemCount: product.length >= TOTAL_DASHBOARD_ITEM ? TOTAL_DASHBOARD_ITEM : product.length,
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,
         itemBuilder: (context, i) {
           return DashBoard4Product(mProductModel: product[i], width: context.width()).paddingAll(4);

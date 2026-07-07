@@ -23,7 +23,7 @@ Widget getVendorWidget(VendorResponse vendor, BuildContext context, {double widt
         if (addressText!.isEmpty) {
           addressText = vendor.address!.street_2;
         } else {
-          addressText += ", " + vendor.address!.street_2!;
+          addressText += ", ${vendor.address!.street_2!}";
         }
       }
     }
@@ -32,7 +32,7 @@ Widget getVendorWidget(VendorResponse vendor, BuildContext context, {double widt
         if (addressText!.isEmpty) {
           addressText = vendor.address!.city;
         } else {
-          addressText += ", " + vendor.address!.city!;
+          addressText += ", ${vendor.address!.city!}";
         }
       }
     }
@@ -42,7 +42,7 @@ Widget getVendorWidget(VendorResponse vendor, BuildContext context, {double widt
         if (addressText!.isEmpty) {
           addressText = vendor.address!.zip;
         } else {
-          addressText += " - " + vendor.address!.zip!;
+          addressText += " - ${vendor.address!.zip!}";
         }
       }
     }
@@ -51,7 +51,7 @@ Widget getVendorWidget(VendorResponse vendor, BuildContext context, {double widt
         if (addressText!.isEmpty) {
           addressText = vendor.address!.state;
         } else {
-          addressText += ", " + vendor.address!.state!;
+          addressText += ", ${vendor.address!.state!}";
         }
       }
     }
@@ -60,7 +60,7 @@ Widget getVendorWidget(VendorResponse vendor, BuildContext context, {double widt
         if (addressText!.isEmpty) {
           addressText = vendor.address!.country;
         } else {
-          addressText += ", " + vendor.address!.country!;
+          addressText += ", ${vendor.address!.country!}";
         }
       }
     }
@@ -68,7 +68,7 @@ Widget getVendorWidget(VendorResponse vendor, BuildContext context, {double widt
 
   return Container(
     width: width,
-    margin: EdgeInsets.all(8.0),
+    margin: const EdgeInsets.all(8.0),
     decoration: boxDecorationRoundedWithShadow(8, backgroundColor: context.cardColor),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,7 +98,7 @@ Widget getVendorWidget(VendorResponse vendor, BuildContext context, {double widt
 Widget vendorList(List<VendorResponse> product) {
   return HorizontalList(
     itemCount: product.length >= TOTAL_DASHBOARD_ITEM ? TOTAL_DASHBOARD_ITEM : product.length,
-    padding: EdgeInsets.only(left: 8, right: 8),
+    padding: const EdgeInsets.only(left: 8, right: 8),
     itemBuilder: (context, i) {
       return GestureDetector(
         onTap: () {
@@ -120,7 +120,7 @@ Widget mVendorWidget(BuildContext context, List<VendorResponse> mVendorModel, va
               children: [
                 Text(title, style: boldTextStyle(size: size)),
                 Text(all, style: boldTextStyle(color: primaryColor)).onTap(() {
-                  VendorListScreen().launch(context);
+                  const VendorListScreen().launch(context);
                 }).visible(mVendorModel.length >= TOTAL_DASHBOARD_ITEM)
               ],
             ).paddingOnly(left: 16, right: 16).visible(mVendorModel.isNotEmpty),
@@ -128,6 +128,6 @@ Widget mVendorWidget(BuildContext context, List<VendorResponse> mVendorModel, va
             vendorList(mVendorModel)
           ],
         )
-      : SizedBox();
+      : const SizedBox();
 }
 

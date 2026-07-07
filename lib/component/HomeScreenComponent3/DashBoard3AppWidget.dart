@@ -10,8 +10,8 @@ Widget mDashBoard3Sale(ProductResponse product) {
     top: 0,
     child: Container(
       decoration: boxDecorationWithRoundedCorners(backgroundColor: Colors.red, borderRadius: radius(0)),
+      padding: const EdgeInsets.fromLTRB(6, 2, 6, 2),
       child: Text("Sale", style: secondaryTextStyle(color: white, size: 12)),
-      padding: EdgeInsets.fromLTRB(6, 2, 6, 2),
     ),
   ).visible(product.onSale == true && product.type!.contains("grouped") && !product.type!.contains("variation"));
 }
@@ -33,7 +33,7 @@ Widget viewAllDashBoard3(BuildContext context, {String? viewAll}) {
   return GestureDetector(
     child: Container(
         width: 80,
-        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         decoration: BoxDecoration(border: Border.all(color: appStore.isDarkMode! ? context.iconColor : white), borderRadius: BorderRadius.circular(8)),
         child: Text(viewAll!, style: boldTextStyle(color: appStore.isDarkMode! ? context.iconColor : white), textAlign: TextAlign.center)),
   );

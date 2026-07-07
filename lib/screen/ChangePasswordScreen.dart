@@ -12,6 +12,8 @@ import '../utils/AppBarWidget.dart';
 class ChangePasswordScreen extends StatefulWidget {
   static String tag = '/ChangePasswordScreen';
 
+  const ChangePasswordScreen({super.key});
+
   @override
   ChangePasswordScreenState createState() => ChangePasswordScreenState();
 }
@@ -79,7 +81,7 @@ class ChangePasswordScreenState extends State<ChangePasswordScreen> {
             child: Stack(
               children: <Widget>[
                 SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   child: Column(
                     children: [
                       16.height,

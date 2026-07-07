@@ -13,7 +13,7 @@ class DashBoard4VendorComponent extends StatefulWidget {
 
   final List<VendorResponse> product;
 
-  DashBoard4VendorComponent(this.product);
+  const DashBoard4VendorComponent(this.product, {super.key});
 
   @override
   DashBoard4VendorComponentState createState() => DashBoard4VendorComponentState();
@@ -39,7 +39,7 @@ class DashBoard4VendorComponentState extends State<DashBoard4VendorComponent> {
   Widget build(BuildContext context) {
     return HorizontalList(
       itemCount: widget.product.length,
-      padding: EdgeInsets.only(left: 8, right: 8),
+      padding: const EdgeInsets.only(left: 8, right: 8),
       itemBuilder: (context, i) {
         return GestureDetector(
           onTap: () {
@@ -63,7 +63,7 @@ Widget getDashboard4VendorWidget(VendorResponse vendor, BuildContext context, {d
         if (addressText.isEmpty) {
           addressText = vendor.address!.state;
         } else {
-          addressText += ", " + vendor.address!.state!;
+          addressText += ", ${vendor.address!.state!}";
         }
       }
     }
@@ -72,7 +72,7 @@ Widget getDashboard4VendorWidget(VendorResponse vendor, BuildContext context, {d
         if (addressText!.isEmpty) {
           addressText = vendor.address!.country;
         } else {
-          addressText += ", " + vendor.address!.country!;
+          addressText += ", ${vendor.address!.country!}";
         }
       }
     }
@@ -81,7 +81,7 @@ Widget getDashboard4VendorWidget(VendorResponse vendor, BuildContext context, {d
   return Container(
     width: width,
     height: 285,
-    margin: EdgeInsets.fromLTRB(8, 8, 8, 8),
+    margin: const EdgeInsets.fromLTRB(8, 8, 8, 8),
     child: Stack(
       children: [
         Image.asset(ic_halloween_vendor, height: 285, width: width, fit: BoxFit.fitWidth),

@@ -14,10 +14,10 @@ class FloatingHomeButton extends StatelessWidget {
   final VoidCallback onTap;
 
   const FloatingHomeButton({
-    Key? key,
+    super.key,
     required this.isActive,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +111,7 @@ class FloatingBottomNavigation extends StatelessWidget {
   final String accountLabel;
 
   const FloatingBottomNavigation({
-    Key? key,
+    super.key,
     required this.currentIndex,
     required this.onTap,
     this.cartCount = 0,
@@ -119,7 +119,7 @@ class FloatingBottomNavigation extends StatelessWidget {
     this.cartLabel = 'السلة',
     this.favouritesLabel = 'المفضلة',
     this.accountLabel = 'حساب',
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

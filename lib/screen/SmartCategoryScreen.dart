@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import '/../models/CategoryData.dart';
 import '/../network/rest_apis.dart';
-import '/../utils/AppBarWidget.dart';
 import '/../utils/AppWidget.dart';
 import '/../utils/AppImages.dart';
 import '/../utils/Common.dart';
 import '/../utils/Constants.dart';
 import 'package:nb_utils/nb_utils.dart';
-import '../AppLocalizations.dart';
-import '../main.dart';
 import 'ViewAllScreen.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -38,11 +35,11 @@ class SmartCategoryScreen extends StatefulWidget {
   final int?    parentCategoryId;
 
   const SmartCategoryScreen({
-    Key? key,
+    super.key,
     required this.categoryName,
     required this.categoryId,
     this.parentCategoryId,       // ← اختياري (القسم الجد لو موجود)
-  }) : super(key: key);
+  });
 
   @override
   State<SmartCategoryScreen> createState() => _SmartCategoryScreenState();

@@ -294,20 +294,20 @@ abstract class _CartStore with Store {
         String? countryCode = "";
         String? stateCode = "";
         if (mShippingCountry != null && mShippingCountry.isNotEmpty) {
-          countryList.forEach((element) {
+          for (var element in countryList) {
             if (element.code == mShippingCountry) {
               countryCode = element.code;
               if (mShippingState != null && mShippingState.isNotEmpty) {
                 if (element.states != null && element.states!.isNotEmpty) {
-                  element.states!.forEach((state) {
+                  for (var state in element.states!) {
                     if (state.code == mShippingState) {
                       stateCode = state.code;
                     }
-                  });
+                  }
                 }
               }
             }
-          });
+          }
         }
         var request = {"country_code": countryCode, "state_code": stateCode, "postcode": mShippingPostcode};
         await getShippingMethod(request).then((value) {
@@ -327,9 +327,9 @@ abstract class _CartStore with Store {
   loadShippingMethod() {
     shippingMethods.clear();
     if (shippingMethodResponse != null && shippingMethodResponse!.data!.methods != null) {
-      shippingMethodResponse!.data!.methods!.forEach((method) {
+      for (var method in shippingMethodResponse!.data!.methods!) {
         shippingMethods.add(method);
-      });
+      }
       if (shippingMethods.isNotEmpty) {
         selectedShipment = 0;
       }

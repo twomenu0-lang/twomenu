@@ -20,12 +20,12 @@ class ReviewScreen extends StatefulWidget {
   final String? productImage;
 
   const ReviewScreen({
-    Key? key,
+    super.key,
     this.mProductId,
     this.productName,
     this.productVariant,
     this.productImage,
-  }) : super(key: key);
+  });
 
   @override
   ReviewScreenState createState() => ReviewScreenState();
@@ -221,7 +221,7 @@ class ReviewScreenState extends State<ReviewScreen> {
             ),
 
           Observer(
-              builder: (_) => Loader().visible(appStore.isLoading)),
+              builder: (_) => const Loader().visible(appStore.isLoading)),
         ],
       ),
     );
@@ -713,9 +713,9 @@ class _ReviewCardState extends State<_ReviewCard> {
                               const Color(0xFF4CAF50).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(5),
                             ),
-                            child: Row(
+                            child: const Row(
                               mainAxisSize: MainAxisSize.min,
-                              children: const [
+                              children: [
                                 Icon(Icons.verified,
                                     size: 10, color: Color(0xFF4CAF50)),
                                 SizedBox(width: 3),
@@ -797,10 +797,10 @@ class _ReviewCardState extends State<_ReviewCard> {
                     fontSize: 11, color: Colors.grey.shade400),
               ),
               const Spacer(),
-              _HelpfulButton(
+              const _HelpfulButton(
                   icon: Icons.thumb_up_outlined, label: 'نعم'),
               const SizedBox(width: 10),
-              _HelpfulButton(icon: Icons.thumb_down_outlined, label: 'لا'),
+              const _HelpfulButton(icon: Icons.thumb_down_outlined, label: 'لا'),
             ],
           ),
         ],

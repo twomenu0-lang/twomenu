@@ -16,7 +16,7 @@ class VendorProfileScreen extends StatefulWidget {
   static String tag = '/VendorProfileScreen';
   final int? mVendorId;
 
-  VendorProfileScreen({Key? key, this.mVendorId}) : super(key: key);
+  const VendorProfileScreen({super.key, this.mVendorId});
 
   @override
   _VendorProfileScreenState createState() => _VendorProfileScreenState();
@@ -84,7 +84,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           if (addressText!.isEmpty) {
             addressText = mVendorModel!.address!.street_2;
           } else {
-            addressText += ", " + mVendorModel!.address!.street_2!;
+            addressText += ", ${mVendorModel!.address!.street_2!}";
           }
         }
 
@@ -92,28 +92,28 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           if (addressText!.isEmpty) {
             addressText = mVendorModel!.address!.city;
           } else {
-            addressText += ", " + mVendorModel!.address!.city!;
+            addressText += ", ${mVendorModel!.address!.city!}";
           }
         }
         if (mVendorModel!.address!.zip!.isNotEmpty) {
           if (addressText!.isEmpty) {
             addressText = mVendorModel!.address!.zip;
           } else {
-            addressText += " - " + mVendorModel!.address!.zip!;
+            addressText += " - ${mVendorModel!.address!.zip!}";
           }
         }
         if (mVendorModel!.address!.state!.isNotEmpty) {
           if (addressText!.isEmpty) {
             addressText = mVendorModel!.address!.state;
           } else {
-            addressText += ", " + mVendorModel!.address!.state!;
+            addressText += ", ${mVendorModel!.address!.state!}";
           }
         }
         if (mVendorModel!.address!.country!.isNotEmpty) {
           if (addressText!.isEmpty) {
             addressText = mVendorModel!.address!.country;
           } else {
-            addressText += ", " + mVendorModel!.address!.country!;
+            addressText += ", ${mVendorModel!.address!.country!}";
           }
         }
       }
@@ -132,22 +132,22 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                           image: DecorationImage(fit: BoxFit.fill, image: NetworkImage(mVendorModel!.banner.validate())),
                         ),
                       ).cornerRadiusWithClipRRect(10).paddingOnly(bottom: 16, left: 12, right: 12)
-                    : SizedBox(),
+                    : const SizedBox(),
                 Text(mVendorModel!.storeName != null ? mVendorModel!.storeName! : '', style: boldTextStyle(size: 18)).paddingOnly(left: 16, right: 16).visible(mVendorModel!.storeName!.isNotEmpty),
                 10.height.visible(!mVendorModel!.phone.isEmptyOrNull),
-                !mVendorModel!.phone.isEmptyOrNull ? mOption(mVendorModel!.phone != null ? mVendorModel!.phone : '', Theme.of(context).textTheme.titleMedium!.color) : SizedBox(),
+                !mVendorModel!.phone.isEmptyOrNull ? mOption(mVendorModel!.phone ?? '', Theme.of(context).textTheme.titleMedium!.color) : const SizedBox(),
                 10.height.visible(mVendorModel!.phone == null && mVendorModel!.phone.isEmptyOrNull),
                 mOption(addressText.validate(), Theme.of(context).textTheme.titleMedium!.color, maxLine: 3).visible(addressText!.isNotEmpty),
                 10.height.visible(addressText.isEmptyOrNull),
-                Divider(color: view_color, thickness: 6),
+                const Divider(color: view_color, thickness: 6),
                 10.height,
                 Text(appLocalization!.translate('lbl_product_list')!, style: boldTextStyle(size: 18)).paddingLeft(12).visible(mVendorProductList.isNotEmpty),
                 mVendorProductList.isNotEmpty
                     ? AlignedGridView.count(
                         scrollDirection: Axis.vertical,
                         itemCount: mVendorProductList.length,
-                        physics: NeverScrollableScrollPhysics(),
-                        padding: EdgeInsets.all(12),
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(12),
                         shrinkWrap: true,
                         crossAxisCount: 2,
                         mainAxisSpacing: 12,
@@ -160,7 +160,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
               ],
             ),
           )
-        : SizedBox();
+        : const SizedBox();
 
     return SafeArea(
       child: Scaffold(

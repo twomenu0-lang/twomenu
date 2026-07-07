@@ -5,6 +5,8 @@ import 'package:nb_utils/nb_utils.dart';
 import '../AppLocalizations.dart';
 
 class NoInternetScreen extends StatefulWidget {
+  const NoInternetScreen({super.key});
+
   @override
   _NoInternetScreenState createState() => _NoInternetScreenState();
 }
@@ -33,7 +35,7 @@ class _NoInternetScreenState extends State<NoInternetScreen> {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(MaterialCommunityIcons.wifi_off, size: 80),
+          const Icon(MaterialCommunityIcons.wifi_off, size: 80),
           20.height,
           Text(appLocalization!.translate('lbl_no_internet')!, style: boldTextStyle(size: 24, color: Theme.of(context).textTheme.titleMedium!.color)),
           4.height,

@@ -25,7 +25,7 @@ Widget getVendorDashBoard3Widget(VendorResponse vendor, BuildContext context, {d
         if (addressText!.isEmpty) {
           addressText = vendor.address!.street_2;
         } else {
-          addressText += ", " + vendor.address!.street_2!;
+          addressText += ", ${vendor.address!.street_2!}";
         }
       }
     }
@@ -34,7 +34,7 @@ Widget getVendorDashBoard3Widget(VendorResponse vendor, BuildContext context, {d
         if (addressText!.isEmpty) {
           addressText = vendor.address!.city;
         } else {
-          addressText += ", " + vendor.address!.city!;
+          addressText += ", ${vendor.address!.city!}";
         }
       }
     }
@@ -44,7 +44,7 @@ Widget getVendorDashBoard3Widget(VendorResponse vendor, BuildContext context, {d
         if (addressText!.isEmpty) {
           addressText = vendor.address!.zip;
         } else {
-          addressText += " - " + vendor.address!.zip!;
+          addressText += " - ${vendor.address!.zip!}";
         }
       }
     }
@@ -53,7 +53,7 @@ Widget getVendorDashBoard3Widget(VendorResponse vendor, BuildContext context, {d
         if (addressText!.isEmpty) {
           addressText = vendor.address!.state;
         } else {
-          addressText += ", " + vendor.address!.state!;
+          addressText += ", ${vendor.address!.state!}";
         }
       }
     }
@@ -62,22 +62,22 @@ Widget getVendorDashBoard3Widget(VendorResponse vendor, BuildContext context, {d
         if (addressText!.isEmpty) {
           addressText = vendor.address!.country;
         } else {
-          addressText += ", " + vendor.address!.country!;
+          addressText += ", ${vendor.address!.country!}";
         }
       }
     }
   }
   return Container(
-    padding: EdgeInsets.all(10),
+    padding: const EdgeInsets.all(10),
     decoration: BoxDecoration(border: Border.all(width: 0.1, color: appStore.isDarkMode! ? white : gray)),
-    margin: EdgeInsets.symmetric(horizontal: 4),
+    margin: const EdgeInsets.symmetric(horizontal: 4),
     child: Row(
       children: [
         commonCacheImageWidget(img, fit: BoxFit.cover, height: 200, width: context.width() * 0.4),
         Container(
           height: 190,
           width: context.width() * 0.4,
-          padding: EdgeInsets.only(left: 8, right: 10),
+          padding: const EdgeInsets.only(left: 8, right: 10),
           decoration: boxDecorationWithShadow(backgroundColor: Theme.of(context).cardTheme.color!),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -101,7 +101,7 @@ Widget vendorDashBoard3List(List<VendorResponse> product) {
     alignment: Alignment.centerLeft,
     child: AnimatedListView(
       itemCount: product.length,
-      padding: EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 8),
+      padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 8),
       shrinkWrap: true,
       scrollDirection: Axis.horizontal,
       itemBuilder: (context, i) {
@@ -134,11 +134,11 @@ Widget mVendorDashBoard3Widget(BuildContext context, List<VendorResponse> mVendo
             ),
             4.height,
             viewAllNewDashBoard3(context, viewAll: all).onTap(() {
-              VendorListScreen().launch(context);
+              const VendorListScreen().launch(context);
             }),
             vendorDashBoard3List(mVendorModel)
           ],
         )
-      : SizedBox();
+      : const SizedBox();
 }
 

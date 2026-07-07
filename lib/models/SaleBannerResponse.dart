@@ -22,12 +22,12 @@ class Salebanner {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['title'] = this.title;
-    data['start_date'] = this.startDate;
-    data['end_date'] = this.endDate;
-    data['image'] = this.image;
-    data['thumb'] = this.thumb;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['title'] = title;
+    data['start_date'] = startDate;
+    data['end_date'] = endDate;
+    data['image'] = image;
+    data['thumb'] = thumb;
     return data;
   }
 }

@@ -11,7 +11,7 @@ class WebViewPaymentScreen extends StatefulWidget {
   static String tag = '/WebViewPaymentScreen';
   final String? checkoutUrl;
 
-  WebViewPaymentScreen({this.checkoutUrl});
+  const WebViewPaymentScreen({super.key, this.checkoutUrl});
 
   @override
   WebViewPaymentScreenState createState() => WebViewPaymentScreenState();
@@ -26,13 +26,16 @@ class WebViewPaymentScreenState extends State<WebViewPaymentScreen> {
     super.initState();
     // log("widget.title${widget.title}");
 
-
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
       ..setNavigationDelegate(
         NavigationDelegate(
-
+          // 🛑 السطور الجديدة المضافة لطباعة الرابط تبدأ من هنا:
+          onPageStarted: (String url) {
+            print('🔍 WEBVIEW URL: $url');
+          },
+          // --------------------------------------------------
           onPageFinished: (String url) {
             if (mIsError) return;
             if (url.contains('checkout/order-received')) {
@@ -43,10 +46,11 @@ class WebViewPaymentScreenState extends State<WebViewPaymentScreen> {
             } else {
               appStore.setLoading(false);
             }
-
           },
           onHttpError: (HttpResponseError error) {},
-          onWebResourceError: (WebResourceError error) {},
+          onWebResourceError: (WebResourceError error) {
+            mIsError = true; // تعديل بسيط لضمان التقاط الخطأ كما كان في الكود القديم
+          },
           onNavigationRequest: (NavigationRequest request) {
             if (request.url.startsWith(widget.checkoutUrl!)) {
               return NavigationDecision.prevent;
@@ -67,27 +71,7 @@ class WebViewPaymentScreenState extends State<WebViewPaymentScreen> {
       body: BodyCornerWidget(
         child: Stack(
           children: [
-            WebViewWidget(                controller: controller!
-
-
-              // initialUrl: widget.checkoutUrl,
-              // javascriptMode: JavascriptMode.unrestricted,
-              // gestureNavigationEnabled: true,
-              // onPageFinished: (String url) {
-              //   if (mIsError) return;
-              //   if (url.contains('checkout/order-received')) {
-              //     appStore.setLoading(true);
-              //     //toast('Order placed successfully');
-              //     appStore.setCount(0);
-              //     finish(context, true);
-              //   } else {
-              //     appStore.setLoading(false);
-              //   }
-              // },
-              // onWebResourceError: (s) {
-              //   mIsError = true;
-              // },
-            ),
+            WebViewWidget(controller: controller!),
             mProgress().visible(appStore.isLoading).center()
           ],
         ),
@@ -95,4 +79,3 @@ class WebViewPaymentScreenState extends State<WebViewPaymentScreen> {
     );
   }
 }
-

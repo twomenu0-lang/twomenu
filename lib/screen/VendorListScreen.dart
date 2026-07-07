@@ -12,6 +12,8 @@ import '../utils/AppBarWidget.dart';
 class VendorListScreen extends StatefulWidget {
   static String tag = '/VendorListScreen';
 
+  const VendorListScreen({super.key});
+
   @override
   _VendorListScreenState createState() => _VendorListScreenState();
 }

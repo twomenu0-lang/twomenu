@@ -22,11 +22,14 @@ import '/../utils/Common.dart';
 import '/../utils/Constants.dart';
 import '/../utils/AppImages.dart';
 import 'package:nb_utils/nb_utils.dart';
+import '../../screen/rewards_wallet_screen.dart'; // ✅ إضافة استيراد شاشة محفظة المكافآت
 
 import 'ChooseProductDetailVariant.dart';
 
 class ProfileScreen extends StatefulWidget {
   static String tag = '/ProfileScreen';
+
+  const ProfileScreen({super.key});
 
   @override
   ProfileScreenState createState() => ProfileScreenState();
@@ -52,7 +55,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   init() async {
     mIsLoggedIn = getBoolAsync(IS_LOGGED_IN);
     mIsGuest = getBoolAsync(IS_GUEST_USER);
-    userName = mIsLoggedIn ? '${getStringAsync(FIRST_NAME) + ' ' + getStringAsync(LAST_NAME)}' : '';
+    userName = mIsLoggedIn ? '${getStringAsync(FIRST_NAME)} ${getStringAsync(LAST_NAME)}' : '';
     userEmail = mIsLoggedIn ? getStringAsync(USER_EMAIL) : '';
     mProfileImage = getStringAsync(PROFILE_IMAGE);
     setState(() {});
@@ -71,7 +74,7 @@ class ProfileScreenState extends State<ProfileScreen> {
       return SettingItemWidget(
         title: text,
         leading: Icon(icon, color: Theme.of(context).textTheme.titleSmall!.color),
-        trailing: Icon(Icons.chevron_right),
+        trailing: const Icon(Icons.chevron_right),
         onTap: () {
           onTap.call();
         },
@@ -107,11 +110,11 @@ class ProfileScreenState extends State<ProfileScreen> {
                     )
                   ],
                 ).paddingOnly(left: 4).paddingOnly(left: 8, right: 8).visible(mIsLoggedIn).onTap(() async {
-                  bool? isLoad = await EditProfileScreen().launch(context);
+                  bool? isLoad = await const EditProfileScreen().launch(context);
                   if (isLoad != null) {
                     setState(() {
                       mProfileImage = getStringAsync(PROFILE_IMAGE);
-                      userName = mIsLoggedIn ? '${getStringAsync(FIRST_NAME) + ' ' + getStringAsync(LAST_NAME)}' : '';
+                      userName = mIsLoggedIn ? '${getStringAsync(FIRST_NAME)} ${getStringAsync(LAST_NAME)}' : '';
                       userEmail = mIsLoggedIn ? getStringAsync(USER_EMAIL) : '';
                     });
                   } else {
@@ -122,55 +125,70 @@ class ProfileScreenState extends State<ProfileScreen> {
                 }),
                 Divider(height: 4, thickness: 2, color: context.dividerColor).paddingOnly(top: 16, bottom: 8).visible(mIsLoggedIn),
                 mSideMenu(appLocalization.translate('lbl_guest_user'), Feather.user, () async {
-                  // ✅ تعديل جلب اسم الزائر ليصبح مترجماً بشكل ديناميكي من ملفات الـ JSON
                   await setValue(FIRST_NAME, appLocalization.translate('lbl_guest') ?? "Guest");
                   await setValue(LAST_NAME, "");
-                  await setValue(USER_EMAIL, "Guest@gmail.com"); // الإيميل يبقى ثابتاً كما طلبت للحفاظ على منطق التطبيق
+                  await setValue(USER_EMAIL, "Guest@gmail.com");
                   await setValue(USERNAME, "Guest");
                   await setValue(USER_DISPLAY_NAME, "Guest");
                   await setValue(IS_LOGGED_IN, true);
                   await setValue(IS_GUEST_USER, true);
                   await setValue(BILLING, "");
                   await setValue(SHIPPING, "");
-                  DashBoardScreen().launch(context, isNewTask: true);
+                  const DashBoardScreen().launch(context, isNewTask: true);
                 }).visible(!mIsLoggedIn),
-                Divider(height: 0).paddingOnly(left: 16, right: 16).visible(!mIsLoggedIn),
+                const Divider(height: 0).paddingOnly(left: 16, right: 16).visible(!mIsLoggedIn),
                 mSideMenu(appLocalization.translate('lbl_orders'), SimpleLineIcons.social_dropbox, () {
-                  OrderListScreen().launch(context);
+                  const OrderListScreen().launch(context);
                 }).visible(mIsLoggedIn && !getBoolAsync(IS_GUEST_USER)),
-                Divider(height: 0).paddingOnly(left: 16, right: 16).visible(mIsLoggedIn && !getBoolAsync(IS_SOCIAL_LOGIN) && !getBoolAsync(IS_GUEST_USER)),
+                const Divider(height: 0).paddingOnly(left: 16, right: 16).visible(mIsLoggedIn && !getBoolAsync(IS_SOCIAL_LOGIN) && !getBoolAsync(IS_GUEST_USER)),
                 mSideMenu(appLocalization.translate('lbl_change_pwd'), MaterialCommunityIcons.lock_outline, () {
-                  ChangePasswordScreen().launch(context);
+                  const ChangePasswordScreen().launch(context);
                 }).visible(mIsLoggedIn && !getBoolAsync(IS_SOCIAL_LOGIN) && !getBoolAsync(IS_GUEST_USER)),
-                Divider(height: 0).paddingOnly(left: 16, right: 16).visible(mIsLoggedIn && !getBoolAsync(IS_GUEST_USER)),
+                const Divider(height: 0).paddingOnly(left: 16, right: 16).visible(mIsLoggedIn && !getBoolAsync(IS_GUEST_USER)),
                 mSideMenu(appLocalization.translate('lbl_blog'), FontAwesome.list_alt, () {
-                  BlogListScreen().launch(context);
+                  const BlogListScreen().launch(context);
                 }).visible(enableBlog == true && mIsLoggedIn),
-                Divider(height: 0).paddingOnly(left: 16, right: 16).visible(enableTeraWallet == true),
+                const Divider(height: 0).paddingOnly(left: 16, right: 16).visible(enableTeraWallet == true),
                 mSideMenu(appLocalization.translate('lbl_wallet')!, MaterialCommunityIcons.wallet_outline, () {
-                  TeraWalletScreen().launch(context);
+                  const TeraWalletScreen().launch(context);
                 }).visible(enableTeraWallet == true && mIsLoggedIn && mIsGuest == false),
-                Divider(height: 0).paddingOnly(left: 16, right: 16).visible(enableBlog == true),
+
+                // ✅ أضف هذا: زر محفظة المكافآت الجديد مع الفواصل وشروط الرؤية الدقيقة
+                const Divider(height: 0).paddingOnly(left: 16, right: 16).visible(mIsLoggedIn && !mIsGuest),
+                mSideMenu(
+                  appLocalization.translate('lbl_rewards') ?? 'مكافآتي',
+                  MaterialCommunityIcons.gift_outline,
+                      () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const RewardsWalletScreen(),
+                      ),
+                    );
+                  },
+                ).visible(mIsLoggedIn && !mIsGuest),
+                const Divider(height: 0).paddingOnly(left: 16, right: 16).visible(mIsLoggedIn && !mIsGuest),
+
                 mSideMenu(appLocalization.translate('lbl_about'), MaterialCommunityIcons.information_outline, () {
-                  AboutUsScreen().launch(context);
+                  const AboutUsScreen().launch(context);
                 }),
-                Divider(height: 0).paddingOnly(left: 16, right: 16),
+                const Divider(height: 0).paddingOnly(left: 16, right: 16),
                 mSideMenu(appLocalization.translate('choose_dashboard_page_variant'), MaterialCommunityIcons.view_dashboard_outline, () {
-                  ChooseDashboardPageVariant().launch(context);
+                  const ChooseDashboardPageVariant().launch(context);
                 }).visible(enableDashboardVariant == true),
-                Divider(height: 0).paddingOnly(left: 16, right: 16).visible(enableDashboardVariant == true),
+                const Divider(height: 0).paddingOnly(left: 16, right: 16).visible(enableDashboardVariant == true),
                 mSideMenu(appLocalization.translate('choose_product_detail_page_variant'), Icons.mobile_friendly, () {
-                  ChooseProductDetailVariant().launch(context);
+                  const ChooseProductDetailVariant().launch(context);
                 }).visible(enableDashboardVariant == true),
-                Divider(height: 0).paddingOnly(left: 16, right: 16).visible(enableDashboardVariant == true),
+                const Divider(height: 0).paddingOnly(left: 16, right: 16).visible(enableDashboardVariant == true),
                 mSideMenu(appLocalization.translate('lbl_terms_conditions'), Icons.assignment_outlined, () {
                   redirectUrl(getStringAsync(TERMS_AND_CONDITIONS).isEmptyOrNull ? TERMS_CONDITION_URL : getStringAsync(TERMS_AND_CONDITIONS));
                 }),
-                Divider(height: 0).paddingOnly(left: 16, right: 16),
+                const Divider(height: 0).paddingOnly(left: 16, right: 16),
                 mSideMenu(appLocalization.translate('llb_privacy_policy'), Icons.privacy_tip_outlined, () {
                   redirectUrl(getStringAsync(PRIVACY_POLICY).isEmptyOrNull ? PRIVACY_POLICY_URL : getStringAsync(PRIVACY_POLICY));
                 }),
-                Divider(height: 0).paddingOnly(left: 16, right: 16),
+                const Divider(height: 0).paddingOnly(left: 16, right: 16),
                 SettingItemWidget(
                   titleTextStyle: secondaryTextStyle(size: 16),
                   title: appLocalization.translate('lbl_select_theme')!,
@@ -179,7 +197,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                     setState(() {
                       showInDialog(
                         context,
-                        builder: (_) => ThemeSelectionDialog(),
+                        builder: (_) => const ThemeSelectionDialog(),
                         contentPadding: EdgeInsets.zero,
                         shape: dialogShape(),
                         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -188,17 +206,17 @@ class ProfileScreenState extends State<ProfileScreen> {
                     });
                   },
                 ),
-                Divider(height: 0).paddingOnly(left: 16, right: 16),
+                const Divider(height: 0).paddingOnly(left: 16, right: 16),
                 SettingItemWidget(
                   titleTextStyle: secondaryTextStyle(size: 16),
                   title: appLocalization.translate('lbl_select_language')!,
                   leading: Icon(Ionicons.language_sharp, color: Theme.of(context).textTheme.titleSmall!.color),
                   trailing: DropdownButton(
                     isDense: true,
-                    items: languages.map((e) => DropdownMenuItem<Language>(child: Text(e.name, style: primaryTextStyle(size: 14)), value: e)).toList(),
+                    items: languages.map((e) => DropdownMenuItem<Language>(value: e, child: Text(e.name, style: primaryTextStyle(size: 14)))).toList(),
                     dropdownColor: appStore.isDarkModeOn ? white : Theme.of(context).scaffoldBackgroundColor,
                     value: language,
-                    underline: SizedBox(),
+                    underline: const SizedBox(),
                     isExpanded: true,
                     onChanged: (Language? v) async {
                       hideKeyboard(context);
@@ -206,7 +224,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                     },
                   ).expand(),
                 ),
-                Divider(height: 0).paddingOnly(left: 16, right: 16),
+                const Divider(height: 0).paddingOnly(left: 16, right: 16),
                 SettingItemWidget(
                   titleTextStyle: secondaryTextStyle(size: 16),
                   title: '${appStore.isNotificationOn ? appLocalization.translate('disable') : appLocalization.translate('enable')} ${appLocalization.translate('push_notification')}',
@@ -225,21 +243,21 @@ class ProfileScreenState extends State<ProfileScreen> {
                     appStore.setNotification(!getBoolAsync(IS_NOTIFICATION_ON, defaultValue: true));
                   },
                 ),
-                Divider(height: 0).paddingOnly(left: 16, right: 16),
+                const Divider(height: 0).paddingOnly(left: 16, right: 16),
                 mSideMenu(appLocalization.translate('btn_sign_out'), Feather.log_out, () async {
                   await logout(context);
                 }).visible(mIsLoggedIn),
-                Divider(height: 0).paddingOnly(left: 16, right: 16).visible(mIsLoggedIn),
+                const Divider(height: 0).paddingOnly(left: 16, right: 16).visible(mIsLoggedIn),
                 mSideMenu(appLocalization.translate('delete_account'), Icons.delete_outline, () async {
                   await deleteAccount(context);
                 }).visible(mIsLoggedIn && !getBoolAsync(IS_GUEST_USER)),
-                Divider(height: 0).paddingOnly(left: 16, right: 16).visible(mIsLoggedIn),
+                const Divider(height: 0).paddingOnly(left: 16, right: 16).visible(mIsLoggedIn),
                 mSideMenu(appLocalization.translate('lbl_sign_in'), MaterialCommunityIcons.login, () {
-                  SignInScreen().launch(context);
+                  const SignInScreen().launch(context);
                 }).visible(!mIsLoggedIn),
-                Divider(height: 0).paddingOnly(left: 16, right: 16).visible(!mIsLoggedIn && enableMultiDemo == true),
+                const Divider(height: 0).paddingOnly(left: 16, right: 16).visible(!mIsLoggedIn && enableMultiDemo == true),
                 mSideMenu(appLocalization.translate('lbl_multiple_demo'), Icons.check_circle_outline_outlined, () {
-                  ChooseDemo().launch(context);
+                  const ChooseDemo().launch(context);
                 }).visible(enableMultiDemo == true),
                 16.height,
               ],

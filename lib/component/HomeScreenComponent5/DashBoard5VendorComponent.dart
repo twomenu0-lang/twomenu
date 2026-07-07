@@ -15,7 +15,7 @@ class DashBoard5VendorComponent extends StatefulWidget {
 
   final List<VendorResponse> product;
 
-  DashBoard5VendorComponent(this.product);
+  const DashBoard5VendorComponent(this.product, {super.key});
 
   @override
   DashBoard5VendorComponentState createState() => DashBoard5VendorComponentState();
@@ -42,7 +42,7 @@ class DashBoard5VendorComponentState extends State<DashBoard5VendorComponent> {
 
     return HorizontalList(
       itemCount: widget.product.length,
-      padding: EdgeInsets.only(left: 8, right: 8),
+      padding: const EdgeInsets.only(left: 8, right: 8),
       itemBuilder: (context, i) {
         return GestureDetector(
           onTap: () {
@@ -66,7 +66,7 @@ Widget getDashboard5VendorWidget(VendorResponse vendor, BuildContext context, {d
         if (addressText.isEmpty) {
           addressText = vendor.address!.state;
         } else {
-          addressText += ", " + vendor.address!.state!;
+          addressText += ", ${vendor.address!.state!}";
         }
       }
     }
@@ -75,7 +75,7 @@ Widget getDashboard5VendorWidget(VendorResponse vendor, BuildContext context, {d
         if (addressText!.isEmpty) {
           addressText = vendor.address!.country;
         } else {
-          addressText += ", " + vendor.address!.country!;
+          addressText += ", ${vendor.address!.country!}";
         }
       }
     }
@@ -84,7 +84,7 @@ Widget getDashboard5VendorWidget(VendorResponse vendor, BuildContext context, {d
   return Container(
     width: width,
     height: 220,
-    margin: EdgeInsets.fromLTRB(6, 8, 0, 8),
+    margin: const EdgeInsets.fromLTRB(6, 8, 0, 8),
     child: Stack(
       children: [
         Image.asset(ic_christmas_vendor, height: 250, width: width, fit: BoxFit.fitWidth).cornerRadiusWithClipRRect(8),
@@ -101,7 +101,7 @@ Widget getDashboard5VendorWidget(VendorResponse vendor, BuildContext context, {d
               RichText(
                 text: TextSpan(
                   children: [
-                    WidgetSpan(child: Icon(Icons.add, size: 14, color: Colors.black)),
+                    const WidgetSpan(child: Icon(Icons.add, size: 14, color: Colors.black)),
                     TextSpan(text:appLocalization.translate('lbl_explore')! , style: secondaryTextStyle(size: 14, color: Colors.black)),
                   ],
                 ),
@@ -130,12 +130,12 @@ Widget mVendor5Widget(BuildContext context, List<VendorResponse> mVendorModel, v
                 Text(all, style: secondaryTextStyle(color: mChristmasColor, size: 14)),
               ],
             ).onTap(() {
-              VendorListScreen().launch(context);
+              const VendorListScreen().launch(context);
             }),
             8.height,
             DashBoard5VendorComponent(mVendorModel)
           ],
         )
-      : SizedBox();
+      : const SizedBox();
 }
 

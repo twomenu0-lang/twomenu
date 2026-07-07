@@ -8,6 +8,8 @@ import '../main.dart';
 class WishListEmptyComponent extends StatefulWidget {
   static String tag = '/WishListEmptyComponent';
 
+  const WishListEmptyComponent({super.key});
+
   @override
   WishListEmptyComponentState createState() => WishListEmptyComponentState();
 }
@@ -46,7 +48,7 @@ class WishListEmptyComponentState extends State<WishListEmptyComponent> {
                 textStyle: primaryTextStyle(color: white),
                 text: appLocalization.translate('lbl_start_shopping'),
                 onTap: () {
-                  DashBoardScreen().launch(context,isNewTask: true);
+                  const DashBoardScreen().launch(context,isNewTask: true);
                   appStore.setBottomNavigationIndex(0);
                 },
                 color: primaryColor)

@@ -7,8 +7,8 @@ class CouponLines {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['code'] = this.code;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['code'] = code;
     return data;
   }
 }
@@ -23,6 +23,6 @@ class Tracking {
 
   @override
   String toString() {
-    return '{${this.status},${this.message}';
+    return '{$status,$message';
   }
 }

@@ -114,46 +114,46 @@ class OrderResponse {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['cart_hash'] = this.cartHash;
-    data['cart_tax'] = this.cartTax;
-    data['created_via'] = this.createdVia;
-    data['currency'] = this.currency;
-    data['customer_id'] = this.customerId;
-    data['customer_ip_address'] = this.customerIpAddress;
-    data['customer_note'] = this.customerNote;
-    data['customer_user_agent'] = this.customerUserAgent;
-    data['date_completed'] = this.dateCompleted;
-    data['date_created'] = this.dateCreated;
-    data['date_modified'] = this.dateModified;
-    data['date_paid'] = this.datePaid;
-    data['discount_tax'] = this.discountTax;
-    data['discount_total'] = this.discountTotal;
-    data['id'] = this.id;
-    data['number'] = this.number;
-    data['order_key'] = this.orderKey;
-    data['parent_id'] = this.parentId;
-    data['paymentMethod'] = this.paymentMethod;
-    data['payment_method_title'] = this.paymentMethodTitle;
-    data['prices_include_tax'] = this.pricesIncludeTax;
-    data['shipping_tax'] = this.shippingTax;
-    data['shipping_total'] = this.shippingTotal;
-    data['status'] = this.status;
-    data['total'] = this.total;
-    data['total_tax'] = this.totalTax;
-    data['transaction_id'] = this.transactionId;
-    data['version'] = this.version;
-    if (this.billing != null) {
-      data['billing'] = this.billing!.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['cart_hash'] = cartHash;
+    data['cart_tax'] = cartTax;
+    data['created_via'] = createdVia;
+    data['currency'] = currency;
+    data['customer_id'] = customerId;
+    data['customer_ip_address'] = customerIpAddress;
+    data['customer_note'] = customerNote;
+    data['customer_user_agent'] = customerUserAgent;
+    data['date_completed'] = dateCompleted;
+    data['date_created'] = dateCreated;
+    data['date_modified'] = dateModified;
+    data['date_paid'] = datePaid;
+    data['discount_tax'] = discountTax;
+    data['discount_total'] = discountTotal;
+    data['id'] = id;
+    data['number'] = number;
+    data['order_key'] = orderKey;
+    data['parent_id'] = parentId;
+    data['paymentMethod'] = paymentMethod;
+    data['payment_method_title'] = paymentMethodTitle;
+    data['prices_include_tax'] = pricesIncludeTax;
+    data['shipping_tax'] = shippingTax;
+    data['shipping_total'] = shippingTotal;
+    data['status'] = status;
+    data['total'] = total;
+    data['total_tax'] = totalTax;
+    data['transaction_id'] = transactionId;
+    data['version'] = version;
+    if (billing != null) {
+      data['billing'] = billing!.toJson();
     }
-    if (this.lineItems != null) {
-      data['line_items'] = this.lineItems!.map((v) => v.toJson()).toList();
+    if (lineItems != null) {
+      data['line_items'] = lineItems!.map((v) => v.toJson()).toList();
     }
-    if (this.metaData != null) {
-      data['meta_data'] = this.metaData!.map((v) => v.toJson()).toList();
+    if (metaData != null) {
+      data['meta_data'] = metaData!.map((v) => v.toJson()).toList();
     }
-    if (this.shipping != null) {
-      data['shipping'] = this.shipping!.toJson();
+    if (shipping != null) {
+      data['shipping'] = shipping!.toJson();
     }
     return data;
   }
@@ -175,10 +175,10 @@ class DateCreated {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['date'] = this.date;
-    data['timezone'] = this.timezone;
-    data['timezone_type'] = this.timezoneType;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['date'] = date;
+    data['timezone'] = timezone;
+    data['timezone_type'] = timezoneType;
     return data;
   }
 }
@@ -240,23 +240,23 @@ class LineItem {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.productId;
-    data['name'] = this.name;
-    data['order_id'] = this.orderId;
-    data['product_id'] = this.pId;
-    data['quantity'] = this.quantity;
-    data['subtotal'] = this.subtotal;
-    data['subtotal_tax'] = this.subtotalTax;
-    data['tax_class'] = this.taxClass;
-    data['total'] = this.total;
-    data['total_tax'] = this.totalTax;
-    data['variation_id'] = this.variationId;
-    if (this.metaData != null) {
-      data['meta_data'] = this.metaData!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = productId;
+    data['name'] = name;
+    data['order_id'] = orderId;
+    data['product_id'] = pId;
+    data['quantity'] = quantity;
+    data['subtotal'] = subtotal;
+    data['subtotal_tax'] = subtotalTax;
+    data['tax_class'] = taxClass;
+    data['total'] = total;
+    data['total_tax'] = totalTax;
+    data['variation_id'] = variationId;
+    if (metaData != null) {
+      data['meta_data'] = metaData!.map((v) => v.toJson()).toList();
     }
-    if (this.productImages != null) {
-      data['product_images'] = this.productImages!.map((v) => v.toJson()).toList();
+    if (productImages != null) {
+      data['product_images'] = productImages!.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -293,14 +293,14 @@ class ProductImage {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['alt'] = this.alt;
-    data['date_created'] = this.dateCreated;
-    data['date_modified'] = this.dateModified;
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['position'] = this.position;
-    data['src'] = this.src;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['alt'] = alt;
+    data['date_created'] = dateCreated;
+    data['date_modified'] = dateModified;
+    data['id'] = id;
+    data['name'] = name;
+    data['position'] = position;
+    data['src'] = src;
     return data;
   }
 }
@@ -321,10 +321,10 @@ class MetaData {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['key'] = this.key;
-    data['value'] = this.value;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['key'] = key;
+    data['value'] = value;
     return data;
   }
 }
@@ -345,10 +345,10 @@ class DateModified {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['date'] = this.date;
-    data['timezone'] = this.timezone;
-    data['timezone_type'] = this.timezoneType;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['date'] = date;
+    data['timezone'] = timezone;
+    data['timezone_type'] = timezoneType;
     return data;
   }
 }
@@ -378,12 +378,12 @@ class Value {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['date_shipped'] = this.dateShipped;
-    data['tracking_id'] = this.trackingId;
-    data['tracking_number'] = this.trackingNumber;
-    data['tracking_product_code'] = this.trackingProductCode;
-    data['tracking_provider'] = this.trackingProvider;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['date_shipped'] = dateShipped;
+    data['tracking_id'] = trackingId;
+    data['tracking_number'] = trackingNumber;
+    data['tracking_product_code'] = trackingProductCode;
+    data['tracking_provider'] = trackingProvider;
     return data;
   }
 }
@@ -404,10 +404,10 @@ class ShippingLines {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['method_id'] = this.methodId;
-    data['method_title'] = this.methodTitle;
-    data['total'] = this.total ?? "";
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['method_id'] = methodId;
+    data['method_title'] = methodTitle;
+    data['total'] = total ?? "";
     return data;
   }
 }

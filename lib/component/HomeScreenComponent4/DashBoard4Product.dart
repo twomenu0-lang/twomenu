@@ -11,7 +11,7 @@ class DashBoard4Product extends StatefulWidget {
   final double? width;
   final ProductResponse? mProductModel;
 
-  DashBoard4Product({Key? key, this.width, this.mProductModel}) : super(key: key);
+  const DashBoard4Product({super.key, this.width, this.mProductModel});
 
   @override
   ProductState createState() => ProductState();
@@ -52,7 +52,7 @@ class ProductState extends State<DashBoard4Product> {
             Image.asset(ic_halloween_product_frame1, height: 265, fit: BoxFit.fill, width: widget.width),
             Container(
               width: widget.width,
-              padding: EdgeInsets.all(10),
+              padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -65,7 +65,7 @@ class ProductState extends State<DashBoard4Product> {
                     ],
                   ),
                   Container(
-                    padding: EdgeInsets.fromLTRB(10, 8, 8, 4),
+                    padding: const EdgeInsets.fromLTRB(10, 8, 8, 4),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

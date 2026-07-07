@@ -67,7 +67,7 @@ void redirectUrl(url) async {
 
 Future<bool> checkLogin(context) async {
   if (!await isLoggedIn()) {
-    SignInScreen().launch(context);
+    const SignInScreen().launch(context);
     return false;
   } else {
     return true;
@@ -134,7 +134,7 @@ Future<void> setLogoutData(BuildContext context, {bool? isApi = false}) async {
     await cartStore.clearCart();
     appStore.setCount(0);
     appStore.setBottomNavigationIndex(0);
-    if (isApi == false) await DashBoardScreen().launch(context, isNewTask: true);
+    if (isApi == false) await const DashBoardScreen().launch(context, isNewTask: true);
   }
 }
 
@@ -143,7 +143,7 @@ checkLoggedIn(context) async {
   if (pref.getBool(IS_LOGGED_IN) != null && pref.getBool(IS_LOGGED_IN)!) {
     MyCartScreen(isShowBack: true).launch(context);
   } else {
-    SignInScreen().launch(context);
+    const SignInScreen().launch(context);
   }
 }
 
@@ -173,7 +173,7 @@ String durationFormatter(int milliSeconds) {
       ? '00'
       : '0$seconds';
   final formattedTime =
-      '${hoursString == '00' ? '' : hoursString + ':'}$minutesString:$secondsString';
+      '${hoursString == '00' ? '' : '$hoursString:'}$minutesString:$secondsString';
   return formattedTime;
 }
 
@@ -208,10 +208,12 @@ Future<void> setupRemoteConfig() async {
 }
 
 class MyLogo extends StatelessWidget {
+  const MyLogo({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Container(
-        decoration: BoxDecoration(shape: BoxShape.circle),
+        decoration: const BoxDecoration(shape: BoxShape.circle),
         alignment: Alignment.center,
         child: Image.asset(app_logo, height: 30, width: 30));
   }
@@ -255,12 +257,12 @@ void addItemToWishlist({ProductResponse? data, ProductDetailResponse? mDetailRes
 }
 
 void checkWishList(ProductDetailResponse? mDetailResponse, context) async {
-  if (!await isLoggedIn())
-    SignInScreen().launch(context);
-  else if (!await isGuestUser() && await isLoggedIn()) {
+  if (!await isLoggedIn()) {
+    const SignInScreen().launch(context);
+  } else if (!await isGuestUser() && await isLoggedIn()) {
     addItemToWishlist(mDetailResponse: mDetailResponse!);
   } else {
-    print("IsInWish" + wishListStore.isItemInWishlist(mDetailResponse!.id!).toString());
+    print("IsInWish${wishListStore.isItemInWishlist(mDetailResponse!.id!)}");
     List<String> mList = [];
     mDetailResponse.images.forEachIndexed((element, index) {
       mList.add(element.src!);

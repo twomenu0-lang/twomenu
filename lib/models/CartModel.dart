@@ -9,14 +9,14 @@ class CartResponse {
     if (json['data'] != null) {
       data = <CartModel>[];
       json['data'].forEach((v) {
-        data!.add(new CartModel.fromJson(v));
+        data!.add(CartModel.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['total_quantity'] = this.totalQuantity;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['total_quantity'] = totalQuantity;
     if (this.data != null) {
       data['data'] = this.data!.map((v) => v.toJson()).toList();
     }
@@ -77,22 +77,22 @@ class CartModel {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['cart_id'] = this.cartId;
-    data['pro_id'] = this.proId;
-    data['name'] = this.name;
-    data['sku'] = this.sku;
-    data['price'] = this.price;
-    data['on_sale'] = this.onSale;
-    data['regular_price'] = this.regularPrice;
-    data['sale_price'] = this.salePrice;
-    data['stock_quantity'] = this.stockQuantity;
-    data['stock_status'] = this.stockStatus;
-    data['thumbnail'] = this.thumbnail;
-    data['full'] = this.full;
-    data['gallery'] = this.gallery;
-    data['created_at'] = this.createdAt;
-    data['quantity'] = this.quantity;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['cart_id'] = cartId;
+    data['pro_id'] = proId;
+    data['name'] = name;
+    data['sku'] = sku;
+    data['price'] = price;
+    data['on_sale'] = onSale;
+    data['regular_price'] = regularPrice;
+    data['sale_price'] = salePrice;
+    data['stock_quantity'] = stockQuantity;
+    data['stock_status'] = stockStatus;
+    data['thumbnail'] = thumbnail;
+    data['full'] = full;
+    data['gallery'] = gallery;
+    data['created_at'] = createdAt;
+    data['quantity'] = quantity;
     return data;
   }
 }

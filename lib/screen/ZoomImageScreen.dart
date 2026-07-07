@@ -12,7 +12,7 @@ class ZoomImageScreen extends StatefulWidget {
   final List<ImageModel>? mImgList;
   final int? ind;
 
-  ZoomImageScreen({Key? key, this.mProductImage, this.mImgList, this.ind}) : super(key: key);
+  const ZoomImageScreen({super.key, this.mProductImage, this.mImgList, this.ind});
 
   @override
   _ZoomImageScreenState createState() => _ZoomImageScreenState();
@@ -35,9 +35,9 @@ class _ZoomImageScreenState extends State<ZoomImageScreen> {
   }
 
   Future productDetail() async {
-    widget.mImgList!.forEach((element) {
+    for (var element in widget.mImgList!) {
       productImg.add(commonCacheImageWidget(element.src.toString(), fit: BoxFit.cover, height: 400, width: double.infinity));
-    });
+    }
   }
 
   @override

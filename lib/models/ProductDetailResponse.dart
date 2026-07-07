@@ -123,7 +123,7 @@ class ProductDetailResponse {
       buttonText: json['button_text'],
       catalogVisibility: json['catalog_visibility'],
       categories: json['categories'] != null ? (json['categories'] as List).map((i) => Category.fromJson(i)).toList() : null,
-      crossSellIds: json['cross_sell_ids'] != null ? new List<int>.from(json['cross_sell_ids']) : null,
+      crossSellIds: json['cross_sell_ids'] != null ? List<int>.from(json['cross_sell_ids']) : null,
       dateCreated: json['date_created'],
       dateModified: json['date_modified'],
       dateOnSaleFrom: json['date_on_sale_from'],
@@ -153,7 +153,7 @@ class ProductDetailResponse {
       purchaseNote: json['purchase_note'],
       ratingCount: json['rating_count'],
       regularPrice: json['regular_price'],
-      relatedIds: json['related_ids'] != null ? new List<int>.from(json['related_ids']) : null,
+      relatedIds: json['related_ids'] != null ? List<int>.from(json['related_ids']) : null,
       reviewsAllowed: json['reviews_allowed'],
       salePrice: json['sale_price'],
       shippingClass: json['shipping_class'],
@@ -169,8 +169,8 @@ class ProductDetailResponse {
       taxClass: json['tax_class'],
       taxStatus: json['tax_status'],
       type: json['type'],
-      upSellIds: json['upsell_ids'] != null ? new List<int>.from(json['upsell_ids']) : null,
-      variations: json['variations'] != null ? new List<int>.from(json['variations']) : null,
+      upSellIds: json['upsell_ids'] != null ? List<int>.from(json['upsell_ids']) : null,
+      variations: json['variations'] != null ? List<int>.from(json['variations']) : null,
       virtual: json['virtual'],
       weight: json['weight'],
       upSellId: json['upsell_id'] != null ? (json['upsell_id'] as List).map((i) => UpsellId.fromJson(i)).toList() : null,
@@ -179,84 +179,84 @@ class ProductDetailResponse {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['average_rating'] = this.averageRating;
-    data['button_text'] = this.buttonText;
-    data['catalog_visibility'] = this.catalogVisibility;
-    data['date_created'] = this.dateCreated;
-    data['date_modified'] = this.dateModified;
-    data['date_on_sale_from'] = this.dateOnSaleFrom;
-    data['date_on_sale_to'] = this.dateOnSaleTo;
-    data['description'] = this.description;
-    data['download_expiry'] = this.downloadExpiry;
-    data['download_limit'] = this.downloadLimit;
-    data['download_type'] = this.downloadType;
-    data['downloadable'] = this.downloadable;
-    data['external_url'] = this.externalUrl;
-    data['featured'] = this.featured;
-    data['id'] = this.id;
-    data['in_stock'] = this.inStock;
-    data['is_added_cart'] = this.isAddedCart;
-    data['is_added_wishlist'] = this.isAddedWishList;
-    data['manage_stock'] = this.manageStock;
-    data['menu_order'] = this.menuOrder;
-    data['name'] = this.name;
-    data['on_sale'] = this.onSale;
-    data['parent_id'] = this.parentId;
-    data['permalink'] = this.permalink;
-    data['price'] = this.price;
-    data['price_html'] = this.priceHtml;
-    data['purchasable'] = this.purchasable;
-    data['purchase_note'] = this.purchaseNote;
-    data['rating_count'] = this.ratingCount;
-    data['regular_price'] = this.regularPrice;
-    data['reviews_allowed'] = this.reviewsAllowed;
-    data['sale_price'] = this.salePrice;
-    data['shipping_class'] = this.shippingClass;
-    data['shipping_class_id'] = this.shippingClassId;
-    data['shipping_required'] = this.shippingRequired;
-    data['shipping_taxable'] = this.shippingTaxable;
-    data['short_description'] = this.shortDescription;
-    data['sku'] = this.sku;
-    data['slug'] = this.slug;
-    data['sold_individually'] = this.soldIndividually;
-    data['status'] = this.status;
-    data['tax_class'] = this.taxClass;
-    data['tax_status'] = this.taxStatus;
-    data['type'] = this.type;
-    data['virtual'] = this.virtual;
-    data['weight'] = this.weight;
-    if (this.attributes != null) {
-      data['attributes'] = this.attributes!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['average_rating'] = averageRating;
+    data['button_text'] = buttonText;
+    data['catalog_visibility'] = catalogVisibility;
+    data['date_created'] = dateCreated;
+    data['date_modified'] = dateModified;
+    data['date_on_sale_from'] = dateOnSaleFrom;
+    data['date_on_sale_to'] = dateOnSaleTo;
+    data['description'] = description;
+    data['download_expiry'] = downloadExpiry;
+    data['download_limit'] = downloadLimit;
+    data['download_type'] = downloadType;
+    data['downloadable'] = downloadable;
+    data['external_url'] = externalUrl;
+    data['featured'] = featured;
+    data['id'] = id;
+    data['in_stock'] = inStock;
+    data['is_added_cart'] = isAddedCart;
+    data['is_added_wishlist'] = isAddedWishList;
+    data['manage_stock'] = manageStock;
+    data['menu_order'] = menuOrder;
+    data['name'] = name;
+    data['on_sale'] = onSale;
+    data['parent_id'] = parentId;
+    data['permalink'] = permalink;
+    data['price'] = price;
+    data['price_html'] = priceHtml;
+    data['purchasable'] = purchasable;
+    data['purchase_note'] = purchaseNote;
+    data['rating_count'] = ratingCount;
+    data['regular_price'] = regularPrice;
+    data['reviews_allowed'] = reviewsAllowed;
+    data['sale_price'] = salePrice;
+    data['shipping_class'] = shippingClass;
+    data['shipping_class_id'] = shippingClassId;
+    data['shipping_required'] = shippingRequired;
+    data['shipping_taxable'] = shippingTaxable;
+    data['short_description'] = shortDescription;
+    data['sku'] = sku;
+    data['slug'] = slug;
+    data['sold_individually'] = soldIndividually;
+    data['status'] = status;
+    data['tax_class'] = taxClass;
+    data['tax_status'] = taxStatus;
+    data['type'] = type;
+    data['virtual'] = virtual;
+    data['weight'] = weight;
+    if (attributes != null) {
+      data['attributes'] = attributes!.map((v) => v.toJson()).toList();
     }
-    if (this.categories != null) {
-      data['categories'] = this.categories!.map((v) => v.toJson()).toList();
+    if (categories != null) {
+      data['categories'] = categories!.map((v) => v.toJson()).toList();
     }
-    if (this.crossSellIds != null) {
-      data['cross_sell_ids'] = this.crossSellIds;
-    }
-
-    if (this.dimensions != null) {
-      data['dimensions'] = this.dimensions!.toJson();
+    if (crossSellIds != null) {
+      data['cross_sell_ids'] = crossSellIds;
     }
 
-    if (this.images != null) {
-      data['images'] = this.images!.map((v) => v.toJson()).toList();
+    if (dimensions != null) {
+      data['dimensions'] = dimensions!.toJson();
     }
-    if (this.relatedIds != null) {
-      data['related_ids'] = this.relatedIds;
+
+    if (images != null) {
+      data['images'] = images!.map((v) => v.toJson()).toList();
     }
-    if (this.store != null) {
-      data['store'] = this.store!.toJson();
+    if (relatedIds != null) {
+      data['related_ids'] = relatedIds;
     }
-    if (this.upSellIds != null) {
-      data['upsell_ids'] = this.upSellIds;
+    if (store != null) {
+      data['store'] = store!.toJson();
     }
-    if (this.variations != null) {
-      data['variations'] = this.variations;
+    if (upSellIds != null) {
+      data['upsell_ids'] = upSellIds;
     }
-    if (this.woofVideoEmbed != null) {
-      data['woofv_video_embed'] = this.woofVideoEmbed!.toJson();
+    if (variations != null) {
+      data['variations'] = variations;
+    }
+    if (woofVideoEmbed != null) {
+      data['woofv_video_embed'] = woofVideoEmbed!.toJson();
     }
     return data;
   }
@@ -280,11 +280,11 @@ class VideoData {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['autoplay'] = this.autoplay;
-    data['poster'] = this.poster;
-    data['thumbnail'] = this.thumbnail;
-    data['url'] = this.url;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['autoplay'] = autoplay;
+    data['poster'] = poster;
+    data['thumbnail'] = thumbnail;
+    data['url'] = url;
     return data;
   }
 }
@@ -309,13 +309,13 @@ class Store {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['shop_name'] = this.shopName;
-    data['url'] = this.url;
-    if (this.address != null) {
-      data['address'] = this.address!.toJson();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['shop_name'] = shopName;
+    data['url'] = url;
+    if (address != null) {
+      data['address'] = address!.toJson();
     }
     return data;
   }
@@ -343,13 +343,13 @@ class Address {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['city'] = this.city;
-    data['country'] = this.country;
-    data['state'] = this.state;
-    data['street_1'] = this.street_1;
-    data['street_2'] = this.street_2;
-    data['zip'] = this.zip;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['city'] = city;
+    data['country'] = country;
+    data['state'] = state;
+    data['street_1'] = street_1;
+    data['street_2'] = street_2;
+    data['zip'] = zip;
     return data;
   }
 }
@@ -370,10 +370,10 @@ class Dimensions {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['height'] = this.height;
-    data['length'] = this.length;
-    data['width'] = this.width;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['height'] = height;
+    data['length'] = length;
+    data['width'] = width;
     return data;
   }
 }
@@ -407,20 +407,20 @@ class Attribute {
       visible: json['visible'],
       variation: json['variation'],
       option: json['option'],
-      options: json['options'] != null ? new List<String>.from(json['options']) : null,
+      options: json['options'] != null ? List<String>.from(json['options']) : null,
     );
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['position'] = this.position;
-    data['visible'] = this.visible;
-    data['variation'] = this.variation;
-    data['option'] = this.option;
-    if (this.options != null) {
-      data['options'] = this.options;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['position'] = position;
+    data['visible'] = visible;
+    data['variation'] = variation;
+    data['option'] = option;
+    if (options != null) {
+      data['options'] = options;
     }
     return data;
   }
@@ -442,10 +442,10 @@ class Category {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['slug'] = this.slug;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['slug'] = slug;
     return data;
   }
 }
@@ -474,14 +474,14 @@ class ImageModel {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['alt'] = this.alt;
-    data['date_created'] = this.dateCreated;
-    data['date_modified'] = this.dateModified;
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['position'] = this.position;
-    data['src'] = this.src;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['alt'] = alt;
+    data['date_created'] = dateCreated;
+    data['date_modified'] = dateModified;
+    data['id'] = id;
+    data['name'] = name;
+    data['position'] = position;
+    data['src'] = src;
     return data;
   }
 }
@@ -510,15 +510,15 @@ class UpsellId {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['price'] = this.price;
-    data['regular_price'] = this.regularPrice;
-    data['sale_price'] = this.salePrice;
-    data['slug'] = this.slug;
-    if (this.images != null) {
-      data['images'] = this.images!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['price'] = price;
+    data['regular_price'] = regularPrice;
+    data['sale_price'] = salePrice;
+    data['slug'] = slug;
+    if (images != null) {
+      data['images'] = images!.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -548,14 +548,14 @@ class ImageX {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['alt'] = this.alt;
-    data['date_created'] = this.dateCreated;
-    data['date_modified'] = this.dateModified;
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['position'] = this.position;
-    data['src'] = this.src;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['alt'] = alt;
+    data['date_created'] = dateCreated;
+    data['date_modified'] = dateModified;
+    data['id'] = id;
+    data['name'] = name;
+    data['position'] = position;
+    data['src'] = src;
     return data;
   }
 }

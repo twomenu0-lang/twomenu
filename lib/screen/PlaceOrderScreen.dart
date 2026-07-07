@@ -20,14 +20,14 @@ class PlaceOrderScreen extends StatefulWidget {
   var mOrderID, total, transactionId, orderKey, paymentMethod, dateCreated;
 
   PlaceOrderScreen({
-    Key? key,
+    super.key,
     this.mOrderID,
     this.total,
     this.transactionId,
     this.orderKey,
     this.paymentMethod,
     this.dateCreated,
-  }) : super(key: key);
+  });
 
   @override
   PlaceOrderScreenState createState() => PlaceOrderScreenState();
@@ -99,10 +99,10 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
         if (!mounted) return;
         cartStore.clearCart();
         appStore.setCount(0);
-        await DashBoardScreen().launch(context, isNewTask: true);
-        await Future.delayed(Duration(milliseconds: 800));
+        await const DashBoardScreen().launch(context, isNewTask: true);
+        await Future.delayed(const Duration(milliseconds: 800));
         if (!mounted) return;
-        OrderListScreen().launch(context);
+        const OrderListScreen().launch(context);
       }).catchError((error) {
         setState(() {});
         toast(error.toString());
@@ -110,10 +110,10 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
     } else {
       appStore.setCount(0);
       cartStore.clearCart();
-      await DashBoardScreen().launch(context, isNewTask: true);
-      await Future.delayed(Duration(milliseconds: 800));
+      await const DashBoardScreen().launch(context, isNewTask: true);
+      await Future.delayed(const Duration(milliseconds: 800));
       if (!mounted) return;
-      OrderListScreen().launch(context);
+      const OrderListScreen().launch(context);
     }
   }
 
@@ -140,11 +140,11 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
     ];
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       decoration: BoxDecoration(
         color: context.cardColor,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
         ],
       ),
@@ -216,7 +216,7 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
                     Expanded(
                       child: Container(
                         height: 2,
-                        margin: EdgeInsets.only(bottom: 20),
+                        margin: const EdgeInsets.only(bottom: 20),
                         decoration: BoxDecoration(
                           color: i < currentStep
                               ? primaryColor
@@ -238,17 +238,17 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
   Widget build(BuildContext context) {
     var appLocalization = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? Color(0xFF1E2235) : Color(0xFFF4F5FA);
+    final cardBg = isDark ? const Color(0xFF1E2235) : const Color(0xFFF4F5FA);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(60.0),
+        preferredSize: const Size.fromHeight(60.0),
         child: AppBar(
           elevation: 0,
           backgroundColor: isHalloween ? mChristmasColor : primaryColor,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: white),
+            icon: const Icon(Icons.arrow_back, color: white),
             onPressed: () => onComplete(),
           ),
           automaticallyImplyLeading: false,
@@ -258,7 +258,7 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
         child: FadeTransition(
           opacity: _fadeAnim,
           child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
             child: Column(
               children: [
 
@@ -272,23 +272,23 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
                         width: 110, height: 110,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Color(0xFF66953A).withOpacity(0.08),
+                          color: const Color(0xFF66953A).withOpacity(0.08),
                         ),
                       ),
                       Container(
                         width: 85, height: 85,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Color(0xFF66953A).withOpacity(0.15),
+                          color: const Color(0xFF66953A).withOpacity(0.15),
                         ),
                       ),
                       Container(
                         width: 64, height: 64,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           shape: BoxShape.circle,
                           color: Color(0xFF66953A),
                         ),
-                        child: Icon(Icons.check, color: white, size: 34),
+                        child: const Icon(Icons.check, color: white, size: 34),
                       ),
                       Positioned(
                         top: 2, right: 10,
@@ -343,7 +343,7 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
                         value: widget.total.toString(),
                         isPrice: true,
                       ),
-                      Divider(height: 1, indent: 16, endIndent: 16),
+                      const Divider(height: 1, indent: 16, endIndent: 16),
                       _DetailRow(
                         icon: Icons.copy_outlined,
                         label: appLocalization.translate('order_id')!,
@@ -354,7 +354,7 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
                           toast('تم نسخ رقم الطلب');
                         },
                       ),
-                      Divider(height: 1, indent: 16, endIndent: 16),
+                      const Divider(height: 1, indent: 16, endIndent: 16),
                       _DetailRow(
                         icon: Icons.calendar_today_outlined,
                         label: appLocalization.translate('lbl_transaction_date')!,
@@ -375,7 +375,7 @@ class PlaceOrderScreenState extends State<PlaceOrderScreen>
                   height: 50,
                   child: ElevatedButton.icon(
                     onPressed: () => _shareOrder(appLocalization),
-                    icon: Icon(Icons.share_outlined, color: white, size: 20),
+                    icon: const Icon(Icons.share_outlined, color: white, size: 20),
                     label: Text('مشاركة تفاصيل الطلب',
                         style: primaryTextStyle(color: white)),
                     style: ElevatedButton.styleFrom(
@@ -435,7 +435,7 @@ class _DetailRow extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
             Container(

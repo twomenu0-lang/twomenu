@@ -6,6 +6,8 @@ import '/../utils/Constants.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 class MyHomeScreen extends StatefulWidget {
+  const MyHomeScreen({super.key});
+
   @override
   MyHomeScreenState createState() => MyHomeScreenState();
 }
@@ -30,13 +32,13 @@ class MyHomeScreenState extends State<MyHomeScreen> {
   Widget build(BuildContext context) {
 
     if (getIntAsync(DASHBOARD_PAGE_VARIANT, defaultValue: 1) == 1) {
-      return HomeScreen1();
+      return const HomeScreen1();
     } else if (getIntAsync(DASHBOARD_PAGE_VARIANT, defaultValue: 1) == 2) {
-      return HomeScreen2();
+      return const HomeScreen2();
     } else if (getIntAsync(DASHBOARD_PAGE_VARIANT, defaultValue: 1) == 3) {
-      return HomeScreen3();
+      return const HomeScreen3();
     } else {
-      return HomeScreen1();
+      return const HomeScreen1();
     }
   }
 }

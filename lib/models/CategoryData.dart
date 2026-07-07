@@ -31,26 +31,26 @@ class Category {
     parent = json['parent'];
     description = json['description'];
     display = json['display'];
-    image = json['image'] != null ? new Images.fromJson(json['image']) : null;
+    image = json['image'] != null ? Images.fromJson(json['image']) : null;
     menuOrder = json['menu_order'];
     count = json['count'];
-    lLinks = json['_links'] != null ? new Links.fromJson(json['_links']) : null;
+    lLinks = json['_links'] != null ? Links.fromJson(json['_links']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['slug'] = this.slug;
-    data['parent'] = this.parent;
-    data['description'] = this.description;
-    data['display'] = this.display;
-    data['image'] = this.image;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['slug'] = slug;
+    data['parent'] = parent;
+    data['description'] = description;
+    data['display'] = display;
+    data['image'] = image;
 
-    data['menu_order'] = this.menuOrder;
-    data['count'] = this.count;
-    if (this.lLinks != null) {
-      data['_links'] = this.lLinks!.toJson();
+    data['menu_order'] = menuOrder;
+    data['count'] = count;
+    if (lLinks != null) {
+      data['_links'] = lLinks!.toJson();
     }
     return data;
   }
@@ -67,33 +67,33 @@ class Links {
     if (json['self'] != null) {
       self = <Self>[];
       json['self'].forEach((v) {
-        self!.add(new Self.fromJson(v));
+        self!.add(Self.fromJson(v));
       });
     }
     if (json['collection'] != null) {
       collection = <Collection>[];
       json['collection'].forEach((v) {
-        collection!.add(new Collection.fromJson(v));
+        collection!.add(Collection.fromJson(v));
       });
     }
     if (json['up'] != null) {
       up = <Up>[];
       json['up'].forEach((v) {
-        up!.add(new Up.fromJson(v));
+        up!.add(Up.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.self != null) {
-      data['self'] = this.self!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    if (self != null) {
+      data['self'] = self!.map((v) => v.toJson()).toList();
     }
-    if (this.collection != null) {
-      data['collection'] = this.collection!.map((v) => v.toJson()).toList();
+    if (collection != null) {
+      data['collection'] = collection!.map((v) => v.toJson()).toList();
     }
-    if (this.up != null) {
-      data['up'] = this.up!.map((v) => v.toJson()).toList();
+    if (up != null) {
+      data['up'] = up!.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -109,8 +109,8 @@ class Self {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['href'] = this.href;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['href'] = href;
     return data;
   }
 }
@@ -124,8 +124,8 @@ class Collection {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['href'] = this.href;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['href'] = href;
     return data;
   }
 }
@@ -140,8 +140,8 @@ class Up {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['href'] = this.href;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['href'] = href;
     return data;
   }
 }

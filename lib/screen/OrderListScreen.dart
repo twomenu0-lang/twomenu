@@ -14,6 +14,8 @@ import '../AppLocalizations.dart';
 class OrderListScreen extends StatefulWidget {
   static String tag = '/OrderList';
 
+  const OrderListScreen({super.key});
+
   @override
   _OrderListScreenState createState() => _OrderListScreenState();
 }
@@ -55,7 +57,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
   }
 
   init() async {
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 500));
     await fetchOrderData();
   }
 
@@ -94,23 +96,23 @@ class _OrderListScreenState extends State<OrderListScreen> {
                     ? mBody
                     : ListView(
                   children: [
-                    SizedBox(height: 200),
+                    const SizedBox(height: 200),
                     // حالة فارغة طبيعية (لا يوجد خطأ)
-                    OrderListEmptyComponent()
+                    const OrderListEmptyComponent()
                         .visible(!appStore.isLoading && !mHasError),
                     // حالة خطأ: زر إعادة المحاولة بدل رسالة الخطأ
                     if (!appStore.isLoading && mHasError)
                       Column(
                         children: [
-                          Icon(Icons.wifi_off_rounded,
+                          const Icon(Icons.wifi_off_rounded,
                               size: 64, color: Colors.grey),
-                          SizedBox(height: 16),
+                          const SizedBox(height: 16),
                           Text(
                             appLocalization.translate('error_something_went_wrong') ?? 'حدث خطأ، يرجى المحاولة مجدداً',
                             style: primaryTextStyle(),
                             textAlign: TextAlign.center,
                           ),
-                          SizedBox(height: 16),
+                          const SizedBox(height: 16),
                           ElevatedButton(
                             onPressed: fetchOrderData,
                             style: ElevatedButton.styleFrom(
@@ -118,7 +120,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                             ),
                             child: Text(
                               appLocalization.translate('lbl_retry') ?? 'إعادة المحاولة',
-                              style: TextStyle(color: Colors.white),
+                              style: const TextStyle(color: Colors.white),
                             ),
                           ),
                         ],
