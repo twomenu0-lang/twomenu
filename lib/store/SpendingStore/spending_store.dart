@@ -71,6 +71,7 @@ abstract class SpendingStoreBase with Store {
       upgradedToTierName: wallet!.upgradedToTierName,
       isVipMax: wallet!.isVipMax,
       lockedTiers: wallet!.lockedTiers,
+      completedTiers: wallet!.completedTiers, // ✅ الإصلاح: كان ناقص فسبب الخطأ في البناء
     );
 
     try {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nb_utils/nb_utils.dart';
+import '/../AppLocalizations.dart';
 import '/../main.dart';
 import '/../service/NotificationService.dart';
 import '/../utils/AppColors.dart';
@@ -32,22 +33,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Future<void> _clearAll() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text('مسح الإشعارات', style: boldTextStyle()),
-        content: Text('هل تريد مسح جميع الإشعارات؟', style: primaryTextStyle()),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('إلغاء'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('مسح', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+    var appLocalization = AppLocalizations.of(context)!;
+    final confirmed = await showAppConfirmDialog(
+      context,
+      title: appLocalization.translate('clear_notifications_title') ?? 'مسح الإشعارات',
+      message: appLocalization.translate('clear_notifications_msg') ?? 'هل تريد مسح جميع الإشعارات؟',
+      icon: Icons.delete_sweep_rounded,
+      positiveText: appLocalization.translate('lbl_clear') ?? 'مسح',
+      negativeText: appLocalization.translate('lbl_cancel') ?? 'إلغاء',
     );
     if (confirmed == true) {
       await NotificationService.clearAll();
@@ -57,9 +50,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   // ─────────────────────────────────────────────────────────────
   // ✅ دالة تحدد الأيقونة واللون تلقائياً حسب نوع الإشعار أو عنوانه
+  // (منطق تحديد النوع نفسه يعتمد على القيمة الخام item.type/النص، فمش محتاج ترجمة،
+  // الترجمة مطلوبة بس للنصوص اللي بتظهر فعليًا للمستخدم)
   // ─────────────────────────────────────────────────────────────
   _NotificationStyle _getStyle(AppNotification item) {
-    // ✅ الأولوية للـ type الصريح الجاي من الباك إند (أدق وأضمن من تحليل النص)
     switch (item.type) {
     // حالات الطلب
       case 'order_confirmed':
@@ -143,7 +137,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     }
 
     // ⚠️ Fallback: لإشعارات قديمة اتسجلت قبل إضافة الـ type (type فاضي)
-    // بيحلل النص العربي زي الأول
+    // بيحلل النص العربي زي الأول (ده منطق تحليل داخلي مش نص ظاهر للمستخدم، فمش محتاج ترجمة)
     final t = '${item.title} ${item.body}'.toLowerCase();
 
     if (t.contains('استلام') || t.contains('استقبل') || t.contains('جديد')) {
@@ -182,25 +176,27 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var appLocalization = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: context.scaffoldBackgroundColor,
       appBar: mTop(
         context,
-        'الإشعارات',
+        appLocalization.translate('lbl_notifications') ?? 'الإشعارات',
         showBack: true,
         actions: _notifications.isEmpty
             ? []
             : [
           IconButton(
             icon: const Icon(Icons.delete_outline, color: kTextMuted),
-            tooltip: 'مسح الكل',
+            tooltip: appLocalization.translate('lbl_clear_all') ?? 'مسح الكل',
             onPressed: _clearAll,
           ),
         ],
       ) as PreferredSizeWidget?,
       body: BodyCornerWidget(
         child: _notifications.isEmpty
-            ? _emptyState(context)
+            ? _emptyState(context, appLocalization)
             : RefreshIndicator(
           onRefresh: _loadAndMarkRead,
           child: ListView.separated(
@@ -208,7 +204,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
             itemCount: _notifications.length,
             separatorBuilder: (_, __) => 12.height,
             itemBuilder: (context, index) {
-              return _notificationCard(context, _notifications[index]);
+              return _notificationCard(context, _notifications[index], appLocalization);
             },
           ),
         ),
@@ -216,8 +212,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
     );
   }
 
-  Widget _notificationCard(BuildContext context, AppNotification item) {
-    // ✅ جلب الأيقونة واللون المناسبين لهذا الإشعار (تعديل استدعاء الدالة لـ item)
+  Widget _notificationCard(BuildContext context, AppNotification item, AppLocalizations appLocalization) {
+    // ✅ جلب الأيقونة واللون المناسبين لهذا الإشعار
     final style = _getStyle(item);
 
     return Container(
@@ -275,7 +271,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 ),
                 6.height,
                 Text(
-                  _formatTime(item.time),
+                  _formatTime(item.time, appLocalization),
                   style: secondaryTextStyle(size: 11, color: kTextMuted),
                 ),
               ],
@@ -286,26 +282,46 @@ class _NotificationScreenState extends State<NotificationScreen> {
     );
   }
 
-  String _formatTime(DateTime time) {
+  // ─────────────────────────────────────────────────────────────
+  // ✅ نصوص الوقت النسبي بقت بتتترجم، مع الاحتفاظ بالعربي كـ fallback
+  // مفاتيح الترجمة بتستخدم %d كعنصر نائب للرقم يتم استبداله يدويًا
+  // ─────────────────────────────────────────────────────────────
+  String _formatTime(DateTime time, AppLocalizations appLocalization) {
     final now = DateTime.now();
     final diff = now.difference(time);
 
-    if (diff.inMinutes < 1) return 'الآن';
-    if (diff.inMinutes < 60) return 'منذ ${diff.inMinutes} دقيقة';
-    if (diff.inHours < 24) return 'منذ ${diff.inHours} ساعة';
-    if (diff.inDays == 1) return 'أمس';
-    if (diff.inDays < 7) return 'منذ ${diff.inDays} أيام';
+    if (diff.inMinutes < 1) {
+      return appLocalization.translate('time_just_now') ?? 'الآن';
+    }
+    if (diff.inMinutes < 60) {
+      final template = appLocalization.translate('time_minutes_ago') ?? 'منذ %d دقيقة';
+      return template.replaceAll('%d', '${diff.inMinutes}');
+    }
+    if (diff.inHours < 24) {
+      final template = appLocalization.translate('time_hours_ago') ?? 'منذ %d ساعة';
+      return template.replaceAll('%d', '${diff.inHours}');
+    }
+    if (diff.inDays == 1) {
+      return appLocalization.translate('time_yesterday') ?? 'أمس';
+    }
+    if (diff.inDays < 7) {
+      final template = appLocalization.translate('time_days_ago') ?? 'منذ %d أيام';
+      return template.replaceAll('%d', '${diff.inDays}');
+    }
     return '${time.day}/${time.month}/${time.year}';
   }
 
-  Widget _emptyState(BuildContext context) {
+  Widget _emptyState(BuildContext context, AppLocalizations appLocalization) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(Icons.notifications_off_outlined, size: 64, color: kTextMuted),
           12.height,
-          Text('لا توجد إشعارات حالياً', style: boldTextStyle(size: 16)),
+          Text(
+            appLocalization.translate('lbl_no_notifications_yet') ?? 'لا توجد إشعارات حالياً',
+            style: boldTextStyle(size: 16),
+          ),
         ],
       ),
     );

@@ -59,6 +59,9 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   // ✅ افتراضياً: نفس الفواتير محدد
   bool isCheckBoxSelected = true;
 
+  // ✅ جديد - لتتبع هل العميل غيّر إيميل الفاتورة يدوياً عن الإيميل الأساسي
+  bool _isBillingEmailManuallyEdited = false;
+
   List<Country> billingCountryList = [];
   List<CountryState> billingStateList = [];
   List<CountryState> shippingStateList = [];
@@ -80,6 +83,9 @@ class EditProfileScreenState extends State<EditProfileScreen> {
     // ✅ مستمع لتحديث billing/shipping أسماء تلقائياً عند تغيير الاسم الأول أو الكنية
     txtFirstName.addListener(_syncNamesToAddresses);
     txtLastName.addListener(_syncNamesToAddresses);
+    // ✅ جديد - مزامنة إيميل الفاتورة تلقائياً مع الإيميل الأساسي
+    txtEmail.addListener(_syncEmailToBilling);
+    txtBillingEmail.addListener(_detectManualBillingEmailEdit);
     init();
   }
 
@@ -91,6 +97,21 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       txtShippingFirstName.text = txtFirstName.text;
       txtShippingLastName.text = txtLastName.text;
     }
+  }
+
+  /// ✅ جديد - نسخ الإيميل الأساسي لحقل إيميل الفاتورة تلقائياً
+  /// طول ما العميل ماعدّلش فيه يدوياً بقيمة مختلفة
+  void _syncEmailToBilling() {
+    if (!_isBillingEmailManuallyEdited) {
+      txtBillingEmail.text = txtEmail.text;
+    }
+  }
+
+  /// ✅ جديد - لو العميل كتب في حقل إيميل الفاتورة بنفسه بقيمة مختلفة
+  /// عن الإيميل الأساسي، نوقف المزامنة التلقائية ونحترم اختياره.
+  /// لو رجّعه بنفسه ليتطابق تاني مع الإيميل الأساسي، المزامنة ترجع تشتغل.
+  void _detectManualBillingEmailEdit() {
+    _isBillingEmailManuallyEdited = txtBillingEmail.text != txtEmail.text;
   }
 
   init() async {
@@ -205,6 +226,9 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       txtBillingPinCode.text = mUserData.billing!.postcode!;
       txtBillingMobile.text = mUserData.billing!.phone!;
       txtBillingEmail.text = mUserData.billing!.email!;
+      // ✅ لو الإيميلين متطابقين وقت التحميل، اعتبرها مزامنة (مش تعديل يدوي)
+      // ولو مختلفين، اعتبرها تعديل يدوي قديم واحترمه من غير ما نغيّره
+      _isBillingEmailManuallyEdited = txtBillingEmail.text != txtEmail.text;
       // ✅ أسماء shipping تأتي من الاسم الأساسي
       txtShippingFirstName.text = mUserData.firstName!;
       txtShippingLastName.text = mUserData.lastName!;
@@ -260,6 +284,9 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       txtBillingPinCode.text = res['billing']['postcode'];
       txtBillingMobile.text = res['billing']['phone'];
       txtBillingEmail.text = res['billing']['email'];
+      // ✅ لو الإيميلين متطابقين وقت التحميل، اعتبرها مزامنة (مش تعديل يدوي)
+      // ولو مختلفين، اعتبرها تعديل يدوي قديم واحترمه من غير ما نغيّره
+      _isBillingEmailManuallyEdited = txtBillingEmail.text != txtEmail.text;
       // ✅ أسماء shipping تأتي من الاسم الأساسي
       txtShippingFirstName.text = res['first_name'];
       txtShippingLastName.text = res['last_name'];
@@ -324,6 +351,8 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   void dispose() {
     txtFirstName.removeListener(_syncNamesToAddresses);
     txtLastName.removeListener(_syncNamesToAddresses);
+    txtEmail.removeListener(_syncEmailToBilling); // ✅ جديد
+    txtBillingEmail.removeListener(_detectManualBillingEmailEdit); // ✅ جديد
     _controller.dispose();
     super.dispose();
   }

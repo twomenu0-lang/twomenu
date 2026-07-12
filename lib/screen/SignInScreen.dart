@@ -314,7 +314,7 @@ class SignInScreenState extends State<SignInScreen> {
                     Text(appLocalization.translate('lbl_back')!, style: primaryTextStyle(color: primaryColor, size: 26)),
                     24.height,
                     EditText(
-                      hintText: appLocalization.translate('hint_Username'),
+                      hintText: appLocalization.translate('hint_username_or_email_or_phone'), // ✅ تم التعديل هنا ليدعم التوضيح الجديد
                       isPassword: false,
                       isSecure: false,
                       mController: usernameCont,

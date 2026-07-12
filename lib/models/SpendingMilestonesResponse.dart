@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// SpendingMilestonesResponse.dart  — v1.7.0 (محدث لدعم الـ Locked Tiers)
+// SpendingMilestonesResponse.dart  — v2.0 (محدث لدعم الـ Completed Tiers)
 // ═══════════════════════════════════════════════════════════════
 
 class SpendingMilestonesResponse {
@@ -14,6 +14,8 @@ class SpendingMilestonesResponse {
   final bool isVipMax;
   // ✅ الحقل الجديد لاستقبال المستويات المقفولة من السيرفر
   final List<LockedTier> lockedTiers;
+  // ✅ جديد v2.0 — المستويات اللي العميل خلصها/تخطاها بالفعل (زي برونزي)
+  final List<CompletedTier> completedTiers;
 
   const SpendingMilestonesResponse({
     required this.customerWallet,
@@ -26,6 +28,7 @@ class SpendingMilestonesResponse {
     this.upgradedToTierName,
     required this.isVipMax,
     required this.lockedTiers, // ✅ مطلوب في الـ Constructor
+    required this.completedTiers, // ✅ مطلوب في الـ Constructor
   });
 
   factory SpendingMilestonesResponse.fromJson(Map<String, dynamic> json) {
@@ -77,6 +80,10 @@ class SpendingMilestonesResponse {
       lockedTiers: (json['locked_tiers'] as List<dynamic>? ?? [])
           .map((e) => LockedTier.fromJson(e as Map<String, dynamic>))
           .toList(),
+      // ✅ قراءة وتوليد قائمة الـ Completed Tiers بأمان
+      completedTiers: (json['completed_tiers'] as List<dynamic>? ?? [])
+          .map((e) => CompletedTier.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -93,6 +100,7 @@ class SpendingMilestonesResponse {
     'tier_upgraded': tierUpgraded,
     'is_vip_max': isVipMax,
     'locked_tiers': lockedTiers.map((t) => t.toJson()).toList(), // ✅ تحويل إلى JSON
+    'completed_tiers': completedTiers.map((t) => t.toJson()).toList(), // ✅ تحويل إلى JSON
   };
 }
 
@@ -116,6 +124,39 @@ class LockedTier {
     key: json['key'] as String? ?? '',
     name: json['name'] as String? ?? '',
     minAmount: _toDouble(json['min_amount']), // حماية تامة للرقم
+    rewardTitle: json['reward_title'] as String? ?? '',
+    colorHex: json['color_hex'] as String?,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'key': key,
+    'name': name,
+    'min_amount': minAmount,
+    'reward_title': rewardTitle,
+    'color_hex': colorHex,
+  };
+}
+
+// ── ✅ جديد v2.0 — الكلاس الخاص بالمستويات المُنجزة فعلاً (اللي العميل خلصها) ──
+class CompletedTier {
+  final String key;
+  final String name;
+  final double minAmount;
+  final String rewardTitle;
+  final String? colorHex;
+
+  const CompletedTier({
+    required this.key,
+    required this.name,
+    required this.minAmount,
+    required this.rewardTitle,
+    this.colorHex,
+  });
+
+  factory CompletedTier.fromJson(Map<String, dynamic> json) => CompletedTier(
+    key: json['key'] as String? ?? '',
+    name: json['name'] as String? ?? '',
+    minAmount: _toDouble(json['min_amount']),
     rewardTitle: json['reward_title'] as String? ?? '',
     colorHex: json['color_hex'] as String?,
   );

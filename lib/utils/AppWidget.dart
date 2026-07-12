@@ -226,6 +226,145 @@ Future<ConfirmAction?> showConfirmDialogs(context, msg, positiveText, negativeTe
     },
   );
 }
+// ─────────────────────────────────────────────────────────────
+// ✅ Dialog التأكيد الموحّد للتطبيق كله (نفس هوية تصميم "تسجيل الخروج")
+// دائرة ملونة فيها أيقونة + عنوان/نص + زرارين (Filled + Outlined)
+// قابلة لإعادة الاستخدام في أي مكان (تسجيل خروج، حذف حساب، مسح إشعارات...)
+// ─────────────────────────────────────────────────────────────
+Future<bool?> showAppConfirmDialog(
+    BuildContext context, {
+      required String message,
+      String? title,
+      IconData icon = Icons.warning_amber_rounded,
+      Color? iconColor,
+      required String positiveText,
+      required String negativeText,
+      Color? positiveColor,
+      bool barrierDismissible = true,
+    }) {
+  final Color mainColor = iconColor ?? primaryColor!;
+  final Color btnColor = positiveColor ?? primaryColor!;
+
+  return showDialog<bool>(
+    context: context,
+    barrierDismissible: barrierDismissible,
+    builder: (dialogContext) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(dialogContext).cardColor,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ── الجزء العلوي: خلفية فاتحة + الأيقونة الدائرية ──
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 28),
+                decoration: BoxDecoration(
+                  color: mainColor.withOpacity(0.08),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: mainColor.withOpacity(0.15),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(icon, color: mainColor, size: 32),
+                ),
+              ),
+
+              // ── الجزء السفلي: العنوان/النص + الأزرار ──
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (title != null) ...[
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: boldTextStyle(size: 16),
+                      ),
+                      8.height,
+                    ],
+                    Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: secondaryTextStyle(size: 14),
+                    ),
+                    20.height,
+                    Row(
+                      children: [
+                        // زر التأكيد (Filled) — يظهر أولاً على اليمين في RTL
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => Navigator.of(dialogContext).pop(true),
+                            child: Container(
+                              height: 46,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: btnColor,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(positiveText, style: boldTextStyle(color: white, size: 14)),
+                                  6.width,
+                                  const Icon(Icons.check_rounded, color: white, size: 16),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        10.width,
+                        // زر الإلغاء (Outlined)
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => Navigator.of(dialogContext).pop(false),
+                            child: Container(
+                              height: 46,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Theme.of(dialogContext).dividerColor),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(negativeText, style: boldTextStyle(size: 14)),
+                                  6.width,
+                                  Icon(Icons.close_rounded, size: 16, color: Theme.of(dialogContext).textTheme.titleMedium!.color),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
 
 // ignore: must_be_immutable
 class PriceWidget extends StatefulWidget {

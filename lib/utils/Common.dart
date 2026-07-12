@@ -14,7 +14,7 @@ import '/../screen/SignInScreen.dart';
 import '/../utils/SharedPref.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import 'AppWidget.dart';
 import '../network/rest_apis.dart';
 import '../service/LoginService.dart';
 import 'Constants.dart';
@@ -75,29 +75,37 @@ Future<bool> checkLogin(context) async {
 }
 
 Future logout(BuildContext context) async {
-  return showConfirmDialogCustom(context,
-      title: AppLocalizations.of(context)!.translate('lbl_logout'),
-      positiveText: AppLocalizations.of(context)!.translate('lbl_yes'),
-      primaryColor: primaryColor,
-      negativeText: AppLocalizations.of(context)!.translate('lbl_cancel'),
-      onAccept: (context) {
-        setLogoutData(context);
-      });
+  bool? confirmed = await showAppConfirmDialog(
+    context,
+    title: AppLocalizations.of(context)!.translate('lbl_logout') ?? 'تسجيل الخروج',
+    message: AppLocalizations.of(context)!.translate('lbl_logout_confirm_msg') ?? 'هل أنت متأكد أنك تريد تسجيل الخروج؟',
+    icon: Icons.logout_rounded,
+    positiveText: AppLocalizations.of(context)!.translate('lbl_yes') ?? 'نعم',
+    negativeText: AppLocalizations.of(context)!.translate('lbl_cancel') ?? 'إلغاء',
+  );
+  if (confirmed == true) {
+    await setLogoutData(context);
+  }
 }
 
 Future deleteAccount(BuildContext context) async {
-  return showConfirmDialogCustom(context,
-      title: AppLocalizations.of(context)!.translate('delete_account_msg'),
-      positiveText: AppLocalizations.of(context)!.translate('lbl_yes'),
-      primaryColor: primaryColor,
-      negativeText: AppLocalizations.of(context)!.translate('lbl_cancel'),
-      onAccept: (con) async {
-        await deleteAccountApi().then((value) async {
-          await LoginService().deleteUser().then((value) {
-            setLogoutData(context);
-          });
-        });
+  bool? confirmed = await showAppConfirmDialog(
+    context,
+    title: AppLocalizations.of(context)!.translate('delete_account') ?? 'حذف الحساب',
+    message: AppLocalizations.of(context)!.translate('delete_account_msg') ?? 'هل أنت متأكد أنك تريد حذف الحساب؟ لا يمكن التراجع عن هذا الإجراء.',
+    icon: Icons.delete_outline_rounded,
+    iconColor: Colors.red,
+    positiveColor: Colors.red,
+    positiveText: AppLocalizations.of(context)!.translate('lbl_yes') ?? 'نعم',
+    negativeText: AppLocalizations.of(context)!.translate('lbl_cancel') ?? 'إلغاء',
+  );
+  if (confirmed == true) {
+    await deleteAccountApi().then((value) async {
+      await LoginService().deleteUser().then((value) {
+        setLogoutData(context);
       });
+    });
+  }
 }
 
 Future<void> setLogoutData(BuildContext context, {bool? isApi = false}) async {

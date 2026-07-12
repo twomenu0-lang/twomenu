@@ -1,10 +1,11 @@
 // lib/screen/tier_details_screen.dart
 // شاشة تفاصيل المستويات — تُفتح بالضغط على شريط التقدم
-// محدّثة بالكامل: تبني خريطة مستويات حقيقية بدمج المستويات المقفولة، التالية، والحالية
+// محدّثة بالكامل: تبني خريطة مستويات حقيقية بدمج المستويات المقفولة، التالية، الحالية، والمُنجزة
 
 import 'package:flutter/material.dart';
 import '../models/SpendingMilestonesResponse.dart';
 import '../main.dart';
+import '../component/TierProgressCard.dart'; // ✅ جديد: استخدام الكارت المشترك الموحد
 
 class TierDetailsScreen extends StatefulWidget {
   const TierDetailsScreen({super.key});
@@ -21,33 +22,10 @@ class _TierDetailsScreenState extends State<TierDetailsScreen>
 
   // ── Colors (من DESIGN.md) ────────────────────────
   static const Color _primary = Color(0xFF030048);
-  static const Color _secondary = Color(0xFF4b41e1);
   static const Color _surface = Color(0xFFF7F9FB);
   static const Color _onSurface = Color(0xFF191C1E);
   static const Color _onSurfaceVariant = Color(0xFF464650);
   static const Color _statusNeutral = Color(0xFF64748B);
-
-  // Tier Gradients الرئيسي للبطاقة العلوية
-  static const LinearGradient _bronzeGrad = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [Color(0xFFCD7F32), Color(0xFFA0522D)],
-  );
-  static const LinearGradient _silverGrad = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [Color(0xFFC0C0C0), Color(0xFF71706E)],
-  );
-  static const LinearGradient _goldGrad = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [Color(0xFFFFD700), Color(0xFFB8860B)],
-  );
-  static const LinearGradient _diamondGrad = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [Color(0xFFE0FFFF), Color(0xFF00CED1)],
-  );
 
   // ── Init ────────────────────────────────────────
   @override
@@ -87,40 +65,6 @@ class _TierDetailsScreenState extends State<TierDetailsScreen>
     }
   }
 
-  // ── Helper: Gradient بحسب tierId للبطاقة الـ Hero ──
-  LinearGradient _gradientForTier(String tierId) {
-    switch (tierId.toLowerCase()) {
-      case 'diamond':
-        return _diamondGrad;
-      case 'gold':
-        return _goldGrad;
-      case 'silver':
-        return _silverGrad;
-      default:
-        return _bronzeGrad;
-    }
-  }
-
-  // ── Helper: لون النص فوق بطاقة المستوى ──────────
-  Color _textColorForTier(String tierId) {
-    switch (tierId.toLowerCase()) {
-      case 'diamond':
-        return const Color(0xFF003333);
-      default:
-        return Colors.white;
-    }
-  }
-
-  // ── تنسيق المبالغ: 12,500 ج.م ───────────────────
-  String _formatAmount(double amount) {
-    final int val = amount.toInt();
-    final String formatted = val.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]},',
-    );
-    return '$formatted ج.م';
-  }
-
   // ── Build ────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -156,7 +100,7 @@ class _TierDetailsScreenState extends State<TierDetailsScreen>
   Widget _buildBody() {
     if (spendingStore.isLoadingWallet) {
       return const Center(
-        child: CircularProgressIndicator(color: _secondary),
+        child: CircularProgressIndicator(color: Color(0xFF4b41e1)),
       );
     }
 
@@ -172,7 +116,7 @@ class _TierDetailsScreenState extends State<TierDetailsScreen>
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _fetchData,
-              style: ElevatedButton.styleFrom(backgroundColor: _secondary),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4b41e1)),
               child: const Text('إعادة المحاولة',
                   style: TextStyle(color: Colors.white)),
             ),
@@ -186,21 +130,18 @@ class _TierDetailsScreenState extends State<TierDetailsScreen>
 
     return RefreshIndicator(
       onRefresh: _fetchData,
-      color: _secondary,
+      color: const Color(0xFF4b41e1),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 40),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── 1. بطاقة المستوى الرئيسية ────────────
-            _HeroTierCard(
+            // ── 1. بطاقة المستوى المشتركة والموحدة ────────────
+            TierProgressCard(
               wallet: wallet,
               barProgress: spendingStore.barProgress,
               barAnimation: _barAnimation,
-              gradient: _gradientForTier(wallet.currentTier.tierId),
-              textColor: _textColorForTier(wallet.currentTier.tierId),
-              formatAmount: _formatAmount,
             ),
 
             const SizedBox(height: 24),
@@ -221,6 +162,7 @@ class _TierDetailsScreenState extends State<TierDetailsScreen>
             const SizedBox(height: 12),
 
             // ✅ بناء خريطة مدمجة وشاملة من الأعلى للأسفل ديناميكياً
+            // الترتيب: مقفولة (الأعلى رتبة فوق) ← التالي ← الحالي ← المُنجزة (الأقرب للحالي فالأقدم)
             Builder(builder: (_) {
               final allForMap = <_MapTierItem>[
                 // أولاً: المستويات المقفولة (ترتيب عكسي — الأعلى فوق)
@@ -230,8 +172,7 @@ class _TierDetailsScreenState extends State<TierDetailsScreen>
                   minAmount: t.minAmount,
                   maxAmount: null,
                   colorHex: t.colorHex,
-                  isCurrentTier: false,
-                  isLocked: true,
+                  status: _TierStatus.locked,
                   rewardTitle: t.rewardTitle,
                 )),
                 // ثانياً: المستوى التالي إن وُجد
@@ -241,21 +182,29 @@ class _TierDetailsScreenState extends State<TierDetailsScreen>
                   minAmount: wallet.nextTier!.minSpend,
                   maxAmount: wallet.nextTier!.maxSpend,
                   colorHex: wallet.nextTier!.colorHex,
-                  isCurrentTier: false,
-                  isLocked: false,
+                  status: _TierStatus.locked,
                   rewardTitle: wallet.nextTier!.motivationalText,
                 ),
-                // ثالثاً: المستوى الحالي في الأسفل
+                // ثالثاً: المستوى الحالي
                 _MapTierItem(
                   key: wallet.currentTier.tierId,
                   name: wallet.currentTier.tierName,
                   minAmount: wallet.currentTier.minSpend,
                   maxAmount: wallet.currentTier.maxSpend,
                   colorHex: wallet.currentTier.colorHex,
-                  isCurrentTier: true,
-                  isLocked: false,
+                  status: _TierStatus.current,
                   rewardTitle: wallet.unlockedReward?.rewardTitle ?? wallet.currentTier.motivationalText,
                 ),
+                // رابعاً: المستويات المُنجزة فعلاً (الأقرب للحالي أولاً، ثم الأقدم في الأسفل)
+                ...wallet.completedTiers.reversed.map((t) => _MapTierItem(
+                  key: t.key,
+                  name: t.name,
+                  minAmount: t.minAmount,
+                  maxAmount: null,
+                  colorHex: t.colorHex,
+                  status: _TierStatus.completed,
+                  rewardTitle: t.rewardTitle,
+                )),
               ];
 
               return Column(
@@ -268,10 +217,9 @@ class _TierDetailsScreenState extends State<TierDetailsScreen>
                     minAmount: t.minAmount,
                     maxAmount: t.maxAmount,
                     colorHex: t.colorHex,
-                    isCurrentTier: t.isCurrentTier,
-                    isLocked: t.isLocked,
+                    status: t.status,
                     rewardTitle: t.rewardTitle,
-                    formatAmount: _formatAmount,
+                    formatAmount: formatTierAmount, // ✅ استخدام الدالة العامة والموحدة لتنسيق المبالغ
                   ),
                 )).toList(),
               );
@@ -289,157 +237,17 @@ class _TierDetailsScreenState extends State<TierDetailsScreen>
 // Sub-Widgets
 // ═══════════════════════════════════════════════════════════════
 
-// ── بطاقة المستوى Hero ──────────────────────────────────────────
-class _HeroTierCard extends StatelessWidget {
-  final SpendingMilestonesResponse wallet;
-  final double barProgress;
-  final Animation<double> barAnimation;
-  final LinearGradient gradient;
-  final Color textColor;
-  final String Function(double) formatAmount;
+// حالة المستوى في الخريطة — مقفول / حالي / مُنجز
+enum _TierStatus { locked, current, completed }
 
-  const _HeroTierCard({
-    required this.wallet,
-    required this.barProgress,
-    required this.barAnimation,
-    required this.gradient,
-    required this.textColor,
-    required this.formatAmount,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final current = wallet.currentTier;
-    final isMax = wallet.nextTier == null;
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            bottom: -24,
-            left: -24,
-            child: Icon(
-              Icons.workspace_premium_rounded,
-              size: 120,
-              color: Colors.white.withValues(alpha: 0.10),
-            ),
-          ),
-
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Header: اسم المستوى ──
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    current.tierName,
-                    style: TextStyle(
-                      fontFamily: 'BeVietnamPro',
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      color: textColor,
-                    ),
-                  ),
-                  if (isMax || wallet.isVipMax)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.20),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.30)),
-                      ),
-                      child: Text(
-                        'VIP',
-                        style: TextStyle(
-                          fontFamily: 'IBMPlexSans',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: textColor,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // ── شريط التقدم والمعلومات المالية المعدلة ──
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'الإنفاق السنوي: ${formatAmount(wallet.customerWallet.totalSpent)}',
-                    style: TextStyle(
-                      fontFamily: 'IBMPlexSans',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: textColor,
-                    ),
-                  ),
-                  if (!isMax && wallet.customerWallet.amountToNextTier != null)
-                    Text(
-                      'باقي ${formatAmount(wallet.customerWallet.amountToNextTier!)} للـ${wallet.nextTier?.tierName ?? ""}',
-                      style: TextStyle(
-                        fontFamily: 'IBMPlexSans',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: textColor,
-                      ),
-                    ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-
-              // الشريط المتحرك للتقدم الحالي
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: AnimatedBuilder(
-                  animation: barAnimation,
-                  builder: (_, __) {
-                    final target = isMax ? 1.0 : barProgress;
-                    return LinearProgressIndicator(
-                      value: barAnimation.value * target,
-                      minHeight: 8,
-                      backgroundColor: Colors.black.withValues(alpha: 0.20),
-                      valueColor: const AlwaysStoppedAnimation(Colors.white),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── ✅ بطاقة مستوى محدثة لتعمل مع الـ Fields الجديدة بحرية وتكامل ──
+// ── بطاقة مستوى محدثة — تدعم 3 حالات: مقفول / حالي / مُنجز ──
 class _TierRoadmapCard extends StatelessWidget {
   final String tierKey;
   final String tierName;
   final double minAmount;
   final double? maxAmount;
   final String? colorHex;
-  final bool isCurrentTier;
-  final bool isLocked;
+  final _TierStatus status;
   final String rewardTitle;
   final String Function(double) formatAmount;
 
@@ -450,11 +258,14 @@ class _TierRoadmapCard extends StatelessWidget {
     required this.minAmount,
     this.maxAmount,
     this.colorHex,
-    required this.isCurrentTier,
-    required this.isLocked,
+    required this.status,
     required this.rewardTitle,
     required this.formatAmount,
   });
+
+  bool get _isLocked => status == _TierStatus.locked;
+  bool get _isCurrent => status == _TierStatus.current;
+  bool get _isCompleted => status == _TierStatus.completed;
 
   // تحديد الـ Gradient الجانبي بناءً على الـ key الفريد للمستوى
   LinearGradient _gradientForKey(String key) {
@@ -472,25 +283,25 @@ class _TierRoadmapCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isActive = isCurrentTier;
-
     return Stack(
       children: [
         AnimatedOpacity(
           duration: const Duration(milliseconds: 200),
-          opacity: isLocked ? 0.5 : 1.0,
+          // المُنجز يفضل واضح تمامًا (مش باهت زي المقفول) بس بهدوء لوني في التفاصيل
+          opacity: _isLocked ? 0.5 : 1.0,
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              // المستوى المُنجز ياخد خلفية رمادي فاتح هادي بدل الأبيض النشط
+              color: _isCompleted ? const Color(0xFFF5F5F7) : Colors.white,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: isActive
+                color: _isCurrent
                     ? const Color(0xFF4b41e1)
                     : const Color(0xFFC7C5D2).withValues(alpha: 0.30),
-                width: isActive ? 1.5 : 1,
+                width: _isCurrent ? 1.5 : 1,
               ),
-              boxShadow: isActive
+              boxShadow: _isCurrent
                   ? [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.07),
@@ -525,15 +336,27 @@ class _TierRoadmapCard extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: 'IBMPlexSans',
                               fontSize: 14,
-                              fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-                              color: const Color(0xFF191C1E),
+                              fontWeight: _isCurrent ? FontWeight.w700 : FontWeight.w400,
+                              // المُنجز بلون نص أهدى شوية عن الحالي
+                              color: _isCompleted
+                                  ? const Color(0xFF464650)
+                                  : const Color(0xFF191C1E),
                             ),
                           ),
-                          if (isActive) ...[
+                          if (_isCurrent) ...[
                             const SizedBox(width: 6),
                             const Icon(
                               Icons.check_circle_rounded,
                               color: Color(0xFFF59E0B),
+                              size: 16,
+                            ),
+                          ],
+                          // علامة "تم الإنجاز" الخضراء للمستويات المُنجزة فعلاً
+                          if (_isCompleted) ...[
+                            const SizedBox(width: 6),
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              color: Color(0xFF22C55E),
                               size: 16,
                             ),
                           ],
@@ -554,8 +377,26 @@ class _TierRoadmapCard extends StatelessWidget {
                   ),
                 ),
 
-                // عرض الهدية أو النص التحفيزي المتاح بشكل أنيق
-                if (rewardTitle.isNotEmpty)
+                // للمُنجز: بادچ "تم الإنجاز" هادي بدل عرض المكافأة كـ CTA
+                if (_isCompleted)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF22C55E).withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text(
+                      'تم الإنجاز',
+                      style: TextStyle(
+                        fontFamily: 'IBMPlexSans',
+                        fontSize: 11,
+                        color: Color(0xFF22C55E),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  )
+                // عرض الهدية أو النص التحفيزي المتاح بشكل أنيق (للحالي/المقفول)
+                else if (rewardTitle.isNotEmpty)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
@@ -577,8 +418,8 @@ class _TierRoadmapCard extends StatelessWidget {
           ),
         ),
 
-        // طبقة الحجب الذكية فوق المستويات التي لم يتم فتحها بعد (Locked Tiers)
-        if (isLocked)
+        // طبقة الحجب الذكية فوق المستويات التي لم يتم فتحها بعد (Locked Tiers فقط)
+        if (_isLocked)
           Positioned.fill(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(14),
@@ -623,7 +464,7 @@ class _TierRoadmapCard extends StatelessWidget {
   }
 }
 
-// ── ✅ الكلاس المساعد لتجميع وهيكلة بيانات الخريطة بيسر ──
+// ── الكلاس المساعد لتجميع وهيكلة بيانات الخريطة بيسر ──
 class _MapTierItem {
   final String key;
   final String name;
@@ -631,8 +472,7 @@ class _MapTierItem {
   final double minAmount;
   final double? maxAmount;
   final String? colorHex;
-  final bool isCurrentTier;
-  final bool isLocked;
+  final _TierStatus status;
 
   const _MapTierItem({
     required this.key,
@@ -640,8 +480,7 @@ class _MapTierItem {
     required this.minAmount,
     this.maxAmount,
     this.colorHex,
-    required this.isCurrentTier,
-    required this.isLocked,
+    required this.status,
     required this.rewardTitle,
   });
 }

@@ -595,7 +595,12 @@ Future saveProfileImage(request) async {
   );
 }
 
-Future<bool> updateProfile({File? file, String? toastMessage, bool showToast = true}) async {
+Future<bool> updateProfile({
+  File? file,
+  String? toastMessage,
+  String? errorMessage,
+  bool showToast = true,
+}) async {
   var multiPartRequest = MultipartRequest(
     'POST',
     Uri.parse('${getStringAsync(APP_URL)}store/api/v2/customer/save-profile-image'),
@@ -614,12 +619,12 @@ Future<bool> updateProfile({File? file, String? toastMessage, bool showToast = t
   log(response.body);
 
   if (response.statusCode.isSuccessful()) {
-    Map<String, dynamic> res = jsonDecode(response.body);
-    await setValue(PROFILE_IMAGE, res['store_profile_image']);
-    if (showToast) toast(toastMessage ?? res['message']);
+    // ✅ تجاهل رسالة السيرفر (غالبًا إنجليزي) واستخدام النص المترجم فقط
+    if (showToast) toast(toastMessage ?? 'تم الحفظ بنجاح');
     return true;
   } else {
-    toast(errorSomethingWentWrong);
+    // ✅ استخدام رسالة مترجمة بدل errorSomethingWentWrong (ثابت إنجليزي من nb_utils)
+    toast(errorMessage ?? 'حدث خطأ ما، حاول مرة أخرى');
     return false;
   }
 }

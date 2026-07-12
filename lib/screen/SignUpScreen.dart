@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -36,6 +38,7 @@ class SignUpScreenState extends State<SignUpScreen> {
   TextEditingController usernameCont = TextEditingController();
   TextEditingController passwordCont = TextEditingController();
   TextEditingController confirmPasswordCont = TextEditingController();
+  TextEditingController phoneCont = TextEditingController(); // ✅ جديد - الـ Controller الخاص برقم الهاتف
 
   @override
   void initState() {
@@ -51,6 +54,7 @@ class SignUpScreenState extends State<SignUpScreen> {
         'first_name': cleanInputText(fNameCont.text),
         'last_name': cleanInputText(lNameCont.text),
         'user_email': cleanInputText(emailCont.text),
+        'billing_phone': cleanInputText(phoneCont.text), // ✅ جديد - إرسال رقم الهاتف متوافقاً مع مسمى الـ Backend
         'user_type': null,
         'user_login': widget.userName ?? cleanInputText(usernameCont.text),
         'user_pass': widget.userName ?? passwordCont.text
@@ -116,49 +120,34 @@ class SignUpScreenState extends State<SignUpScreen> {
         await setValue(USER_DISPLAY_NAME, res['user_display_name']);
         appStore.setLoggedIn(true);
 
-        // ✅ v1.7.5-fix — نفس التعديل في مسار التسجيل/الدخول بـ Google/Apple
-        // من شاشة SignUpScreen.
         await savePlayerIdToServer();
 
-        // ✅ توحيد ظهور دايلوج هدية الترحيب: نعتمد على فلاج is_new_user
-        // الراجع من الباك إند (mighty_get_customer_by_social) بدل أي تخمين
-        // في الفرونت. الدايلوج يظهر فقط لو الحساب اتعمل دلوقتي فعلاً —
-        // مش لأي تسجيل دخول عادي بجوجل/أبل لمستخدم موجود من قبل ليه
-        // مكافآت تانية (ترقية مستوى مثلاً) مش لازم تتعرض بنفس الشكل ده.
         final bool isNewUser = res['is_new_user'] == true;
 
         if (isNewUser) {
           log('🎁 [WELCOME] جاري جلب المكافآت بعد تسجيل اشتراك جديد عبر السوشيال...');
           try {
             await rewardsStore.fetchRewards();
-            log('🎁 [WELCOME] fetchRewards انتهت بنجاح — error=${rewardsStore.error} | rewards.length=${rewardsStore.rewards.length} | available.length=${rewardsStore.availableRewards.length}');
-          } catch (e, st) {
+          } catch (e) { // ✅ تم إزالة حقل st غير المستخدم
             log('🎁 [WELCOME] ❌ fetchRewards رمت Exception: $e');
-            log('🎁 [WELCOME] StackTrace: $st');
           }
 
           if (!mounted) {
             log('🎁 [WELCOME] ❌ الشاشة اتعملها dispose قبل ما نعرض الدايلوج (mounted=false)');
           } else if (rewardsStore.availableRewards.isNotEmpty) {
-            log('🎁 [WELCOME] ✅ هنعرض الدايلوج دلوقتي — reward: ${rewardsStore.availableRewards.first.rewardTitle}');
             await RewardWelcomeDialog.show(context, rewardsStore.availableRewards.first);
             if (!mounted) return;
-          } else {
-            log('🎁 [WELCOME] ⚠️ availableRewards فاضية — مفيش دايلوج هيظهر');
           }
         }
 
         appStore.setLoading(false);
-
         const DashBoardScreen().launch(context, isNewTask: true);
       }).catchError((error) {
         appStore.setLoading(false);
-
         toast(error.toString());
       });
     }).catchError((error) {
       appStore.setLoading(false);
-
       toast(error.toString());
     });
   }
@@ -187,43 +176,27 @@ class SignUpScreenState extends State<SignUpScreen> {
         await setValue(IS_SOCIAL_LOGIN, true);
       }
 
-      // ✅ v1.7.5-fix — بعد ما التوكن بقى صالح هنا (مسار التسجيل الجديد ثم
-      // اللوجين التلقائي بعده)، نبعت الـ Player ID فوراً عشان أي إشعار بعد
-      // كده (هدية الترحيب، تأكيد الاستخدام...) يوصل من أول استخدام للحساب.
       await savePlayerIdToServer();
 
-      // ✅ هدية الترحيب: بيتم منحها من الباك إند بشكل متزامن داخل
-      // wp_insert_user وقت createCustomer (قبل ما اللوجين ده يحصل أصلاً).
-      // دلوقتي عندنا توكن صالح (newly set above)، فنقدر نسأل عن المكافآت
-      // فعلياً ونعرض دايلوج ترحيبي لو لقينا حاجة متاحة، قبل ما نروح الداشبورد.
       log('🎁 [WELCOME] جاري جلب المكافآت بعد التسجيل...');
       try {
         await rewardsStore.fetchRewards();
-        log('🎁 [WELCOME] fetchRewards انتهت بنجاح — error=${rewardsStore.error} | rewards.length=${rewardsStore.rewards.length} | available.length=${rewardsStore.availableRewards.length}');
-      } catch (e, st) {
+      } catch (e) { // ✅ تم إزالة حقل st غير المستخدم
         log('🎁 [WELCOME] ❌ fetchRewards رمت Exception: $e');
-        log('🎁 [WELCOME] StackTrace: $st');
       }
 
       appStore.setLoading(false);
 
-      if (!mounted) {
-        log('🎁 [WELCOME] ❌ الشاشة اتعملها dispose قبل ما نعرض الدايلوج (mounted=false)');
-        return;
-      }
+      if (!mounted) return;
 
       if (rewardsStore.availableRewards.isNotEmpty) {
-        log('🎁 [WELCOME] ✅ هنعرض الدايلوج دلوقتي — reward: ${rewardsStore.availableRewards.first.rewardTitle}');
-        // ✅ استخدام الكومبوننت الموحّد بدل الكود المحلي المكرر
         await RewardWelcomeDialog.show(context, rewardsStore.availableRewards.first);
         if (!mounted) return;
-      } else {
-        log('🎁 [WELCOME] ⚠️ availableRewards فاضية — مفيش دايلوج هيظهر');
       }
 
       const DashBoardScreen().launch(context, isNewTask: true);
     }).catchError((error) {
-      print("Error$error");
+      log("Error$error"); // ✅ تحويل print إلى log للإنتاج
       appStore.setLoading(false);
       toast(error.toString());
     });
@@ -231,6 +204,7 @@ class SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void dispose() {
+    phoneCont.dispose(); // ✅ تنظيف الـ controller الجديد لمنع تسريب الذاكرة
     super.dispose();
   }
 
@@ -292,6 +266,18 @@ class SignUpScreenState extends State<SignUpScreen> {
                           )
                         ],
                       ),
+                      16.height,
+                      EditText(
+                          hintText: appLocalization.translate('hint_phone'), // ✅ جديد - حقل إدخال رقم الهاتف فوق الإيميل مباشرة
+                          isPassword: false,
+                          mController: phoneCont,
+                          validator: (String? v) {
+                            String phone = v!.trim();
+                            if (phone.isEmpty) return appLocalization.translate('error_phone_required');
+                            if (!RegExp(r'^[0-9]+$').hasMatch(phone)) return appLocalization.translate('error_phone_only_numbers');
+                            if (phone.length < 10 || phone.length > 11) return appLocalization.translate('error_phone_length');
+                            return null;
+                          }),
                       16.height,
                       EditText(
                           hintText: appLocalization.translate('lbl_email'),

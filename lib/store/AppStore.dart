@@ -103,6 +103,8 @@ abstract class AppStoreBase with Store {
   @action
   Future<void> setDarkMode({bool? aIsDarkMode}) async {
     isDarkMode = aIsDarkMode ?? false;
+    isDarkModeOn = isDarkMode ?? false; // ✅ توحيد الحالة مع المتغير اللي بتستخدمه شاشة البروفايل
+
 
     if (isDarkMode == true) {
       textPrimaryColorGlobal = Colors.white54;

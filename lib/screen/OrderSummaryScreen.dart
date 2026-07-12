@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart'; // ✅ لفتح رابط صفحة الدعم
 import '/../main.dart';
 import '/../models/CartModel.dart';
 import '/../models/Coupon_lines.dart';
@@ -17,11 +18,14 @@ import '/../utils/Constants.dart';
 import '/../utils/SharedPref.dart';
 import 'package:nb_utils/nb_utils.dart';
 import '../AppLocalizations.dart';
-import 'DashBoardScreen.dart';
 import 'PlaceOrderScreen.dart';
 import 'WebViewPaymentScreen.dart';
 import 'WalletMobileInputScreen.dart'; // ✅ الانتقال لشاشة المحفظة
 import 'CardPaymentSheet.dart'; // ✅ Bottom Sheet الدفع بالكارت
+import 'EditProfileScreen.dart'; // ✅ شاشة تعديل العنوان (بيانات الشحن)
+
+/// رابط صفحة الدعم/التواصل التي يفتحها زر السماعة أعلى الشاشة
+const String kSupportContactUrl = 'https://twomenu.shop/contact/';
 
 class OrderSummaryScreen extends StatefulWidget {
   static String tag = '/OrderSummaryScreen';
@@ -44,8 +48,15 @@ class OrderSummaryScreen extends StatefulWidget {
 
 class OrderSummaryScreenState extends State<OrderSummaryScreen> {
   final formKey = GlobalKey<FormState>();
-  var mOrderModel = OrderResponse();
+  OrderResponse mOrderModel = OrderResponse();
   List<PaymentClass>? paymentList = [];
+
+  // أيقونة لكل وسيلة دفع بنفس ترتيب paymentList (كاش / محفظة / كارت)
+  final List<IconData> paymentIcons = [
+    Icons.payments_rounded,
+    Icons.account_balance_wallet_rounded,
+    Icons.credit_card_rounded,
+  ];
 
   Shipping? shipping;
   Billing? billing;
@@ -298,8 +309,75 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
     } else if (paymentIndex == 1) {
       createNativeOrder(PAYMENT_METHOD_KASHIER_WALLET, appLocalization.translate('lbl_wallet_payment') ?? 'الدفع بالمحفظة');
     } else if (paymentIndex == 2) {
-      createNativeOrder(PAYMENT_METHOD_KASHIER_CARD, appLocalization.translate('lbl_card_payment') ?? 'الدفع بالكارت');
+      createNativeOrder(PAYMENT_METHOD_KASHIER_CARD, appLocalization.translate('lbl_card_payment') ?? 'البطاقات البنكية');
     }
+  }
+
+  // ✅ فتح صفحة الدعم/التواصل عند الضغط على أيقونة السماعة أعلى الشاشة
+  Future<void> _openSupport() async {
+    final uri = Uri.parse(kSupportContactUrl);
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched) toast('تعذر فتح صفحة الدعم');
+    } catch (_) {
+      toast('تعذر فتح صفحة الدعم');
+    }
+  }
+
+  // ✅ فتح شاشة تعديل بيانات العنوان، وتحديث البيانات المعروضة عند العودة
+  Future<void> _editAddress() async {
+    final navContext = context;
+    await EditProfileScreen().launch(navContext);
+    if (!navContext.mounted) return;
+    init();
+  }
+
+  String _paymentSubtitle(AppLocalizations appLocalization, int index) {
+    switch (index) {
+      case 0:
+        return appLocalization.translate('lbl_cod_subtitle') ?? 'ادفع للمندوب عند استلام الطلب';
+      case 1:
+        return appLocalization.translate('lbl_wallet_subtitle') ?? 'ادفع باستخدام محفظتك الإلكترونية';
+      case 2:
+        return appLocalization.translate('lbl_card_subtitle') ?? 'ادفع باستخدام بطاقة بنكية';
+      default:
+        return '';
+    }
+  }
+
+  // قيمة رسوم التوصيل مشتقة من الإجمالي والمنتجات والخصومات (لا يوجد حقل مستقل لها حاليًا في الـ widget)
+  double get _shippingCharge {
+    final total = double.tryParse(widget.mPrice?.toString() ?? '') ?? 0;
+    final calculated = total - widget.subtotal.validate() + widget.discount.validate();
+    return calculated < 0 ? 0 : calculated;
+  }
+
+  // ظل ناعم وخفيف يُستخدم بدل الإطارات (Border) في كروت الشاشة
+  final List<BoxShadow> _softCardShadow = [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.06),
+      blurRadius: 12,
+      offset: const Offset(0, 4),
+      spreadRadius: 0,
+    ),
+  ];
+
+  Widget _priceDetailItem({required IconData icon, required String label, required String value}) {
+    return Expanded(
+      child: Column(
+        children: [
+          PriceWidget(price: value, size: 12),
+          4.height,
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(color: primaryColor!.withValues(alpha: 0.08), shape: BoxShape.circle),
+            child: Icon(icon, size: 14, color: primaryColor),
+          ),
+          4.height,
+          Text(label, style: secondaryTextStyle(size: 10), textAlign: TextAlign.center),
+        ],
+      ),
+    );
   }
 
   @override
@@ -317,12 +395,31 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
     ));
     paymentList!.add(PaymentClass(
       paymentIndex: 2,
-      paymentMethod: appLocalization.translate('lbl_card_payment') ?? 'الدفع بالكارت (فيزا/ماستركارد)',
+      paymentMethod: appLocalization.translate('lbl_card_payment') ?? 'البطاقات البنكية',
     ));
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: mTop(context, appLocalization.translate('lbl_order_summary'), showBack: true) as PreferredSizeWidget?,
+      appBar: AppBar(
+        backgroundColor: primaryColor!,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => finish(context),
+        ),
+        title: Text(
+          appLocalization.translate('lbl_order_summary') ?? 'ملخص الطلب',
+          style: boldTextStyle(color: Colors.white, size: 18),
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'الدعم',
+            icon: const Icon(Icons.headset_mic_outlined, color: Colors.white),
+            onPressed: _openSupport,
+          ),
+        ],
+      ),
       body: BodyCornerWidget(
         child: Stack(
           children: [
@@ -330,26 +427,117 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  16.height,
-                  if (shipping != null)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  // ── بانر ترحيبي أعلى الشاشة "إكمال عملية الشراء" ──
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: boxDecorationWithRoundedCorners(
+                      borderRadius: radius(16),
+                      backgroundColor: primaryColor!,
+                    ),
+                    child: Row(
                       children: [
-                        Text(appLocalization.translate("lbl_shipping_address")!, style: boldTextStyle()),
-                        4.height,
-                        Text(
-                          "${shipping!.firstName.validate()} ${shipping!.lastName.validate()}\n${shipping!.address1.validate()}\n${shipping!.city.validate()}\n${shipping!.state.validate()}-${shipping!.country.validate()}-${shipping!.postcode.validate()}",
-                          style: secondaryTextStyle(),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                appLocalization.translate('lbl_complete_purchase') ?? 'إكمال عملية الشراء',
+                                style: boldTextStyle(color: Colors.white, size: 14),
+                              ),
+                              4.height,
+                              Text(
+                                appLocalization.translate('lbl_complete_purchase_desc') ?? 'راجع بيانات الطلب ثم اختر طريقة الدفع المناسبة.',
+                                style: secondaryTextStyle(color: Colors.white.withValues(alpha: 0.9), size: 11),
+                              ),
+                            ],
+                          ),
+                        ),
+                        10.width,
+                        Container(
+                          padding: const EdgeInsets.all(9),
+                          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                          child: Icon(Icons.fact_check_outlined, color: primaryColor, size: 22),
                         ),
                       ],
-                    ).paddingSymmetric(horizontal: 16),
-                  Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color).visible(isNativePayment),
+                    ),
+                  ),
+
+                  // ── عنوان التوصيل + زر تعديل (تصميم مُصغّر) ──
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: boxDecorationWithRoundedCorners(
+                      borderRadius: radius(12),
+                      backgroundColor: context.cardColor,
+                      boxShadow: _softCardShadow,
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: primaryColor!.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(Icons.location_on_outlined, color: primaryColor, size: 18),
+                        ),
+                        10.width,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(appLocalization.translate("lbl_shipping_address")!, style: boldTextStyle(size: 13)),
+                              3.height,
+                              if (shipping != null)
+                                Text(
+                                  "${shipping!.firstName.validate()} ${shipping!.lastName.validate()}، ${shipping!.address1.validate()}، ${shipping!.city.validate()}، ${shipping!.state.validate()}-${shipping!.country.validate()}-${shipping!.postcode.validate()}",
+                                  style: secondaryTextStyle(size: 12).copyWith(height: 1.35),
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                )
+                              else
+                                Text(
+                                  appLocalization.translate('lbl_no_address') ?? 'لا يوجد عنوان محدد، من فضلك أضف عنوان التوصيل',
+                                  style: secondaryTextStyle(size: 12),
+                                ),
+                              6.height,
+                              Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: OutlinedButton.icon(
+                                  onPressed: _editAddress,
+                                  icon: Icon(Icons.edit_outlined, size: 14, color: primaryColor),
+                                  label: Text(
+                                    appLocalization.translate('lbl_edit_address') ?? 'تعديل العنوان',
+                                    style: secondaryTextStyle(color: primaryColor, size: 12),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    shape: const StadiumBorder(),
+                                    side: BorderSide(color: primaryColor!),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // ── طرق الدفع ──
                   if (isNativePayment)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(appLocalization.translate('lbl_payment_methods')!, style: boldTextStyle()).paddingLeft(16),
-                        8.height,
+                        Text(appLocalization.translate('lbl_payment_methods')!, style: boldTextStyle()).paddingSymmetric(horizontal: 16),
+                        6.height,
                         AnimatedListView(
                           physics: const NeverScrollableScrollPhysics(),
                           shrinkWrap: true,
@@ -357,23 +545,38 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
                           itemBuilder: (context, index) {
                             bool isSelectedMethod = paymentIndex == index;
                             return Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
                               decoration: boxDecorationWithRoundedCorners(
-                                borderRadius: radius(8),
+                                borderRadius: radius(12),
                                 backgroundColor: context.cardColor,
-                                border: Border.all(color: isSelectedMethod ? primaryColor! : context.dividerColor),
+                                border: isSelectedMethod ? Border.all(color: primaryColor!, width: 1.5) : null,
+                                boxShadow: _softCardShadow,
                               ),
                               child: ListTile(
-                                leading: Container(
-                                  width: 20, height: 20,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: isSelectedMethod ? primaryColor : Colors.transparent,
-                                    border: Border.all(color: primaryColor!),
-                                  ),
-                                  child: isSelectedMethod ? const Icon(Icons.done, color: Colors.white, size: 14) : const SizedBox(),
+                                dense: true,
+                                visualDensity: const VisualDensity(horizontal: 0, vertical: -3),
+                                contentPadding: EdgeInsets.zero,
+                                leading: Icon(
+                                  isSelectedMethod ? Icons.check_circle : Icons.circle_outlined,
+                                  color: isSelectedMethod ? primaryColor : context.dividerColor,
+                                  size: 20,
                                 ),
-                                title: Text(paymentList![index].paymentMethod!, style: boldTextStyle(color: isSelectedMethod ? primaryColor : null)),
+                                title: Text(
+                                  paymentList![index].paymentMethod!,
+                                  style: boldTextStyle(size: 13, color: isSelectedMethod ? primaryColor : null),
+                                ),
+                                subtitle: Text(_paymentSubtitle(appLocalization, index), style: secondaryTextStyle(size: 10)),
+                                trailing: Container(
+                                  width: 34,
+                                  height: 34,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: primaryColor!.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(paymentIcons[index], color: primaryColor, size: 18),
+                                ),
                                 onTap: () {
                                   setState(() {
                                     paymentIndex = index;
@@ -383,32 +586,79 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
                             );
                           },
                         ),
+                        6.height,
                       ],
                     ),
-                  Divider(thickness: 6, color: Theme.of(context).textTheme.headlineMedium!.color),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(appLocalization.translate("lbl_price_detail")!, style: boldTextStyle()),
-                      8.height,
-                      const Divider(),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(appLocalization.translate("lbl_total_mrp")!, style: secondaryTextStyle(size: 16)),
-                          PriceWidget(price: nf.format(widget.subtotal.validate()), size: 16)
-                        ],
-                      ),
-                      const Divider(),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(appLocalization.translate('lbl_total_amount')!, style: boldTextStyle(color: primaryColor)),
-                          PriceWidget(price: widget.mPrice, size: 16),
-                        ],
-                      ),
-                    ],
-                  ).paddingAll(16),
+
+                  // ── ملخص الدفع ──
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    padding: const EdgeInsets.all(12),
+                    decoration: boxDecorationWithRoundedCorners(
+                      borderRadius: radius(12),
+                      backgroundColor: context.cardColor,
+                      boxShadow: _softCardShadow,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(appLocalization.translate("lbl_price_detail")!, style: boldTextStyle(size: 13)),
+                        10.height,
+                        Row(
+                          children: [
+                            _priceDetailItem(
+                              icon: Icons.shopping_bag_outlined,
+                              label: appLocalization.translate('lbl_total_mrp') ?? 'إجمالي المنتجات',
+                              value: nf.format(widget.subtotal.validate()),
+                            ),
+                            _priceDetailItem(
+                              icon: Icons.local_shipping_outlined,
+                              label: appLocalization.translate('lbl_shipping_charge') ?? 'رسوم التوصيل',
+                              value: nf.format(_shippingCharge),
+                            ),
+                            _priceDetailItem(
+                              icon: Icons.sell_outlined,
+                              label: appLocalization.translate('lbl_discount') ?? 'الخصومات',
+                              value: nf.format(widget.discount.validate()),
+                            ),
+                          ],
+                        ),
+                        10.height,
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(color: primaryColor!.withValues(alpha: 0.08), borderRadius: radius(8)),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(appLocalization.translate('lbl_total_amount')!, style: boldTextStyle(color: primaryColor, size: 13)),
+                              PriceWidget(price: widget.mPrice, size: 15, color: primaryColor),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // ── ملاحظة الأمان ──
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(color: primaryColor!.withValues(alpha: 0.06), borderRadius: radius(8)),
+                    child: Row(
+                      children: [
+                        Icon(Icons.verified_user_outlined, size: 16, color: primaryColor),
+                        8.width,
+                        Expanded(
+                          child: Text(
+                            appLocalization.translate('lbl_secure_payment_note') ?? 'جميع بياناتك محمية ومشفرة لضمان أمان معلوماتك',
+                            style: secondaryTextStyle(size: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  4.height,
                 ],
               ),
             ),
@@ -417,16 +667,15 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
         ),
       ),
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(color: context.cardColor),
         child: Row(
           children: [
-            PriceWidget(price: widget.mPrice, size: 16).expand(),
-            16.width,
             AppButton(
               text: appLocalization.translate('lbl_continue'),
-              textStyle: primaryTextStyle(color: white),
+              textStyle: primaryTextStyle(color: Colors.white),
               color: primaryColor,
+              shapeBorder: const StadiumBorder(),
               onTap: () {
                 if (isNativePayment) {
                   payments();
@@ -434,7 +683,23 @@ class OrderSummaryScreenState extends State<OrderSummaryScreen> {
                   createWebViewOrder();
                 }
               },
-            ).expand(),
+            ).expand(flex: 2),
+            16.width,
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  PriceWidget(price: widget.mPrice, size: 16),
+                  2.height,
+                  Text(
+                    appLocalization.translate('lbl_total_amount') ?? 'الإجمالي الكلي',
+                    style: secondaryTextStyle(size: 10),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
