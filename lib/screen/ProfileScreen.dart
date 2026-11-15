@@ -256,17 +256,22 @@ class ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderS
         final bool showTierArea = mIsLoggedIn && !mIsGuest;
         final Widget? tierCardWidget = showTierArea ? _buildTierPointsCard(context) : null;
 
+        // ✅ ارتفاع شريط الحالة (الوقت/الشبكة/الشحن) عشان نمدّد الخلفية الزرقاء خلفه
+        final double statusBarHeight = MediaQuery.of(context).padding.top;
+
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Stack(
             children: [
               SafeArea(
+                top: false,
                 bottom: false,
                 child: CustomScrollView(
                   slivers: [
                     // ═══════════════════════════════════════════
                     // ✅ الهيدر القابل للطي: بطاقة المستخدم + كارت المستوى
                     // يتصغر تدريجياً ويثبت (pinned) أثناء الأسكرول
+                    // (في حالة الضيف: بار ثابت موحّد الشكل مع باقي الشاشات)
                     // ═══════════════════════════════════════════
                     SliverPersistentHeader(
                       pinned: true,
@@ -289,6 +294,7 @@ class ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderS
                         unreadCount: appStore.unreadNotificationCount,
                         tierCard: tierCardWidget,
                         hasTierCard: showTierArea,
+                        statusBarHeight: statusBarHeight,
                       ),
                     ),
 
@@ -649,6 +655,12 @@ class ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderS
 // ✅ الهيدر القابل للطي: يحتوي على دوائر الخلفية + بطاقة المستخدم
 // (صورة/اسم/بريد/بادچ المستوى/زر التعديل) + كارت المستوى.
 // يتصغر تدريجياً مع الأسكرول ويثبت أعلى الشاشة (pinned) كبطاقة مصغّرة.
+// الخلفية الزرقاء تمتد الآن خلف شريط الحالة (statusBarHeight) بدون تغيير أي تنسيق آخر.
+//
+// ✅ حالة الضيف (غير مسجّل الدخول): هيدر بسيط وثابت الحجم، موحّد الشكل مع
+// باقي شاشات التطبيق (زي شاشة السلة MyCartScreen عبر BodyCornerWidget):
+// بار أزرق علوي + غطاء أبيض بزاوية استدارة علوية (topLeft/topRight = 30)
+// "طالع" فوق الأزرق، بدل ما يكون الأزرق نفسه هو المقوّص من تحت.
 // ═══════════════════════════════════════════════════════════════
 class _CollapsingProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   final AppLocalizations appLocalization;
@@ -667,17 +679,24 @@ class _CollapsingProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   final int unreadCount;
   final Widget? tierCard;
   final bool hasTierCard;
+  final double statusBarHeight; // ✅ ارتفاع شريط الحالة (Notch/الوقت/الشبكة)
 
   static const double _titleRowHeight = 40;
   static const double _titleSpacing = 18;
-  static const double _bigCardHeight = 150;
+  static const double _bigCardHeight = 157;
   static const double _cardSpacing = 16;
-  static const double _tierCardHeight = 130;
-  static const double _smallCardHeight = 64;
+  static const double _tierCardHeight = 134;
+  static const double _smallCardHeight = 67;
   static const double _topPadding = 12;
   static const double _bottomPaddingExpanded = 18;
   static const double _bottomPaddingCollapsed = 10;
   static const double _hPadding = 20;
+
+  // ✅ قيم هيدر حالة الضيف — نفس نصف قطر استدارة BodyCornerWidget (30)
+  // المستخدم في باقي شاشات التطبيق (مثال: MyCartScreen عبر mTop/BodyCornerWidget)
+  static const double _guestTopPadding = 16;
+  static const double _guestCapHeight = 26;
+  static const double _guestCapRadius = 30;
 
   _CollapsingProfileHeaderDelegate({
     required this.appLocalization,
@@ -696,20 +715,36 @@ class _CollapsingProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.unreadCount,
     this.tierCard,
     this.hasTierCard = false,
+    this.statusBarHeight = 0,
   });
 
   @override
-  double get minExtent => _topPadding + _smallCardHeight + _bottomPaddingCollapsed;
+  double get minExtent {
+    if (!isLoggedIn) {
+      // ✅ حالة الضيف: بار ثابت وصغير، مفيش تصغير أثناء السكرول
+      return statusBarHeight + _guestTopPadding + _titleRowHeight + _guestCapHeight;
+    }
+    return statusBarHeight + _topPadding + _smallCardHeight + _bottomPaddingCollapsed;
+  }
 
   @override
   double get maxExtent {
-    double h = _topPadding + _titleRowHeight + _titleSpacing + _bigCardHeight;
+    if (!isLoggedIn) {
+      // ✅ نفس الارتفاع دايمًا (min = max) عشان الهيدر يفضل ثابت زي الأبار بار العادي
+      return minExtent;
+    }
+    double h = statusBarHeight + _topPadding + _titleRowHeight + _titleSpacing + _bigCardHeight;
     if (hasTierCard) h += _cardSpacing + _tierCardHeight;
     return h + _bottomPaddingExpanded;
   }
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    // ✅ حالة الضيف: هيدر بسيط ومستقل تمامًا عن منطق تسجيل الدخول (بدون أي تعديل عليه)
+    if (!isLoggedIn) {
+      return _buildGuestHeader(context);
+    }
+
     final double range = (maxExtent - minExtent);
     // t = 1 (موسّع بالكامل) -> t = 0 (مطوي بالكامل)
     final double t = range <= 0 ? 0 : (1 - (shrinkOffset / range)).clamp(0.0, 1.0);
@@ -740,7 +775,12 @@ class _CollapsingProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
             ),
           ),
           Padding(
-            padding: EdgeInsets.fromLTRB(_hPadding, _topPadding, _hPadding, lerpDouble(_bottomPaddingCollapsed, _bottomPaddingExpanded, t) ?? _bottomPaddingExpanded),
+            padding: EdgeInsets.fromLTRB(
+              _hPadding,
+              statusBarHeight + _topPadding,
+              _hPadding,
+              lerpDouble(_bottomPaddingCollapsed, _bottomPaddingExpanded, t) ?? _bottomPaddingExpanded,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -835,6 +875,57 @@ class _CollapsingProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                     ),
                   ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // ✅ هيدر حالة الضيف — موحّد الشكل مع باقي شاشات التطبيق:
+  // بار أزرق ثابت أعلاه عنوان الصفحة والجرس، وتحته غطاء أبيض
+  // بزاوية استدارة علوية (نفس قيمة BodyCornerWidget = 30) بيغطي
+  // على الأزرق من فوق بدل ما الأزرق نفسه يتقوّص من تحت.
+  // ═══════════════════════════════════════════════════════════
+  Widget _buildGuestHeader(BuildContext context) {
+    final double barHeight = statusBarHeight + _guestTopPadding + _titleRowHeight;
+
+    return SizedBox(
+      height: minExtent,
+      child: Stack(
+        children: [
+          // ── البار الأزرق: حواف مربعة بالكامل (بدون أي تقويص) ──
+          Container(
+            height: barHeight,
+            width: double.infinity,
+            color: kBrandPrimary,
+            padding: EdgeInsets.fromLTRB(_hPadding, statusBarHeight + _guestTopPadding, _hPadding, 0),
+            child: SizedBox(
+              height: _titleRowHeight,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    appLocalization.translate('title_account') ?? 'حسابي',
+                    style: boldTextStyle(color: white, size: 20),
+                  ),
+                  _HeaderNotificationBell(onTap: onBellTap, unreadCount: unreadCount),
+                ],
+              ),
+            ),
+          ),
+          // ── الغطاء الأبيض العلوي: بيكشف الأزرق عند الزوايا فقط (radius = 30) ──
+          Positioned(
+            top: barHeight,
+            left: 0,
+            right: 0,
+            height: _guestCapHeight,
+            child: Container(
+              color: Theme.of(context).scaffoldBackgroundColor,
+            ).cornerRadiusWithClipRRectOnly(
+              topLeft: _guestCapRadius.toInt(),
+              topRight: _guestCapRadius.toInt(),
             ),
           ),
         ],
@@ -1022,7 +1113,8 @@ class _CollapsingProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
         oldDelegate.isGuest != isGuest ||
         oldDelegate.hasTierCard != hasTierCard ||
         oldDelegate.tierCard != tierCard ||
-        oldDelegate.unreadCount != unreadCount;
+        oldDelegate.unreadCount != unreadCount ||
+        oldDelegate.statusBarHeight != statusBarHeight;
   }
 }
 

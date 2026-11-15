@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cached_network_image/cached_network_image.dart'; // ✅ إضافة مكتبة الكاش
 import '/../main.dart';
 import '/../models/ProductResponse.dart';
 import '/../models/WalkModel.dart';
@@ -29,7 +30,7 @@ class EditText extends StatefulWidget {
   TextEditingController? mController;
   VoidCallback? onPressed;
 
-  EditText({super.key, 
+  EditText({super.key,
     var this.fontSize = 16,
     var this.textColor = textColorSecondary,
     var this.hintText = '',
@@ -541,19 +542,45 @@ Widget mSale(ProductResponse product) {
   ).visible(product.onSale == true && product.type!.contains("grouped") && !product.type!.contains("variation"));
 }
 
+// ─────────────────────────────────────────────────────────────
+// ✅ commonCacheImageWidget — بعد التحسين
+// تم الاستبدال من Image.network (بدون أي كاش فعلي رغم الاسم)
+// إلى CachedNetworkImage مع تحديد حجم فك التشفير (memCache)
+// بناءً على الحجم الفعلي المطلوب على الشاشة × devicePixelRatio.
+// الفايدة:
+//   1) كاش فعلي على القرص → الصورة متتحملش تاني من الإنترنت كل مرة.
+//   2) تقليل استهلاك الذاكرة ووقت الـ decode للصور الكبيرة (زي البانرات).
+//   3) Placeholder واضح أثناء التحميل بدل مكان فاضي/أبيض.
+// ─────────────────────────────────────────────────────────────
 Widget commonCacheImageWidget(String? url, {double? height, double? width, BoxFit? fit, AlignmentGeometry? alignment, bool usePlaceholderIfUrlEmpty = true, double? radius}) {
   if (url.validate().isEmpty) {
     return placeHolderWidget(height: height, width: width, fit: fit, alignment: alignment, radius: radius);
   } else if (url.validate().startsWith('http')) {
-    return Image.network(
-      url!,
+    // حساب حجم الديكود المناسب فعليًا بالبكسل بدل تحميل الصورة بحجمها الأصلي
+    final double pixelRatio = WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
+    final int? cacheW = width != null && width.isFinite ? (width * pixelRatio).round() : null;
+    final int? cacheH = height != null && height.isFinite ? (height * pixelRatio).round() : null;
+
+    return CachedNetworkImage(
+      imageUrl: url!,
       height: height,
       width: width,
       fit: fit,
-      errorBuilder: (BuildContext? context, Object? exception, StackTrace? stackTrace) {
-        return Image.asset(ic_placeHolder, height: height, width: width, fit: fit, alignment: alignment ?? Alignment.center).cornerRadiusWithClipRRect(radius ?? defaultRadius);
+      alignment: (alignment as Alignment?) ?? Alignment.center,
+      memCacheWidth: cacheW,
+      memCacheHeight: cacheH,
+      fadeInDuration: const Duration(milliseconds: 150),
+      placeholder: (context, _) => placeHolderWidget(
+        height: height,
+        width: width,
+        fit: fit,
+        alignment: alignment,
+        radius: radius,
+      ),
+      errorWidget: (context, url, error) {
+        return Image.asset(ic_placeHolder, height: height, width: width, fit: fit, alignment: alignment ?? Alignment.center)
+            .cornerRadiusWithClipRRect(radius ?? defaultRadius);
       },
-      alignment: alignment as Alignment? ?? Alignment.center,
     );
   } else {
     return Image.asset(ic_placeHolder, height: height, width: width, fit: fit, alignment: alignment ?? Alignment.center).cornerRadiusWithClipRRect(radius ?? defaultRadius);

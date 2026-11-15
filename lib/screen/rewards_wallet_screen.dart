@@ -12,6 +12,7 @@ import '../models/SpendingMilestonesResponse.dart';
 import 'RedemptionScreen.dart'; // شاشة العداد والكود للفرع
 import 'MyCartScreen.dart';       // ✅ تم إضافة شاشة السلة للاستخدام داخل التطبيق
 import 'TierDetailsScreen.dart';
+import '../AppLocalizations.dart'; // ✅ إضافة الترجمة
 
 class RewardsWalletScreen extends StatefulWidget {
   const RewardsWalletScreen({super.key});
@@ -66,9 +67,9 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              '🎉 تهانينا المتميزة!',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context)!.translate('msg_level_up_congrats') ?? '',
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
                 color: Color(0xFF030048),
@@ -76,7 +77,8 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              'لقد تمت ترقيتك بنجاح إلى مستوى\n[ ${spendingStore.wallet!.currentTier.tierName} ]',
+              AppLocalizations.of(context)!.translate('msg_level_up_description',
+                  {'tier': spendingStore.wallet!.currentTier.tierName}) ?? '',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 15,
@@ -87,7 +89,7 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
             ),
             const SizedBox(height: 6),
             Text(
-              'تنتظرك الآن مكافآت ومميزات حصرية جديدة.',
+              AppLocalizations.of(context)!.translate('msg_new_rewards_await') ?? '',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: Colors.grey[600]),
             ),
@@ -107,9 +109,9 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(99)),
             ),
-            child: const Text(
-              'استكشاف المميزات 🚀',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            child: Text(
+              AppLocalizations.of(context)!.translate('lbl_explore_features') ?? '',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -133,9 +135,9 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
     } else {
       // حالة استثنائية: مفيش قناة صرف مفعّلة خالص لهذه المكافأة
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('هذه المكافأة غير متاحة للاستخدام حالياً'),
-          backgroundColor: Color(0xFFE53E3E),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.translate('msg_reward_not_available') ?? ''),
+          backgroundColor: const Color(0xFFE53E3E),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -172,10 +174,10 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
                   ),
                 ),
               ),
-              const Text(
-                'فين عاوز تستخدم المكافأة؟',
+              Text(
+                AppLocalizations.of(context)!.translate('msg_choose_redemption_location') ?? '',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF030048),
@@ -184,10 +186,10 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
               const SizedBox(height: 20),
               _ChoiceTile(
                 icon: Icons.storefront_outlined,
-                title: 'استخدام في الفرع',
+                title: AppLocalizations.of(context)!.translate('lbl_use_in_branch') ?? '',
                 subtitle: canBranch
-                    ? 'هيتولد لك كود تعرضه للكاشير'
-                    : 'غير متاح لهذه المكافأة',
+                    ? (AppLocalizations.of(context)!.translate('msg_branch_code_desc') ?? '')
+                    : (AppLocalizations.of(context)!.translate('msg_not_available_for_reward') ?? ''),
                 enabled: canBranch,
                 onTap: () {
                   Navigator.pop(sheetContext);
@@ -197,10 +199,10 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
               const SizedBox(height: 12),
               _ChoiceTile(
                 icon: Icons.shopping_bag_outlined,
-                title: 'استخدام في طلب التطبيق',
+                title: AppLocalizations.of(context)!.translate('lbl_use_in_app') ?? '',
                 subtitle: canApp
-                    ? 'هيتطبق الخصم تلقائياً على طلبك الحالي'
-                    : 'غير متاح لهذه المكافأة',
+                    ? (AppLocalizations.of(context)!.translate('msg_auto_apply_discount') ?? '')
+                    : (AppLocalizations.of(context)!.translate('msg_not_available_for_reward') ?? ''),
                 enabled: canApp,
                 onTap: () {
                   Navigator.pop(sheetContext);
@@ -239,20 +241,20 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'هل أنت أمام الكاشير الآن؟',
+              Text(
+                AppLocalizations.of(context)!.translate('msg_confirm_cashier_now') ?? '',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF030048),
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'لا يمكن التراجع بعد إنشاء الكود',
+              Text(
+                AppLocalizations.of(context)!.translate('msg_cannot_undo_code') ?? '',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.grey),
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
               ),
               const SizedBox(height: 24),
               Row(
@@ -267,9 +269,9 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'إلغاء',
-                        style: TextStyle(
+                      child: Text(
+                        AppLocalizations.of(context)!.translate('lbl_cancel') ?? '',
+                        style: const TextStyle(
                           color: Colors.black87,
                           fontWeight: FontWeight.w600,
                         ),
@@ -291,9 +293,9 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
                         ),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'تأكيد',
-                        style: TextStyle(
+                      child: Text(
+                        AppLocalizations.of(context)!.translate('lbl_confirm') ?? '',
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
                         ),
@@ -341,7 +343,7 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(rewardsStore.error ?? 'تعذّر إنشاء الكود'),
+          content: Text(rewardsStore.error ?? (AppLocalizations.of(context)!.translate('msg_code_generation_failed') ?? '')),
           backgroundColor: const Color(0xFFE53E3E),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -358,19 +360,19 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
       builder: (dialogContext) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'استخدام في طلب التطبيق',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+        title: Text(
+          AppLocalizations.of(context)!.translate('lbl_use_in_app') ?? '',
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
         ),
-        content: const Text(
-          'هيتم تطبيق الخصم تلقائياً على طلبك الحالي في السلة.\n'
-              'تقدر تكمّل التسوق وتستخدمه وقت ما تحب.',
-          style: TextStyle(fontSize: 14, height: 1.6),
+        content: Text(
+          AppLocalizations.of(context)!.translate('msg_apply_discount_details') ?? '',
+          style: const TextStyle(fontSize: 14, height: 1.6),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
+            child: Text(AppLocalizations.of(context)!.translate('lbl_cancel') ?? '',
+                style: const TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -380,7 +382,7 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('تطبيق الخصم'),
+            child: Text(AppLocalizations.of(context)!.translate('lbl_apply_discount') ?? ''),
           ),
         ],
       ),
@@ -413,7 +415,8 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '🎉 تم تطبيق ${coupon.discountLabel} من ${coupon.partnerName} على السلة',
+            AppLocalizations.of(context)!.translate('msg_discount_applied_success',
+                {'discount': coupon.discountLabel, 'partner': coupon.partnerName}) ?? '',
           ),
           backgroundColor: const Color(0xFF38A169),
           behavior: SnackBarBehavior.floating,
@@ -428,7 +431,7 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(rewardsStore.error ?? 'تعذّر تطبيق الخصم'),
+          content: Text(rewardsStore.error ?? (AppLocalizations.of(context)!.translate('msg_apply_discount_failed') ?? '')),
           backgroundColor: const Color(0xFFE53E3E),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -447,9 +450,9 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
       child: Scaffold(
         backgroundColor: const Color(0xFFF7F9FB),
         appBar: AppBar(
-          title: const Text(
-            'محفظة المكافآت',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          title: Text(
+            AppLocalizations.of(context)!.translate('lbl_rewards_wallet') ?? '',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           centerTitle: true,
           elevation: 0,
@@ -511,11 +514,11 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
                       fontSize: 12, fontWeight: FontWeight.normal),
                   labelPadding: EdgeInsets.zero,
                   overlayColor: WidgetStateProperty.all(Colors.transparent),
-                  tabs: const [
-                    Tab(text: 'متاحة'),
-                    Tab(text: 'تنتهي قريباً'),
-                    Tab(text: 'مستخدمة'),
-                    Tab(text: 'منتهية'),
+                  tabs: [
+                    Tab(text: AppLocalizations.of(context)!.translate('lbl_reward_available') ?? ''),
+                    Tab(text: AppLocalizations.of(context)!.translate('lbl_reward_expiring_soon') ?? ''),
+                    Tab(text: AppLocalizations.of(context)!.translate('lbl_reward_used') ?? ''),
+                    Tab(text: AppLocalizations.of(context)!.translate('lbl_reward_expired') ?? ''),
                   ],
                 ),
               ),
@@ -551,7 +554,7 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
                             ElevatedButton.icon(
                               onPressed: rewardsStore.fetchRewards,
                               icon: const Icon(Icons.refresh),
-                              label: const Text('إعادة المحاولة'),
+                              label: Text(AppLocalizations.of(context)!.translate('lbl_retry') ?? ''),
                             ),
                           ],
                         ),
@@ -565,25 +568,25 @@ class _RewardsWalletScreenState extends State<RewardsWalletScreen>
                       // ✅ تم التعديل لتوجيه الضغط للمايسترو الذكي _handleUse
                       _RewardsList(
                         rewards: rewardsStore.availableRewards,
-                        emptyMessage: 'لا توجد مكافآت متاحة حالياً',
+                        emptyMessage: AppLocalizations.of(context)!.translate('msg_no_available_rewards') ?? '',
                         emptyIcon: Icons.card_giftcard_outlined,
                         onUse: (r) => _handleUse(r),   // ⬅️ بدون context
                       ),
                       _RewardsList(
                         rewards: rewardsStore.expiringSoonRewards,
-                        emptyMessage: 'لا توجد مكافآت تنتهي قريباً',
+                        emptyMessage: AppLocalizations.of(context)!.translate('msg_no_expiring_rewards') ?? '',
                         emptyIcon: Icons.alarm_off_outlined,
                         onUse: (r) => _handleUse(r),   // ⬅️ بدون context
                       ),
                       _RedeemedExpiredList(
                         rewards: rewardsStore.usedRewards,
-                        emptyMessage: 'لم تقم باستخدام أي مكافأة بعد',
+                        emptyMessage: AppLocalizations.of(context)!.translate('msg_no_used_rewards') ?? '',
                         emptyIcon: Icons.check_circle_outline,
                         isRedeemed: true,
                       ),
                       _RedeemedExpiredList(
                         rewards: rewardsStore.expiredRewards,
-                        emptyMessage: 'لا توجد مكافآت منتهية الصلاحية',
+                        emptyMessage: AppLocalizations.of(context)!.translate('msg_no_expired_rewards') ?? '',
                         emptyIcon: Icons.hourglass_empty,
                         isRedeemed: false,
                       ),
@@ -740,7 +743,7 @@ class _TierProgressBarState extends State<_TierProgressBar>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'المستوى الحالي',
+                              AppLocalizations.of(context)!.translate('lbl_current_tier') ?? '',
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Colors.white.withValues(alpha: 0.85),
@@ -784,7 +787,7 @@ class _TierProgressBarState extends State<_TierProgressBar>
                   const SizedBox(height: 10),
 
                   Text(
-                    'دورتك الحالية: ${cycle.displayRange}',
+                    AppLocalizations.of(context)!.translate('msg_current_cycle', {'range': cycle.displayRange}) ?? '',
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.white.withValues(alpha: 0.85),
@@ -797,7 +800,8 @@ class _TierProgressBarState extends State<_TierProgressBar>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'الإنفاق السنوي: ${totalSpent.toStringAsFixed(0)} ج.م',
+                        AppLocalizations.of(context)!.translate('msg_annual_spending',
+                            {'amount': totalSpent.toStringAsFixed(0)}) ?? '',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.white.withValues(alpha: 0.9),
@@ -806,7 +810,8 @@ class _TierProgressBarState extends State<_TierProgressBar>
                       ),
                       if (!isMaxTier && amountLeft != null)
                         Text(
-                          'باقي ${amountLeft.toStringAsFixed(0)} ج.م للـ${nextTier.tierName}',
+                          AppLocalizations.of(context)!.translate('msg_amount_left_for_tier',
+                              {'amount': amountLeft.toStringAsFixed(0), 'tier': nextTier.tierName}) ?? '',
                           style: TextStyle(
                             fontSize: 11,
                             color: Colors.white.withValues(alpha: 0.9),
@@ -815,7 +820,7 @@ class _TierProgressBarState extends State<_TierProgressBar>
                         )
                       else if (isMaxTier)
                         Text(
-                          '✦ أعلى مستوى',
+                          AppLocalizations.of(context)!.translate('lbl_max_tier_reached') ?? '',
                           style: TextStyle(
                             fontSize: 11,
                             color: Colors.white.withValues(alpha: 0.9),
@@ -960,14 +965,14 @@ class _TierBarPlaceholder extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFE6E8EA)),
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.refresh, size: 16, color: Color(0xFF64748B)),
-            SizedBox(width: 8),
+            const Icon(Icons.refresh, size: 16, color: Color(0xFF64748B)),
+            const SizedBox(width: 8),
             Text(
-              'تعذّر تحميل بيانات المستوى — اضغط للمحاولة',
-              style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+              AppLocalizations.of(context)!.translate('msg_tier_load_failed_retry') ?? '',
+              style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
             ),
           ],
         ),
@@ -1093,7 +1098,9 @@ class _SimpleRewardCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(99),
                 ),
                 child: Text(
-                  isRedeemed ? 'مستخدمة' : 'منتهية',
+                  isRedeemed
+                      ? (AppLocalizations.of(context)!.translate('lbl_reward_used') ?? '')
+                      : (AppLocalizations.of(context)!.translate('lbl_reward_expired') ?? ''),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,

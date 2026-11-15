@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // ✅ لازم عشان AnnotatedRegion / SystemUiOverlayStyle
 import 'package:flutter_vector_icons/flutter_vector_icons.dart'; // 👈 استيراد المكتبة الحالية في مشروعك
 import '../../utils/AppColors.dart';
 
@@ -138,93 +139,103 @@ class FloatingAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(50),
-                  border: Border.all(
-                    color: kBrandPrimary.withValues(alpha: 0.12),
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+    // ✅ الشاشة دي خلفيتها فاتحة (بيضاء تقريباً)، فلازم نفرض إن أيقونات شريط
+    // الحالة (الساعة/الشبكة/الشحن) تكون غامقة (Dark) عشان تبان بوضوح فوق
+    // الخلفية الفاتحة، مهما كان الإعداد العام للثيم في باقي الشاشات.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark, // Android: أيقونات غامقة
+        statusBarBrightness: Brightness.light, // iOS: أيقونات غامقة
+      ),
+      child: RepaintBoundary(
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(50),
+                    border: Border.all(
+                      color: kBrandPrimary.withValues(alpha: 0.12),
+                      width: 1.5,
                     ),
-                    BoxShadow(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      blurRadius: 4,
-                      offset: const Offset(0, -1),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    // كبسولة الإشعارات والواتساب المحدثة
-                    SupportNotificationGroup(
-                      onChatTap: onChatTap,
-                      onNotificationTap: onNotificationTap,
-                      hasNotification: hasNotification,
-                    ),
-
-                    // ✅ التعديل: تم تصحيح المسار إلى أيقونة اللانشر المطلوبة ليعمل اللوجو مباشرة وبدون مشاكل
-                    Expanded(
-                      child: Image.asset(
-                        'assets/mipmap-xxxhdpi/ic_launcher.png',
-                        height: 48,
-                        fit: BoxFit.contain,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
                       ),
-                    ),
+                      BoxShadow(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        blurRadius: 4,
+                        offset: const Offset(0, -1),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      // كبسولة الإشعارات والواتساب المحدثة
+                      SupportNotificationGroup(
+                        onChatTap: onChatTap,
+                        onNotificationTap: onNotificationTap,
+                        hasNotification: hasNotification,
+                      ),
 
-                    // زر البحث الدائري على اليمين
-                    Semantics(
-                      label: 'بحث',
-                      button: true,
-                      child: GestureDetector(
-                        onTap: onSearchTap,
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: kBrandBackground,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: kBrandPrimary.withValues(alpha: 0.10),
-                              width: 1,
+                      // ✅ التعديل: تم تصحيح المسار إلى أيقونة اللانشر المطلوبة ليعمل اللوجو مباشرة وبدون مشاكل
+                      Expanded(
+                        child: Image.asset(
+                          'assets/mipmap-xxxhdpi/ic_launcher.png',
+                          height: 48,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+
+                      // زر البحث الدائري على اليمين
+                      Semantics(
+                        label: 'بحث',
+                        button: true,
+                        child: GestureDetector(
+                          onTap: onSearchTap,
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: kBrandBackground,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: kBrandPrimary.withValues(alpha: 0.10),
+                                width: 1,
+                              ),
                             ),
-                          ),
-                          child: const Icon(
-                            Icons.search_rounded,
-                            color: kBrandPrimary,
-                            size: 22,
+                            child: const Icon(
+                              Icons.search_rounded,
+                              color: kBrandPrimary,
+                              size: 22,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              if (showAccentLine) ...[
-                const SizedBox(height: 10),
-                Container(
-                  height: 3,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    gradient: kAccentLineGradient,
+                    ],
                   ),
                 ),
+                if (showAccentLine) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    height: 3,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      gradient: kAccentLineGradient,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

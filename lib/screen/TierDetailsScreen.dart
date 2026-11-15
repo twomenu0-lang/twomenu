@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../models/SpendingMilestonesResponse.dart';
 import '../main.dart';
 import '../component/TierProgressCard.dart'; // ✅ جديد: استخدام الكارت المشترك الموحد
+import '../AppLocalizations.dart'; // ✅ إضافة الترجمة
 
 class TierDetailsScreen extends StatefulWidget {
   const TierDetailsScreen({super.key});
@@ -76,9 +77,12 @@ class _TierDetailsScreenState extends State<TierDetailsScreen>
           backgroundColor: _surface,
           elevation: 0,
           surfaceTintColor: Colors.transparent,
-          title: const Text(
-            'تفاصيل المستويات',
-            style: TextStyle(
+          title: Text(
+            // ⚠️ ملحوظة: المفتاح lbl_tier_details قيمته "تفاصيل المستوى" (مفرد)
+            // بينما النص الأصلي هنا كان "تفاصيل المستويات" (جمع). استخدمت المفتاح
+            // كما هو لأنه أقرب مفتاح متاح — لو حابب نص الجمع بالظبط قولّي أضيفه كمفتاح جديد.
+            AppLocalizations.of(context)!.translate('lbl_tier_details') ?? '',
+            style: const TextStyle(
               fontFamily: 'BeVietnamPro',
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -117,8 +121,8 @@ class _TierDetailsScreenState extends State<TierDetailsScreen>
             ElevatedButton(
               onPressed: _fetchData,
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4b41e1)),
-              child: const Text('إعادة المحاولة',
-                  style: TextStyle(color: Colors.white)),
+              child: Text(AppLocalizations.of(context)!.translate('lbl_retry') ?? '',
+                  style: const TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -147,11 +151,11 @@ class _TierDetailsScreenState extends State<TierDetailsScreen>
             const SizedBox(height: 24),
 
             // ── 2. خريطة المستويات المحدثة ──────────────────
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                'خريطة المستويات',
-                style: TextStyle(
+                AppLocalizations.of(context)!.translate('lbl_tier_map') ?? '',
+                style: const TextStyle(
                   fontFamily: 'BeVietnamPro',
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
@@ -332,7 +336,7 @@ class _TierRoadmapCard extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            'المستوى $tierName',
+                            AppLocalizations.of(context)!.translate('msg_tier_name_prefix', {'name': tierName}) ?? '',
                             style: TextStyle(
                               fontFamily: 'IBMPlexSans',
                               fontSize: 14,
@@ -365,7 +369,7 @@ class _TierRoadmapCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         (maxAmount == null || maxAmount == 0)
-                            ? '${formatAmount(minAmount)} وأكثر'
+                            ? (AppLocalizations.of(context)!.translate('msg_amount_and_above', {'amount': formatAmount(minAmount)}) ?? '')
                             : '${formatAmount(minAmount)} ← ${formatAmount(maxAmount!)}',
                         style: const TextStyle(
                           fontFamily: 'IBMPlexSans',
@@ -385,9 +389,9 @@ class _TierRoadmapCard extends StatelessWidget {
                       color: const Color(0xFF22C55E).withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Text(
-                      'تم الإنجاز',
-                      style: TextStyle(
+                    child: Text(
+                      AppLocalizations.of(context)!.translate('lbl_completed') ?? '',
+                      style: const TextStyle(
                         fontFamily: 'IBMPlexSans',
                         fontSize: 11,
                         color: Color(0xFF22C55E),
@@ -438,14 +442,14 @@ class _TierRoadmapCard extends StatelessWidget {
                         )
                       ],
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.lock_rounded, size: 14, color: Color(0xFF64748B)),
-                        SizedBox(width: 6),
+                        const Icon(Icons.lock_rounded, size: 14, color: Color(0xFF64748B)),
+                        const SizedBox(width: 6),
                         Text(
-                          'مغلق',
-                          style: TextStyle(
+                          AppLocalizations.of(context)!.translate('lbl_locked') ?? '',
+                          style: const TextStyle(
                             fontFamily: 'IBMPlexSans',
                             fontSize: 12,
                             fontWeight: FontWeight.w500,

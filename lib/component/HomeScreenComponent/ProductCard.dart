@@ -10,6 +10,7 @@ import '../../utils/AppColors.dart';
 import '../../utils/AppWidget.dart';
 import '../../utils/Common.dart';
 import '../../utils/ProductWishListExtension.dart';
+import '../../AppLocalizations.dart'; // ✅ إضافة الترجمة
 
 /// ─────────────────────────────────────────────────────────────
 /// ProductCard — Premium UI مع دعم RTL صحيح وسلوك "أضف للسلة" الذكي
@@ -490,7 +491,10 @@ class _ProductCardState extends State<ProductCard>
     // منتج فيه خيارات → دايمًا "اختر خياراتك"، الزرار ده بيفتح Bottom Sheet بس
     if (_isVariableOrGrouped) {
       return [
-        Text('اختر خياراتك', style: boldTextStyle(size: 13, color: Colors.white)),
+        Text(
+          AppLocalizations.of(context)!.translate('lbl_choose_your_options') ?? '',
+          style: boldTextStyle(size: 13, color: Colors.white),
+        ),
         4.width,
         const Icon(Icons.tune_rounded, color: Colors.white, size: 16),
       ];
@@ -504,7 +508,10 @@ class _ProductCardState extends State<ProductCard>
           child: const Icon(Icons.check_rounded, color: Colors.white, size: 18),
         ),
         4.width,
-        Text('تمت الإضافة', style: boldTextStyle(size: 12, color: Colors.white)),
+        Text(
+          AppLocalizations.of(context)!.translate('lbl_added_to_cart') ?? '',
+          style: boldTextStyle(size: 12, color: Colors.white),
+        ),
       ];
     }
 
@@ -513,13 +520,19 @@ class _ProductCardState extends State<ProductCard>
       return [
         const Icon(Icons.check_circle_rounded, color: Colors.white, size: 16),
         4.width,
-        Text('في السلة', style: boldTextStyle(size: 12, color: Colors.white)),
+        Text(
+          AppLocalizations.of(context)!.translate('lbl_in_cart') ?? '',
+          style: boldTextStyle(size: 12, color: Colors.white),
+        ),
       ];
     }
 
     // الحالة الافتراضية: مش في السلة
     return [
-      Text('أضف للسلة', style: boldTextStyle(size: 13, color: Colors.white)),
+      Text(
+        AppLocalizations.of(context)!.translate('lbl_add_to_cart_btn') ?? '',
+        style: boldTextStyle(size: 13, color: Colors.white),
+      ),
       4.width,
       const Icon(Icons.add_shopping_cart_rounded, color: Colors.white, size: 16),
     ];
@@ -689,7 +702,7 @@ class _VariationBottomSheetState extends State<_VariationBottomSheet> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Text(
-                'لا توجد خيارات متاحة لهذا المنتج',
+                AppLocalizations.of(context)!.translate('msg_no_options_available') ?? '',
                 style: secondaryTextStyle(size: 13, color: kTextMuted),
               ),
             )
@@ -711,8 +724,8 @@ class _VariationBottomSheetState extends State<_VariationBottomSheet> {
                     color: Colors.white, size: 18),
                 label: Text(
                   _allSelected
-                      ? 'أضف للسلة'
-                      : 'اختر جميع الخيارات أولاً',
+                      ? (AppLocalizations.of(context)!.translate('lbl_add_to_cart_btn') ?? '')
+                      : (AppLocalizations.of(context)!.translate('msg_select_all_options_first') ?? ''),
                   style: boldTextStyle(size: 14, color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -762,7 +775,7 @@ class _VariationBottomSheetState extends State<_VariationBottomSheet> {
           // إذا لم تكن هناك options
           if (options.isEmpty)
             Text(
-              'لا توجد قيم لـ $name',
+              AppLocalizations.of(context)!.translate('msg_no_values_for', {'name': name}) ?? '',
               style: secondaryTextStyle(size: 11, color: kTextMuted),
             )
           else

@@ -89,7 +89,9 @@ class HomeScreen1State extends State<HomeScreen1> {
   }
 
   Future<void> _openWhatsApp() async {
-    const String message = 'مرحباً، أحتاج مساعدة في تطبيق تو مينو 🛒';
+    // ✅ تمت إضافة مفتاح ترجمة جديد: msg_whatsapp_greeting
+    final String message = AppLocalizations.of(context)!.translate('msg_whatsapp_greeting') ??
+        'مرحباً، أحتاج مساعدة في تطبيق تو مينو 🛒';
     final String encoded = Uri.encodeComponent(message);
     final Uri whatsappUri = Uri.parse(
       'https://wa.me/${_supportWhatsApp.replaceAll('+', '').replaceAll(' ', '')}?text=$encoded',
@@ -650,7 +652,9 @@ class HomeScreen1State extends State<HomeScreen1> {
                     const Icon(Icons.card_giftcard_rounded, color: Colors.white, size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      AppLocalizations.of(context)!.translate('lbl_my_rewards') ?? 'اكتشف مكافآتك',
+                      // ✅ تصحيح: كان المفتاح 'lbl_my_rewards' وهو غير موجود في ملف الترجمة،
+                      // تم تغييره إلى 'lbl_discover_rewards' ليطابق المفتاح الفعلي بنفس القيمة "اكتشف مكافآتك"
+                      AppLocalizations.of(context)!.translate('lbl_discover_rewards') ?? 'اكتشف مكافآتك',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,

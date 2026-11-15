@@ -1,7 +1,6 @@
 platform :ios, '14.0'
 
 # ✅ هذا السطر يوقف SPM تماماً
-ENV['SWIFT_PACKAGE_MANAGER_ENABLED'] = 'false'
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
 project 'Runner', {
